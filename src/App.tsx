@@ -17,6 +17,53 @@ type Feed = {
   amount: number;
 };
 
+/* ================= REUSABLE UI ================= */
+const Input = (props: any) => (
+  <input
+    {...props}
+    style={{
+      padding: "10px",
+      borderRadius: "6px",
+      border: "1px solid #d1d5db",
+      marginRight: "10px",
+      marginBottom: "10px",
+      width: "150px"
+    }}
+  />
+);
+
+const Button = ({ children, onClick, color = "#2563eb" }: any) => (
+  <button
+    onClick={onClick}
+    style={{
+      padding: "10px 15px",
+      background: color,
+      color: "white",
+      border: "none",
+      borderRadius: "6px",
+      cursor: "pointer",
+      marginBottom: "15px"
+    }}
+  >
+    {children}
+  </button>
+);
+
+const Card = ({ title, value, color }: any) => (
+  <div
+    style={{
+      flex: 1,
+      background: "white",
+      padding: "20px",
+      borderRadius: "12px",
+      boxShadow: "0 3px 8px rgba(0,0,0,0.1)"
+    }}
+  >
+    <div style={{ fontSize: "14px", color: "#6b7280" }}>{title}</div>
+    <div style={{ fontSize: "26px", color, marginTop: "5px" }}>{value}</div>
+  </div>
+);
+
 /* ================= APP ================= */
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -59,32 +106,18 @@ export default function App() {
   const addChicken = () => {
     if (!name || !breed || !age) return;
     setChickens([...chickens, { name, breed, age }]);
-    setName("");
-    setBreed("");
-    setAge("");
+    setName(""); setBreed(""); setAge("");
   };
 
   const addEggs = () => {
     if (!eggCount) return;
-    setEggs([
-      ...eggs,
-      {
-        date: new Date().toISOString().slice(0, 10),
-        count: Number(eggCount),
-      },
-    ]);
+    setEggs([...eggs, { date: new Date().toISOString().slice(0, 10), count: Number(eggCount) }]);
     setEggCount("");
   };
 
   const addFeed = () => {
     if (!feedAmount) return;
-    setFeed([
-      ...feed,
-      {
-        date: new Date().toISOString().slice(0, 10),
-        amount: Number(feedAmount),
-      },
-    ]);
+    setFeed([...feed, { date: new Date().toISOString().slice(0, 10), amount: Number(feedAmount) }]);
     setFeedAmount("");
   };
 
@@ -99,47 +132,21 @@ export default function App() {
     return days;
   };
 
-  const eggChart = last7Days().map((date) => {
-    const total = eggs
-      .filter((e) => e.date === date)
-      .reduce((sum, e) => sum + e.count, 0);
-    return { date, value: total };
-  });
+  const eggChart = last7Days().map(date => ({
+    date,
+    value: eggs.filter(e => e.date === date).reduce((s, e) => s + e.count, 0)
+  }));
 
-  const feedChart = last7Days().map((date) => {
-    const total = feed
-      .filter((f) => f.date === date)
-      .reduce((sum, f) => sum + f.amount, 0);
-    return { date, value: total };
-  });
+  const feedChart = last7Days().map(date => ({
+    date,
+    value: feed.filter(f => f.date === date).reduce((s, f) => s + f.amount, 0)
+  }));
 
-  /* ================= STATS ================= */
-  const totalEggs7Days = eggChart.reduce((sum, d) => sum + d.value, 0);
-  const totalFeed7Days = feedChart.reduce((sum, d) => sum + d.value, 0);
-
+  const totalEggs = eggChart.reduce((s, d) => s + d.value, 0);
+  const totalFeed = feedChart.reduce((s, d) => s + d.value, 0);
   const chickensCount = chickens.length || 1;
 
-  const eggsPerChicken = (totalEggs7Days / chickensCount / 7).toFixed(2);
-  const feedPerChicken = (totalFeed7Days / chickensCount / 7).toFixed(2);
-
-  /* ================= ALERTS ================= */
-  const alerts = [];
-
-  if (chickens.length === 0) {
-    alerts.push("⚠️ No chickens added yet");
-  }
-
-  if (totalEggs7Days === 0) {
-    alerts.push("⚠️ No eggs logged in last 7 days");
-  }
-
-  if (eggsPerChicken < 0.3) {
-    alerts.push("⚠️ Low egg production per chicken");
-  }
-
-  if (feedPerChicken > 0.25) {
-    alerts.push("⚠️ High feed usage per chicken");
-  }
+  const eggsPerChicken = (totalEggs / chickensCount / 7).toFixed(2);
 
   /* ================= CHART ================= */
   const Chart = ({ data, color }: any) => {
@@ -148,12 +155,12 @@ export default function App() {
     return (
       <div style={{
         display: "flex",
-        gap: "12px",
+        gap: "10px",
         alignItems: "flex-end",
-        height: "180px",
-        padding: "10px",
+        height: "160px",
         background: "white",
-        borderRadius: "10px"
+        padding: "15px",
+        borderRadius: "12px"
       }}>
         {data.map((d: any, i: number) => {
           let height = (d.value / max) * 100;
@@ -161,14 +168,12 @@ export default function App() {
 
           return (
             <div key={i} style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontSize: "12px" }}>{d.value}</div>
-
+              <div style={{ fontSize: "11px" }}>{d.value}</div>
               <div style={{
                 height: `${height}%`,
                 background: d.value === 0 ? "#e5e7eb" : color,
                 borderRadius: "6px"
               }}/>
-
               <div style={{ fontSize: "10px" }}>{d.date.slice(5)}</div>
             </div>
           );
@@ -176,20 +181,6 @@ export default function App() {
       </div>
     );
   };
-
-  /* ================= CARD ================= */
-  const Card = ({ title, value, color }: any) => (
-    <div style={{
-      flex: 1,
-      background: "white",
-      padding: "20px",
-      borderRadius: "10px",
-      boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
-    }}>
-      <div style={{ fontSize: "14px", color: "#6b7280" }}>{title}</div>
-      <div style={{ fontSize: "24px", color }}>{value}</div>
-    </div>
-  );
 
   /* ================= UI ================= */
   return (
@@ -204,57 +195,42 @@ export default function App() {
       }}>
         <h2>🐔 Coop Keeper</h2>
 
-        {["dashboard", "chickens", "eggs", "feed"].map((p) => (
-          <p
+        {["dashboard", "chickens", "eggs", "feed"].map(p => (
+          <div
             key={p}
             onClick={() => setPage(p)}
             style={{
               marginTop: "15px",
-              padding: "8px",
+              padding: "10px",
+              borderRadius: "8px",
               cursor: "pointer",
-              borderRadius: "6px",
               background: page === p ? "#374151" : "transparent"
             }}
           >
             {p}
-          </p>
+          </div>
         ))}
       </div>
 
       {/* CONTENT */}
-      <div style={{ flex: 1, padding: "30px", background: "#f3f4f6" }}>
+      <div style={{ flex: 1, padding: "20px", background: "#f3f4f6" }}>
 
         {/* DASHBOARD */}
         {page === "dashboard" && (
           <>
             <h1>Dashboard</h1>
 
-            {/* ALERTS */}
-            {alerts.length > 0 && (
-              <div style={{
-                background: "#fee2e2",
-                padding: "15px",
-                borderRadius: "8px",
-                marginBottom: "20px"
-              }}>
-                {alerts.map((a, i) => (
-                  <div key={i}>{a}</div>
-                ))}
-              </div>
-            )}
-
-            {/* STATS */}
-            <div style={{ display: "flex", gap: "20px", marginBottom: "30px" }}>
+            <div style={{ display: "flex", gap: "15px", flexWrap: "wrap", marginBottom: "20px" }}>
               <Card title="Chickens" value={chickens.length} color="#2563eb" />
-              <Card title="Eggs (7d)" value={totalEggs7Days} color="#f59e0b" />
-              <Card title="Feed (7d kg)" value={totalFeed7Days} color="#3b82f6" />
-              <Card title="Eggs / Chicken / Day" value={eggsPerChicken} color="#10b981" />
+              <Card title="Eggs (7d)" value={totalEggs} color="#f59e0b" />
+              <Card title="Feed (7d kg)" value={totalFeed} color="#3b82f6" />
+              <Card title="Eggs/Chicken" value={eggsPerChicken} color="#10b981" />
             </div>
 
             <h3>Egg Production</h3>
             <Chart data={eggChart} color="#f59e0b" />
 
-            <h3 style={{ marginTop: "30px" }}>Feed Usage</h3>
+            <h3 style={{ marginTop: "20px" }}>Feed Usage</h3>
             <Chart data={feedChart} color="#3b82f6" />
           </>
         )}
@@ -263,13 +239,25 @@ export default function App() {
         {page === "chickens" && (
           <>
             <h1>Chickens</h1>
-            <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-            <input placeholder="Breed" value={breed} onChange={(e) => setBreed(e.target.value)} />
-            <input placeholder="Age" value={age} onChange={(e) => setAge(e.target.value)} />
-            <button onClick={addChicken}>Add</button>
+
+            <div>
+              <Input placeholder="Name" value={name} onChange={(e:any)=>setName(e.target.value)} />
+              <Input placeholder="Breed" value={breed} onChange={(e:any)=>setBreed(e.target.value)} />
+              <Input placeholder="Age" value={age} onChange={(e:any)=>setAge(e.target.value)} />
+            </div>
+
+            <Button onClick={addChicken}>Add Chicken</Button>
 
             {chickens.map((c, i) => (
-              <div key={i}>{c.name} - {c.breed} - {c.age}</div>
+              <div key={i} style={{
+                background: "white",
+                padding: "15px",
+                borderRadius: "10px",
+                marginBottom: "10px"
+              }}>
+                <strong>{c.name}</strong><br/>
+                {c.breed} | Age: {c.age}
+              </div>
             ))}
           </>
         )}
@@ -278,11 +266,14 @@ export default function App() {
         {page === "eggs" && (
           <>
             <h1>Eggs</h1>
-            <input placeholder="Egg count" value={eggCount} onChange={(e) => setEggCount(e.target.value)} />
-            <button onClick={addEggs}>Add</button>
+
+            <Input placeholder="Egg count" value={eggCount} onChange={(e:any)=>setEggCount(e.target.value)} />
+            <Button onClick={addEggs}>Add Eggs</Button>
 
             {eggs.map((e, i) => (
-              <div key={i}>{e.date} - {e.count}</div>
+              <div key={i} style={{ background: "white", padding: "10px", borderRadius: "8px", marginBottom: "8px" }}>
+                {e.date} - {e.count}
+              </div>
             ))}
           </>
         )}
@@ -291,14 +282,18 @@ export default function App() {
         {page === "feed" && (
           <>
             <h1>Feed</h1>
-            <input placeholder="Feed (kg)" value={feedAmount} onChange={(e) => setFeedAmount(e.target.value)} />
-            <button onClick={addFeed}>Add</button>
+
+            <Input placeholder="Feed (kg)" value={feedAmount} onChange={(e:any)=>setFeedAmount(e.target.value)} />
+            <Button onClick={addFeed}>Add Feed</Button>
 
             {feed.map((f, i) => (
-              <div key={i}>{f.date} - {f.amount} kg</div>
+              <div key={i} style={{ background: "white", padding: "10px", borderRadius: "8px", marginBottom: "8px" }}>
+                {f.date} - {f.amount} kg
+              </div>
             ))}
           </>
         )}
+
       </div>
     </div>
   );
