@@ -3,11 +3,12 @@ useEffect(() => {
   const saved = localStorage.getItem("chickens");
   if (saved) {
     setChickens(JSON.parse(saved));
-  }
-}, []);
-useEffect(() => {
+    useEffect(() => {
   localStorage.setItem("chickens", JSON.stringify(chickens));
 }, [chickens]);
+  }
+}, []);
+
 
 type Chicken = {
   name: string;
