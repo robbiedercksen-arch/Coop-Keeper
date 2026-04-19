@@ -30,7 +30,6 @@ export default function App() {
   const [feedAmount, setFeedAmount] = useState("");
 
   const [page, setPage] = useState("dashboard");
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -76,39 +75,6 @@ export default function App() {
     setAge("");
   };
 
-  const deleteChicken = (index: number) => {
-    setChickens(chickens.filter((_, i) => i !== index));
-  };
-
-  const startEdit = (index: number) => {
-    const c = chickens[index];
-    setName(c.name);
-    setBreed(c.breed);
-    setAge(c.age);
-    setEditIndex(index);
-    setPage("chickens");
-  };
-
-  // EGGS (SMART MERGE)
-  const addEggs = () => {
-    if (!eggCount) return;
-
-    const existing = eggs.find(e => e.date === today);
-
-    if (existing) {
-      const updated = eggs.map(e =>
-        e.date === today
-          ? { ...e, count: e.count + parseInt(eggCount) }
-          : e
-      );
-      setEggs(updated);
-    } else {
-      setEggs([...eggs, { date: today, count: parseInt(eggCount) }]);
-    }
-
-    setEggCount("");
-  };
-
   // FEED (SMART MERGE)
   const addFeed = () => {
     if (!feedAmount) return;
@@ -116,12 +82,11 @@ export default function App() {
     const existing = feed.find(f => f.date === today);
 
     if (existing) {
-      const updated = feed.map(f =>
+      setFeed(feed.map(f =>
         f.date === today
           ? { ...f, amount: f.amount + parseFloat(feedAmount) }
           : f
-      );
-      setFeed(updated);
+      ));
     } else {
       setFeed([...feed, { date: today, amount: parseFloat(feedAmount) }]);
     }
@@ -129,116 +94,54 @@ export default function App() {
     setFeedAmount("");
   };
 
-  const eggsToday = eggs.find(e => e.date === today)?.count || 0;
-  const totalEggs = eggs.reduce((sum, e) => sum + e.count, 0);
-
-  const feedToday = feed.find(f => f.date === today)?.amount || 0;
-  const totalFeed = feed.reduce((sum, f) => sum + f.amount, 0);
-
   return (
-    <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
-
-      {/* MOBILE MENU BUTTON */}
-      <button
-        onClick={() => setMenuOpen(!menuOpen)}
-        style={{
-          position: "absolute",
-          top: 10,
-          left: 10,
-          zIndex: 1000
-        }}
-      >
-        ☰
-      </button>
+    <div style={layout.container}>
 
       {/* Sidebar */}
-      {(menuOpen || window.innerWidth > 768) && (
-        <div style={{
-          width: "220px",
-          background: "#111827",
-          color: "white",
-          padding: "20px"
-        }}>
-          <h2>🐔 Coop Keeper</h2>
+      <div style={layout.sidebar}>
+        <h2>🐔 Coop Keeper</h2>
 
-          {["dashboard", "chickens", "eggs", "feed"].map(p => (
-            <div
-              key={p}
-              onClick={() => {
-                setPage(p);
-                setMenuOpen(false);
-              }}
-              style={{
-                padding: "10px",
-                cursor: "pointer",
-                background: page === p ? "#374151" : "transparent"
-              }}
-            >
-              {p}
-            </div>
-          ))}
-        </div>
-      )}
+        {["dashboard", "chickens", "eggs", "feed"].map(p => (
+          <div
+            key={p}
+            onClick={() => setPage(p)}
+            style={{
+              ...styles.menuItem,
+              background: page === p ? "#374151" : "transparent"
+            }}
+          >
+            {p}
+          </div>
+        ))}
+      </div>
 
       {/* Main */}
-      <div style={{ flex: 1, padding: "20px", background: "#f3f4f6" }}>
+      <div style={layout.main}>
 
-        {page === "dashboard" && (
-          <>
-            <h1>Dashboard</h1>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-              <Card title="Chickens" value={chickens.length} />
-              <Card title="Eggs Today" value={eggsToday} />
-              <Card title="Total Eggs" value={totalEggs} />
-              <Card title="Feed Today" value={feedToday} />
-              <Card title="Total Feed" value={totalFeed} />
-            </div>
-          </>
-        )}
-
-        {page === "chickens" && (
-          <>
-            <h1>Chickens</h1>
-
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" />
-            <input value={breed} onChange={e => setBreed(e.target.value)} placeholder="Breed" />
-            <input value={age} onChange={e => setAge(e.target.value)} placeholder="Age" />
-
-            <button onClick={handleSubmit}>
-              {editIndex !== null ? "Update" : "Add"}
-            </button>
-
-            {chickens.map((c, i) => (
-              <Card key={i}>
-                {c.name} - {c.breed} - {c.age}
-                <br />
-                <button onClick={() => startEdit(i)}>Edit</button>
-                <button onClick={() => deleteChicken(i)}>Delete</button>
-              </Card>
-            ))}
-          </>
-        )}
-
-        {page === "eggs" && (
-          <>
-            <h1>Eggs</h1>
-            <input value={eggCount} onChange={e => setEggCount(e.target.value)} placeholder="Egg count" />
-            <button onClick={addEggs}>Add</button>
-
-            {eggs.map((e, i) => (
-              <Card key={i}>{e.date} - {e.count}</Card>
-            ))}
-          </>
-        )}
-
+        {/* FEED PAGE */}
         {page === "feed" && (
           <>
-            <h1>Feed</h1>
-            <input value={feedAmount} onChange={e => setFeedAmount(e.target.value)} placeholder="Feed (kg)" />
-            <button onClick={addFeed}>Add</button>
+            <h1 style={{ marginBottom: "20px" }}>Feed</h1>
 
+            {/* FIXED FORM ROW */}
+            <div style={layout.formRow}>
+              <input
+                style={styles.input}
+                value={feedAmount}
+                onChange={(e) => setFeedAmount(e.target.value)}
+                placeholder="Feed (kg)"
+              />
+
+              <button style={styles.primaryBtn} onClick={addFeed}>
+                Add
+              </button>
+            </div>
+
+            {/* LIST */}
             {feed.map((f, i) => (
-              <Card key={i}>{f.date} - {f.amount} kg</Card>
+              <Card key={i}>
+                {f.date} • {f.amount} kg
+              </Card>
             ))}
           </>
         )}
@@ -248,18 +151,61 @@ export default function App() {
   );
 }
 
-function Card({ title, value, children }: any) {
+/* ---------- STYLES ---------- */
+
+const layout = {
+  container: { display: "flex", height: "100vh", fontFamily: "Arial" },
+  sidebar: {
+    width: "220px",
+    background: "#111827",
+    color: "white",
+    padding: "20px"
+  },
+  main: {
+    flex: 1,
+    padding: "30px",
+    background: "#f3f4f6"
+  },
+  formRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    marginBottom: "20px"
+  }
+};
+
+const styles = {
+  input: {
+    padding: "10px",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+    width: "200px"
+  },
+  primaryBtn: {
+    padding: "10px 16px",
+    background: "#2563eb",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer"
+  },
+  menuItem: {
+    padding: "10px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    marginTop: "5px"
+  }
+};
+
+function Card({ children }: any) {
   return (
     <div style={{
       background: "white",
       padding: "15px",
       borderRadius: "10px",
       boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-      minWidth: "150px",
       marginBottom: "10px"
     }}>
-      {title && <h3>{title}</h3>}
-      {value !== undefined && <p>{value}</p>}
       {children}
     </div>
   );
