@@ -1,27 +1,26 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+export default function App() {
+  return (
+    <div style={{ display: "flex", height: "100vh" }}>
+      
+      {/* Sidebar */}
+      <div style={{
+        width: "200px",
+        background: "#1f2937",
+        color: "white",
+        padding: "20px"
+      }}>
+        <h2>Menu</h2>
+        <p>Dashboard</p>
+        <p>Chickens</p>
+      </div>
 
-const queryClient = new QueryClient();
+      {/* Main Content */}
+      <div style={{ flex: 1, padding: "20px" }}>
+        <h1>Coop Keeper</h1>
+        <h2>Chickens</h2>
+        <button>Add Chicken</button>
+      </div>
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
-export default App;
+    </div>
+  );
+}
