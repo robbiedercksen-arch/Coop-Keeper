@@ -216,33 +216,46 @@ function Chart({ data, color }: any) {
       gap: "12px",
       alignItems: "flex-end",
       height: "180px",
-      marginTop: "10px"
+      marginTop: "10px",
+      padding: "10px",
+      background: "white",
+      borderRadius: "10px"
     }}>
       {data.map((d: any, i: number) => {
-        const height = (d.value / max) * 100;
+        let height = (d.value / max) * 100;
+
+        // ✅ make small values visible
+        if (d.value > 0 && height < 8) height = 8;
 
         return (
           <div key={i} style={{ flex: 1, textAlign: "center" }}>
             
-            <div style={{ fontSize: "12px", marginBottom: "4px" }}>
+            {/* VALUE */}
+            <div style={{ fontSize: "12px", marginBottom: "5px" }}>
               {d.value}
             </div>
 
+            {/* BAR */}
             <div
               style={{
-                height: `${height < 5 ? 5 : height}%`,
-                background: color,
-                borderRadius: "6px"
+                height: `${height}%`,
+                background: d.value === 0 ? "#e5e7eb" : color,
+                borderRadius: "6px",
+                transition: "0.3s"
               }}
             />
 
-            <div style={{ fontSize: "10px", marginTop: "4px" }}>
+            {/* DATE */}
+            <div style={{ fontSize: "10px", marginTop: "5px" }}>
               {d.date.slice(5)}
             </div>
 
           </div>
         );
       })}
+    </div>
+  );
+}
     </div>
   );
 }
