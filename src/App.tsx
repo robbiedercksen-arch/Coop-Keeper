@@ -1,13 +1,4 @@
 import { useState, useEffect } from "react";
-useEffect(() => {
-  const saved = localStorage.getItem("chickens");
-  if (saved) {
-    setChickens(JSON.parse(saved));
-    useEffect(() => {localStorage.setItem("chickens", JSON.stringify(chickens));
-}, [chickens]);
-  }
-}, []);
-
 
 type Chicken = {
   name: string;
@@ -21,6 +12,19 @@ export default function App() {
   const [breed, setBreed] = useState("");
   const [age, setAge] = useState("");
 
+  // ✅ Load saved chickens (runs once)
+  useEffect(() => {
+    const saved = localStorage.getItem("chickens");
+    if (saved) {
+      setChickens(JSON.parse(saved));
+    }
+  }, []);
+
+  // ✅ Save chickens (runs when list changes)
+  useEffect(() => {
+    localStorage.setItem("chickens", JSON.stringify(chickens));
+  }, [chickens]);
+
   const addChicken = () => {
     if (!name || !breed || !age) return;
 
@@ -33,12 +37,11 @@ export default function App() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        fontFamily: "Arial"
-      }}
+    <div>
+      {/* Your existing UI stays here */}
+    </div>
+  );
+}
     >
       {/* Sidebar */}
       <div
