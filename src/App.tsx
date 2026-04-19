@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-
+useEffect(() => {
+  const saved = localStorage.getItem("chickens");
+  if (saved) {
+    setChickens(JSON.parse(saved));
+  }
+}, []);
 
 type Chicken = {
   name: string;
