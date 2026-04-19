@@ -56,26 +56,19 @@ export default function App() {
     localStorage.setItem("feed", JSON.stringify(feed));
   }, [feed]);
 
-  // ADD CHICKEN
+  // ADD FUNCTIONS
   const addChicken = () => {
     if (!name || !breed || !age) return;
-
     setChickens([...chickens, { name, breed, age }]);
-
-    setName("");
-    setBreed("");
-    setAge("");
+    setName(""); setBreed(""); setAge("");
   };
 
-  // ADD EGGS
   const addEggs = () => {
     if (!eggCount) return;
-
     setEggs([...eggs, { date: today, count: parseInt(eggCount) }]);
     setEggCount("");
   };
 
-  // ADD FEED (SMART MERGE)
   const addFeed = () => {
     if (!feedAmount) return;
 
@@ -93,6 +86,26 @@ export default function App() {
 
     setFeedAmount("");
   };
+
+  // 📊 CALCULATIONS
+  const eggsToday = eggs
+    .filter(e => e.date === today)
+    .reduce((sum, e) => sum + e.count, 0);
+
+  const feedToday = feed
+    .filter(f => f.date === today)
+    .reduce((sum, f) => sum + f.amount, 0);
+
+  const last7Days = new Date();
+  last7Days.setDate(last7Days.getDate() - 7);
+
+  const eggsWeek = eggs
+    .filter(e => new Date(e.date) >= last7Days)
+    .reduce((sum, e) => sum + e.count, 0);
+
+  const feedPerEgg = eggsToday > 0
+    ? (feedToday / eggsToday).toFixed(2)
+    : "0";
 
   return (
     <div style={layout.container}>
@@ -118,13 +131,18 @@ export default function App() {
       {/* MAIN */}
       <div style={layout.main}>
 
-        {/* DASHBOARD */}
+        {/* 🔥 DASHBOARD */}
         {page === "dashboard" && (
           <>
             <h1>Dashboard</h1>
-            <Card>Total Chickens: {chickens.length}</Card>
-            <Card>Total Eggs Entries: {eggs.length}</Card>
-            <Card>Total Feed Entries: {feed.length}</Card>
+
+            <div style={layout.grid}>
+              <Card title="🐔 Chickens">{chickens.length}</Card>
+              <Card title="🥚 Eggs Today">{eggsToday}</Card>
+              <Card title="🥚 Eggs (7 days)">{eggsWeek}</Card>
+              <Card title="🌾 Feed Today (kg)">{feedToday}</Card>
+              <Card title="⚖️ Feed / Egg">{feedPerEgg}</Card>
+            </div>
           </>
         )}
 
@@ -134,34 +152,14 @@ export default function App() {
             <h1>Chickens</h1>
 
             <div style={layout.formRow}>
-              <input
-                style={styles.input}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Name"
-              />
-              <input
-                style={styles.input}
-                value={breed}
-                onChange={(e) => setBreed(e.target.value)}
-                placeholder="Breed"
-              />
-              <input
-                style={styles.input}
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                placeholder="Age"
-              />
-              <button style={styles.primaryBtn} onClick={addChicken}>
-                Add
-              </button>
+              <input style={styles.input} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+              <input style={styles.input} value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="Breed" />
+              <input style={styles.input} value={age} onChange={(e) => setAge(e.target.value)} placeholder="Age" />
+              <button style={styles.primaryBtn} onClick={addChicken}>Add</button>
             </div>
 
             {chickens.map((c, i) => (
-              <Card key={i}>
-                <strong>{c.name}</strong><br />
-                {c.breed} • {c.age}
-              </Card>
+              <SimpleCard key={i}>{c.name} • {c.breed} • {c.age}</SimpleCard>
             ))}
           </>
         )}
@@ -172,21 +170,12 @@ export default function App() {
             <h1>Eggs</h1>
 
             <div style={layout.formRow}>
-              <input
-                style={styles.input}
-                value={eggCount}
-                onChange={(e) => setEggCount(e.target.value)}
-                placeholder="Egg count"
-              />
-              <button style={styles.primaryBtn} onClick={addEggs}>
-                Add
-              </button>
+              <input style={styles.input} value={eggCount} onChange={(e) => setEggCount(e.target.value)} placeholder="Egg count" />
+              <button style={styles.primaryBtn} onClick={addEggs}>Add</button>
             </div>
 
             {eggs.map((e, i) => (
-              <Card key={i}>
-                {e.date} • {e.count} eggs
-              </Card>
+              <SimpleCard key={i}>{e.date} • {e.count} eggs</SimpleCard>
             ))}
           </>
         )}
@@ -197,21 +186,12 @@ export default function App() {
             <h1>Feed</h1>
 
             <div style={layout.formRow}>
-              <input
-                style={styles.input}
-                value={feedAmount}
-                onChange={(e) => setFeedAmount(e.target.value)}
-                placeholder="Feed (kg)"
-              />
-              <button style={styles.primaryBtn} onClick={addFeed}>
-                Add
-              </button>
+              <input style={styles.input} value={feedAmount} onChange={(e) => setFeedAmount(e.target.value)} placeholder="Feed (kg)" />
+              <button style={styles.primaryBtn} onClick={addFeed}>Add</button>
             </div>
 
             {feed.map((f, i) => (
-              <Card key={i}>
-                {f.date} • {f.amount} kg
-              </Card>
+              <SimpleCard key={i}>{f.date} • {f.amount} kg</SimpleCard>
             ))}
           </>
         )}
@@ -225,55 +205,39 @@ export default function App() {
 
 const layout = {
   container: { display: "flex", height: "100vh", fontFamily: "Arial" },
-  sidebar: {
-    width: "220px",
-    background: "#111827",
-    color: "white",
-    padding: "20px"
-  },
-  main: {
-    flex: 1,
-    padding: "30px",
-    background: "#f3f4f6"
-  },
-  formRow: {
-    display: "flex",
-    gap: "10px",
-    marginBottom: "20px",
-    flexWrap: "wrap"
-  }
+  sidebar: { width: "220px", background: "#111827", color: "white", padding: "20px" },
+  main: { flex: 1, padding: "30px", background: "#f3f4f6" },
+  formRow: { display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" },
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "15px" }
 };
 
 const styles = {
-  input: {
-    padding: "10px",
-    borderRadius: "6px",
-    border: "1px solid #ccc"
-  },
-  primaryBtn: {
-    padding: "10px 16px",
-    background: "#2563eb",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer"
-  },
-  menuItem: {
-    padding: "10px",
-    borderRadius: "6px",
-    cursor: "pointer",
-    marginTop: "5px"
-  }
+  input: { padding: "10px", borderRadius: "6px", border: "1px solid #ccc" },
+  primaryBtn: { padding: "10px 16px", background: "#2563eb", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" },
+  menuItem: { padding: "10px", borderRadius: "6px", cursor: "pointer", marginTop: "5px" }
 };
 
-function Card({ children }: any) {
+function Card({ title, children }: any) {
   return (
     <div style={{
       background: "white",
-      padding: "15px",
+      padding: "20px",
       borderRadius: "10px",
-      boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-      marginBottom: "10px"
+      boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+    }}>
+      <div style={{ fontSize: "14px", color: "#6b7280" }}>{title}</div>
+      <div style={{ fontSize: "22px", fontWeight: "bold" }}>{children}</div>
+    </div>
+  );
+}
+
+function SimpleCard({ children }: any) {
+  return (
+    <div style={{
+      background: "white",
+      padding: "12px",
+      borderRadius: "8px",
+      marginBottom: "8px"
     }}>
       {children}
     </div>
