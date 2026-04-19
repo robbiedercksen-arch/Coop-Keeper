@@ -113,6 +113,12 @@ export default function App() {
     return { date, value: total };
   });
 
+  /* ================= STATS ================= */
+  const totalEggs7Days = eggChart.reduce((sum, d) => sum + d.value, 0);
+  const totalFeed7Days = feedChart.reduce((sum, d) => sum + d.value, 0);
+  const avgEggs = (totalEggs7Days / 7).toFixed(1);
+  const avgFeed = (totalFeed7Days / 7).toFixed(1);
+
   /* ================= CHART ================= */
   const Chart = ({ data, color }: any) => {
     const max = Math.max(...data.map((d: any) => d.value), 1);
@@ -132,8 +138,6 @@ export default function App() {
       >
         {data.map((d: any, i: number) => {
           let height = (d.value / max) * 100;
-
-          // make small values visible
           if (d.value > 0 && height < 8) height = 8;
 
           return (
@@ -157,6 +161,24 @@ export default function App() {
       </div>
     );
   };
+
+  /* ================= CARD ================= */
+  const Card = ({ title, value, color }: any) => (
+    <div
+      style={{
+        flex: 1,
+        background: "white",
+        padding: "20px",
+        borderRadius: "10px",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+      }}
+    >
+      <div style={{ fontSize: "14px", color: "#6b7280" }}>{title}</div>
+      <div style={{ fontSize: "24px", color, marginTop: "5px" }}>
+        {value}
+      </div>
+    </div>
+  );
 
   /* ================= UI ================= */
   return (
@@ -197,6 +219,14 @@ export default function App() {
           <>
             <h1>Dashboard</h1>
 
+            {/* 🔥 STATS */}
+            <div style={{ display: "flex", gap: "20px", marginBottom: "30px" }}>
+              <Card title="Total Chickens" value={chickens.length} color="#2563eb" />
+              <Card title="Eggs (7 Days)" value={totalEggs7Days} color="#f59e0b" />
+              <Card title="Feed (7 Days kg)" value={totalFeed7Days} color="#3b82f6" />
+              <Card title="Avg Eggs / Day" value={avgEggs} color="#10b981" />
+            </div>
+
             <h3>Egg Production (Last 7 Days)</h3>
             <Chart data={eggChart} color="#f59e0b" />
 
@@ -212,28 +242,14 @@ export default function App() {
           <>
             <h1>Chickens</h1>
 
-            <input
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <input
-              placeholder="Breed"
-              value={breed}
-              onChange={(e) => setBreed(e.target.value)}
-            />
-            <input
-              placeholder="Age"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-            />
+            <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+            <input placeholder="Breed" value={breed} onChange={(e) => setBreed(e.target.value)} />
+            <input placeholder="Age" value={age} onChange={(e) => setAge(e.target.value)} />
 
             <button onClick={addChicken}>Add</button>
 
             {chickens.map((c, i) => (
-              <div key={i}>
-                {c.name} - {c.breed} - {c.age}
-              </div>
+              <div key={i}>{c.name} - {c.breed} - {c.age}</div>
             ))}
           </>
         )}
@@ -243,18 +259,11 @@ export default function App() {
           <>
             <h1>Eggs</h1>
 
-            <input
-              placeholder="Egg count"
-              value={eggCount}
-              onChange={(e) => setEggCount(e.target.value)}
-            />
-
+            <input placeholder="Egg count" value={eggCount} onChange={(e) => setEggCount(e.target.value)} />
             <button onClick={addEggs}>Add</button>
 
             {eggs.map((e, i) => (
-              <div key={i}>
-                {e.date} - {e.count}
-              </div>
+              <div key={i}>{e.date} - {e.count}</div>
             ))}
           </>
         )}
@@ -264,18 +273,11 @@ export default function App() {
           <>
             <h1>Feed</h1>
 
-            <input
-              placeholder="Feed (kg)"
-              value={feedAmount}
-              onChange={(e) => setFeedAmount(e.target.value)}
-            />
-
+            <input placeholder="Feed (kg)" value={feedAmount} onChange={(e) => setFeedAmount(e.target.value)} />
             <button onClick={addFeed}>Add</button>
 
             {feed.map((f, i) => (
-              <div key={i}>
-                {f.date} - {f.amount} kg
-              </div>
+              <div key={i}>{f.date} - {f.amount} kg</div>
             ))}
           </>
         )}
