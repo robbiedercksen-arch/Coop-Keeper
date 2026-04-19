@@ -11,9 +11,15 @@ type EggEntry = {
   count: number;
 };
 
+type FeedEntry = {
+  date: string;
+  amount: number;
+};
+
 export default function App() {
   const [chickens, setChickens] = useState<Chicken[]>([]);
   const [eggs, setEggs] = useState<EggEntry[]>([]);
+  const [feed, setFeed] = useState<FeedEntry[]>([]);
 
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
@@ -21,15 +27,21 @@ export default function App() {
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const [eggCount, setEggCount] = useState("");
-  const [page, setPage] = useState<"dashboard" | "chickens" | "eggs">("dashboard");
+  const [feedAmount, setFeedAmount] = useState("");
+
+  const [page, setPage] = useState<
+    "dashboard" | "chickens" | "eggs" | "feed"
+  >("dashboard");
 
   // LOAD
   useEffect(() => {
     const savedChickens = localStorage.getItem("chickens");
     const savedEggs = localStorage.getItem("eggs");
+    const savedFeed = localStorage.getItem("feed");
 
     if (savedChickens) setChickens(JSON.parse(savedChickens));
     if (savedEggs) setEggs(JSON.parse(savedEggs));
+    if (savedFeed) setFeed(JSON.parse(savedFeed));
   }, []);
 
   // SAVE
@@ -40,6 +52,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("eggs", JSON.stringify(eggs));
   }, [eggs]);
+
+  useEffect(() => {
+    localStorage.setItem("feed", JSON.stringify(feed));
+  }, [feed]);
 
   // CHICKENS
   const handleSubmit = () => {
@@ -78,21 +94,35 @@ export default function App() {
 
     const today = new Date().toISOString().split("T")[0];
 
-    const newEntry = {
-      date: today,
-      count: parseInt(eggCount)
-    };
+    setEggs([
+      ...eggs,
+      { date: today, count: parseInt(eggCount) }
+    ]);
 
-    setEggs([...eggs, newEntry]);
     setEggCount("");
+  };
+
+  // FEED
+  const addFeed = () => {
+    if (!feedAmount) return;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    setFeed([
+      ...feed,
+      { date: today, amount: parseFloat(feedAmount) }
+    ]);
+
+    setFeedAmount("");
   };
 
   const today = new Date().toISOString().split("T")[0];
 
-  const eggsToday =
-    eggs.find((e) => e.date === today)?.count || 0;
-
+  const eggsToday = eggs.find(e => e.date === today)?.count || 0;
   const totalEggs = eggs.reduce((sum, e) => sum + e.count, 0);
+
+  const feedToday = feed.find(f => f.date === today)?.amount || 0;
+  const totalFeed = feed.reduce((sum, f) => sum + f.amount, 0);
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
@@ -106,9 +136,10 @@ export default function App() {
       }}>
         <h2>🐔 Coop Keeper</h2>
 
-        <p onClick={() => setPage("dashboard")} style={{ cursor: "pointer" }}>Dashboard</p>
-        <p onClick={() => setPage("chickens")} style={{ cursor: "pointer" }}>Chickens</p>
-        <p onClick={() => setPage("eggs")} style={{ cursor: "pointer" }}>Eggs</p>
+        <p onClick={() => setPage("dashboard")}>Dashboard</p>
+        <p onClick={() => setPage("chickens")}>Chickens</p>
+        <p onClick={() => setPage("eggs")}>Eggs</p>
+        <p onClick={() => setPage("feed")}>Feed</p>
       </div>
 
       {/* Main */}
@@ -119,21 +150,12 @@ export default function App() {
           <>
             <h1>Dashboard</h1>
 
-            <div style={{ display: "flex", gap: "20px" }}>
-              <div style={cardStyle}>
-                <h3>Chickens</h3>
-                <p>{chickens.length}</p>
-              </div>
-
-              <div style={cardStyle}>
-                <h3>Eggs Today</h3>
-                <p>{eggsToday}</p>
-              </div>
-
-              <div style={cardStyle}>
-                <h3>Total Eggs</h3>
-                <p>{totalEggs}</p>
-              </div>
+            <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+              <Card title="Chickens" value={chickens.length} />
+              <Card title="Eggs Today" value={eggsToday} />
+              <Card title="Total Eggs" value={totalEggs} />
+              <Card title="Feed Today (kg)" value={feedToday} />
+              <Card title="Total Feed (kg)" value={totalFeed} />
             </div>
           </>
         )}
@@ -152,12 +174,12 @@ export default function App() {
             </button>
 
             {chickens.map((c, i) => (
-              <div key={i} style={cardStyle}>
+              <Card key={i}>
                 {c.name} - {c.breed} - {c.age}
                 <br />
                 <button onClick={() => startEdit(i)}>Edit</button>
                 <button onClick={() => deleteChicken(i)}>Delete</button>
-              </div>
+              </Card>
             ))}
           </>
         )}
@@ -175,9 +197,29 @@ export default function App() {
             <button onClick={addEggs}>Add Eggs</button>
 
             {eggs.map((e, i) => (
-              <div key={i} style={cardStyle}>
+              <Card key={i}>
                 {e.date} - {e.count} eggs
-              </div>
+              </Card>
+            ))}
+          </>
+        )}
+
+        {/* FEED */}
+        {page === "feed" && (
+          <>
+            <h1>Feed Tracking</h1>
+
+            <input
+              value={feedAmount}
+              onChange={(e) => setFeedAmount(e.target.value)}
+              placeholder="Feed amount (kg)"
+            />
+            <button onClick={addFeed}>Add Feed</button>
+
+            {feed.map((f, i) => (
+              <Card key={i}>
+                {f.date} - {f.amount} kg
+              </Card>
             ))}
           </>
         )}
@@ -187,10 +229,19 @@ export default function App() {
   );
 }
 
-// Simple card style
-const cardStyle = {
-  background: "white",
-  padding: "15px",
-  borderRadius: "8px",
-  boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
-};
+// Reusable card
+function Card({ title, value, children }: any) {
+  return (
+    <div style={{
+      background: "white",
+      padding: "15px",
+      borderRadius: "8px",
+      boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+      minWidth: "180px"
+    }}>
+      {title && <h3>{title}</h3>}
+      {value !== undefined && <p>{value}</p>}
+      {children}
+    </div>
+  );
+}
