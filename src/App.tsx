@@ -12,6 +12,7 @@ export default function App() {
   const [breed, setBreed] = useState("");
   const [age, setAge] = useState("");
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [page, setPage] = useState<"dashboard" | "chickens">("dashboard");
 
   // Load saved chickens
   useEffect(() => {
@@ -30,13 +31,11 @@ export default function App() {
     if (!name || !breed || !age) return;
 
     if (editIndex !== null) {
-      // Update existing
       const updated = [...chickens];
       updated[editIndex] = { name, breed, age };
       setChickens(updated);
       setEditIndex(null);
     } else {
-      // Add new
       setChickens([...chickens, { name, breed, age }]);
     }
 
@@ -56,123 +55,159 @@ export default function App() {
     setBreed(chicken.breed);
     setAge(chicken.age);
     setEditIndex(index);
+    setPage("chickens");
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        fontFamily: "Arial"
-      }}
-    >
+    <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
+      
       {/* Sidebar */}
-      <div
-        style={{
-          width: "220px",
-          background: "#111827",
-          color: "white",
-          padding: "20px"
-        }}
-      >
+      <div style={{
+        width: "220px",
+        background: "#111827",
+        color: "white",
+        padding: "20px"
+      }}>
         <h2 style={{ marginBottom: "20px" }}>🐔 Coop Keeper</h2>
-        <p style={{ marginBottom: "10px" }}>Dashboard</p>
-        <p style={{ marginBottom: "10px" }}>Chickens</p>
+
+        <p
+          onClick={() => setPage("dashboard")}
+          style={{ marginBottom: "10px", cursor: "pointer" }}
+        >
+          Dashboard
+        </p>
+
+        <p
+          onClick={() => setPage("chickens")}
+          style={{ marginBottom: "10px", cursor: "pointer" }}
+        >
+          Chickens
+        </p>
       </div>
 
-      {/* Main */}
+      {/* Main Content */}
       <div style={{ flex: 1, padding: "30px", background: "#f9fafb" }}>
-        <h1 style={{ marginBottom: "20px" }}>Chickens</h1>
 
-        {/* Form */}
-        <div style={{ marginBottom: "20px" }}>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Name"
-            style={{ padding: "10px", marginRight: "10px" }}
-          />
-          <input
-            value={breed}
-            onChange={(e) => setBreed(e.target.value)}
-            placeholder="Breed"
-            style={{ padding: "10px", marginRight: "10px" }}
-          />
-          <input
-            value={age}
-            onChange={(e) => setAge(e.target.value)}
-            placeholder="Age"
-            style={{ padding: "10px", marginRight: "10px" }}
-          />
+        {/* DASHBOARD */}
+        {page === "dashboard" && (
+          <>
+            <h1 style={{ marginBottom: "20px" }}>Dashboard</h1>
 
-          <button
-            onClick={handleSubmit}
-            style={{
-              padding: "10px 15px",
-              background: editIndex !== null ? "#f59e0b" : "#2563eb",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer"
-            }}
-          >
-            {editIndex !== null ? "Update Chicken" : "Add Chicken"}
-          </button>
-        </div>
-
-        {/* List */}
-        <div>
-          {chickens.map((chicken, index) => (
-            <div
-              key={index}
-              style={{
+            <div style={{ display: "flex", gap: "20px" }}>
+              
+              <div style={{
                 background: "white",
-                padding: "15px",
-                marginBottom: "10px",
-                borderRadius: "8px",
-                boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
-              }}
-            >
-              <strong>{chicken.name}</strong>
-              <br />
-              Breed: {chicken.breed}
-              <br />
-              Age: {chicken.age}
+                padding: "20px",
+                borderRadius: "10px",
+                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                minWidth: "200px"
+              }}>
+                <h3>Total Chickens</h3>
+                <p style={{ fontSize: "24px", fontWeight: "bold" }}>
+                  {chickens.length}
+                </p>
+              </div>
 
-              <br />
-              <br />
+            </div>
+          </>
+        )}
+
+        {/* CHICKENS PAGE */}
+        {page === "chickens" && (
+          <>
+            <h1 style={{ marginBottom: "20px" }}>Chickens</h1>
+
+            {/* Form */}
+            <div style={{ marginBottom: "20px" }}>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Name"
+                style={{ padding: "10px", marginRight: "10px" }}
+              />
+              <input
+                value={breed}
+                onChange={(e) => setBreed(e.target.value)}
+                placeholder="Breed"
+                style={{ padding: "10px", marginRight: "10px" }}
+              />
+              <input
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder="Age"
+                style={{ padding: "10px", marginRight: "10px" }}
+              />
 
               <button
-                onClick={() => startEdit(index)}
+                onClick={handleSubmit}
                 style={{
-                  padding: "5px 10px",
-                  background: "#f59e0b",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  marginRight: "10px"
-                }}
-              >
-                Edit
-              </button>
-
-              <button
-                onClick={() => deleteChicken(index)}
-                style={{
-                  padding: "5px 10px",
-                  background: "red",
+                  padding: "10px 15px",
+                  background: editIndex !== null ? "#f59e0b" : "#2563eb",
                   color: "white",
                   border: "none",
                   borderRadius: "5px",
                   cursor: "pointer"
                 }}
               >
-                Delete
+                {editIndex !== null ? "Update Chicken" : "Add Chicken"}
               </button>
             </div>
-          ))}
-        </div>
+
+            {/* List */}
+            <div>
+              {chickens.map((chicken, index) => (
+                <div
+                  key={index}
+                  style={{
+                    background: "white",
+                    padding: "15px",
+                    marginBottom: "10px",
+                    borderRadius: "8px",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
+                  }}
+                >
+                  <strong>{chicken.name}</strong>
+                  <br />
+                  Breed: {chicken.breed}
+                  <br />
+                  Age: {chicken.age}
+
+                  <br /><br />
+
+                  <button
+                    onClick={() => startEdit(index)}
+                    style={{
+                      padding: "5px 10px",
+                      background: "#f59e0b",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "5px",
+                      cursor: "pointer",
+                      marginRight: "10px"
+                    }}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => deleteChicken(index)}
+                    style={{
+                      padding: "5px 10px",
+                      background: "red",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "5px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
       </div>
     </div>
   );
