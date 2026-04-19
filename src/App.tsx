@@ -87,25 +87,32 @@ export default function App() {
     setFeedAmount("");
   };
 
-  // 📊 CALCULATIONS
-  const eggsToday = eggs
-    .filter(e => e.date === today)
-    .reduce((sum, e) => sum + e.count, 0);
+  // 📊 DASHBOARD CALCULATIONS
+  const getLast7Days = () => {
+    const days: string[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().split("T")[0]);
+    }
+    return days;
+  };
 
-  const feedToday = feed
-    .filter(f => f.date === today)
-    .reduce((sum, f) => sum + f.amount, 0);
+  const last7Days = getLast7Days();
 
-  const last7Days = new Date();
-  last7Days.setDate(last7Days.getDate() - 7);
+  const eggData = last7Days.map(date => {
+    const total = eggs
+      .filter(e => e.date === date)
+      .reduce((sum, e) => sum + e.count, 0);
+    return { date, value: total };
+  });
 
-  const eggsWeek = eggs
-    .filter(e => new Date(e.date) >= last7Days)
-    .reduce((sum, e) => sum + e.count, 0);
-
-  const feedPerEgg = eggsToday > 0
-    ? (feedToday / eggsToday).toFixed(2)
-    : "0";
+  const feedData = last7Days.map(date => {
+    const total = feed
+      .filter(f => f.date === date)
+      .reduce((sum, f) => sum + f.amount, 0);
+    return { date, value: total };
+  });
 
   return (
     <div style={layout.container}>
@@ -131,18 +138,16 @@ export default function App() {
       {/* MAIN */}
       <div style={layout.main}>
 
-        {/* 🔥 DASHBOARD */}
+        {/* DASHBOARD */}
         {page === "dashboard" && (
           <>
             <h1>Dashboard</h1>
 
-            <div style={layout.grid}>
-              <Card title="🐔 Chickens">{chickens.length}</Card>
-              <Card title="🥚 Eggs Today">{eggsToday}</Card>
-              <Card title="🥚 Eggs (7 days)">{eggsWeek}</Card>
-              <Card title="🌾 Feed Today (kg)">{feedToday}</Card>
-              <Card title="⚖️ Feed / Egg">{feedPerEgg}</Card>
-            </div>
+            <h3>Egg Production (Last 7 Days)</h3>
+            <Chart data={eggData} color="#f59e0b" />
+
+            <h3 style={{ marginTop: "30px" }}>Feed Usage (Last 7 Days)</h3>
+            <Chart data={feedData} color="#10b981" />
           </>
         )}
 
@@ -201,14 +206,37 @@ export default function App() {
   );
 }
 
+/* 📊 SIMPLE BAR CHART */
+function Chart({ data, color }: any) {
+  const max = Math.max(...data.map((d: any) => d.value), 1);
+
+  return (
+    <div style={{ display: "flex", gap: "10px", alignItems: "flex-end", height: "150px" }}>
+      {data.map((d: any, i: number) => (
+        <div key={i} style={{ textAlign: "center", flex: 1 }}>
+          <div
+            style={{
+              height: `${(d.value / max) * 100}%`,
+              background: color,
+              borderRadius: "4px"
+            }}
+          />
+          <div style={{ fontSize: "10px" }}>
+            {d.date.slice(5)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* STYLES */
 
 const layout = {
   container: { display: "flex", height: "100vh", fontFamily: "Arial" },
   sidebar: { width: "220px", background: "#111827", color: "white", padding: "20px" },
   main: { flex: 1, padding: "30px", background: "#f3f4f6" },
-  formRow: { display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" },
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "15px" }
+  formRow: { display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }
 };
 
 const styles = {
@@ -216,20 +244,6 @@ const styles = {
   primaryBtn: { padding: "10px 16px", background: "#2563eb", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" },
   menuItem: { padding: "10px", borderRadius: "6px", cursor: "pointer", marginTop: "5px" }
 };
-
-function Card({ title, children }: any) {
-  return (
-    <div style={{
-      background: "white",
-      padding: "20px",
-      borderRadius: "10px",
-      boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
-    }}>
-      <div style={{ fontSize: "14px", color: "#6b7280" }}>{title}</div>
-      <div style={{ fontSize: "22px", fontWeight: "bold" }}>{children}</div>
-    </div>
-  );
-}
 
 function SimpleCard({ children }: any) {
   return (
