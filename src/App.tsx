@@ -1,13 +1,26 @@
 import { useState } from "react";
 
+type Chicken = {
+  name: string;
+  breed: string;
+  age: string;
+};
+
 export default function App() {
-  const [chickens, setChickens] = useState<string[]>([]);
-  const [newChicken, setNewChicken] = useState("");
+  const [chickens, setChickens] = useState<Chicken[]>([]);
+  const [name, setName] = useState("");
+  const [breed, setBreed] = useState("");
+  const [age, setAge] = useState("");
 
   const addChicken = () => {
-    if (newChicken.trim() === "") return;
+    if (!name || !breed || !age) return;
+
+    const newChicken = { name, breed, age };
     setChickens([...chickens, newChicken]);
-    setNewChicken("");
+
+    setName("");
+    setBreed("");
+    setAge("");
   };
 
   return (
@@ -31,18 +44,27 @@ export default function App() {
         
         <h1 style={{ marginBottom: "20px" }}>Chickens</h1>
 
-        {/* Input */}
-        <input
-          value={newChicken}
-          onChange={(e) => setNewChicken(e.target.value)}
-          placeholder="Enter chicken name"
-          style={{
-            padding: "10px",
-            marginRight: "10px",
-            borderRadius: "5px",
-            border: "1px solid #ccc"
-          }}
-        />
+        {/* Inputs */}
+        <div style={{ marginBottom: "15px" }}>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Name"
+            style={{ padding: "10px", marginRight: "10px" }}
+          />
+          <input
+            value={breed}
+            onChange={(e) => setBreed(e.target.value)}
+            placeholder="Breed"
+            style={{ padding: "10px", marginRight: "10px" }}
+          />
+          <input
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            placeholder="Age"
+            style={{ padding: "10px", marginRight: "10px" }}
+          />
+        </div>
 
         {/* Button */}
         <button
@@ -53,18 +75,29 @@ export default function App() {
             color: "white",
             border: "none",
             borderRadius: "5px",
-            cursor: "pointer"
+            cursor: "pointer",
+            marginBottom: "20px"
           }}
         >
           Add Chicken
         </button>
 
         {/* List */}
-        <ul style={{ marginTop: "20px" }}>
+        <div>
           {chickens.map((chicken, index) => (
-            <li key={index}>{chicken}</li>
+            <div key={index} style={{
+              background: "white",
+              padding: "15px",
+              marginBottom: "10px",
+              borderRadius: "8px",
+              boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
+            }}>
+              <strong>{chicken.name}</strong><br />
+              Breed: {chicken.breed} <br />
+              Age: {chicken.age}
+            </div>
           ))}
-        </ul>
+        </div>
 
       </div>
 
