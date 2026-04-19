@@ -123,17 +123,34 @@ export default function App() {
               <br />
 
               <button
-                onClick={() => {
-                  const updated = chickens.filter((_, i) => i !== index);
-                  setChickens(updated);
-                }}
-                style={{
-                  padding: "5px 10px",
-                  background: "red",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer"
+  onClick={() => {
+    const newName = prompt("Edit name:", chicken.name);
+    const newBreed = prompt("Edit breed:", chicken.breed);
+    const newAge = prompt("Edit age:", chicken.age);
+
+    if (!newName || !newBreed || !newAge) return;
+
+    const updated = [...chickens];
+    updated[index] = {
+      name: newName,
+      breed: newBreed,
+      age: newAge
+    };
+
+    setChickens(updated);
+  }}
+  style={{
+    padding: "5px 10px",
+    background: "#f59e0b",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    marginRight: "10px"
+  }}
+>
+  Edit
+</button>
                 }}
               >
                 Delete
