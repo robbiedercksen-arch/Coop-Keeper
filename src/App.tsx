@@ -3,8 +3,7 @@ useEffect(() => {
   const saved = localStorage.getItem("chickens");
   if (saved) {
     setChickens(JSON.parse(saved));
-    useEffect(() => {
-  localStorage.setItem("chickens", JSON.stringify(chickens));
+    useEffect(() => {localStorage.setItem("chickens", JSON.stringify(chickens));
 }, [chickens]);
   }
 }, []);
