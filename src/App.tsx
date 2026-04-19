@@ -11,6 +11,7 @@ export default function App() {
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
   const [age, setAge] = useState("");
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
   // Load saved chickens
   useEffect(() => {
@@ -25,11 +26,19 @@ export default function App() {
     localStorage.setItem("chickens", JSON.stringify(chickens));
   }, [chickens]);
 
-  const addChicken = () => {
+  const handleSubmit = () => {
     if (!name || !breed || !age) return;
 
-    const newChicken = { name, breed, age };
-    setChickens([...chickens, newChicken]);
+    if (editIndex !== null) {
+      // Update existing
+      const updated = [...chickens];
+      updated[editIndex] = { name, breed, age };
+      setChickens(updated);
+      setEditIndex(null);
+    } else {
+      // Add new
+      setChickens([...chickens, { name, breed, age }]);
+    }
 
     setName("");
     setBreed("");
@@ -41,23 +50,12 @@ export default function App() {
     setChickens(updated);
   };
 
-  const editChicken = (index: number) => {
+  const startEdit = (index: number) => {
     const chicken = chickens[index];
-
-    const newName = prompt("Edit name:", chicken.name);
-    const newBreed = prompt("Edit breed:", chicken.breed);
-    const newAge = prompt("Edit age:", chicken.age);
-
-    if (!newName || !newBreed || !newAge) return;
-
-    const updated = [...chickens];
-    updated[index] = {
-      name: newName,
-      breed: newBreed,
-      age: newAge
-    };
-
-    setChickens(updated);
+    setName(chicken.name);
+    setBreed(chicken.breed);
+    setAge(chicken.age);
+    setEditIndex(index);
   };
 
   return (
@@ -82,12 +80,12 @@ export default function App() {
         <p style={{ marginBottom: "10px" }}>Chickens</p>
       </div>
 
-      {/* Main Content */}
+      {/* Main */}
       <div style={{ flex: 1, padding: "30px", background: "#f9fafb" }}>
         <h1 style={{ marginBottom: "20px" }}>Chickens</h1>
 
-        {/* Inputs */}
-        <div style={{ marginBottom: "15px" }}>
+        {/* Form */}
+        <div style={{ marginBottom: "20px" }}>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -106,23 +104,21 @@ export default function App() {
             placeholder="Age"
             style={{ padding: "10px", marginRight: "10px" }}
           />
-        </div>
 
-        {/* Add Button */}
-        <button
-          onClick={addChicken}
-          style={{
-            padding: "10px 15px",
-            background: "#2563eb",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            marginBottom: "20px"
-          }}
-        >
-          Add Chicken
-        </button>
+          <button
+            onClick={handleSubmit}
+            style={{
+              padding: "10px 15px",
+              background: editIndex !== null ? "#f59e0b" : "#2563eb",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer"
+            }}
+          >
+            {editIndex !== null ? "Update Chicken" : "Add Chicken"}
+          </button>
+        </div>
 
         {/* List */}
         <div>
@@ -146,9 +142,8 @@ export default function App() {
               <br />
               <br />
 
-              {/* Edit Button */}
               <button
-                onClick={() => editChicken(index)}
+                onClick={() => startEdit(index)}
                 style={{
                   padding: "5px 10px",
                   background: "#f59e0b",
@@ -162,7 +157,6 @@ export default function App() {
                 Edit
               </button>
 
-              {/* Delete Button */}
               <button
                 onClick={() => deleteChicken(index)}
                 style={{
