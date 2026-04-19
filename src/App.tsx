@@ -116,8 +116,7 @@ export default function App() {
       </button>
     </div>
   ))}
-</div>
-      </div>   // closes Main Content
-    </div>     // closes Root container
-  );
+</div>   {/* closes Main Content */}
+</div>   {/* closes Root container */}
+);
 }
