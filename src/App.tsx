@@ -84,23 +84,36 @@ export default function App() {
 
         {/* List */}
         <div>
-          {chickens.map((chicken, index) => (
-            <div key={index} style={{
-              background: "white",
-              padding: "15px",
-              marginBottom: "10px",
-              borderRadius: "8px",
-              boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
-            }}>
-              <strong>{chicken.name}</strong><br />
-              Breed: {chicken.breed} <br />
-              Age: {chicken.age}
-            </div>
-          ))}
-        </div>
+  {chickens.map((chicken, index) => (
+    <div key={index} style={{
+      background: "white",
+      padding: "15px",
+      marginBottom: "10px",
+      borderRadius: "8px",
+      boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
+    }}>
+      <strong>{chicken.name}</strong><br />
+      Breed: {chicken.breed} <br />
+      Age: {chicken.age}
 
-      </div>
+      <br /><br />
 
+      <button
+        onClick={() => {
+          const updated = chickens.filter((_, i) => i !== index);
+          setChickens(updated);
+        }}
+        style={{
+          padding: "5px 10px",
+          background: "red",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer"
+        }}
+      >
+        Delete
+      </button>
     </div>
-  );
-}
+  ))}
+</div>
