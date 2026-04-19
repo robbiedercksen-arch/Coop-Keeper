@@ -5,6 +5,16 @@ type Chicken = { name: string; breed: string; age: string };
 type Egg = { date: string; count: number };
 type Feed = { date: string; amount: number };
 
+/* ================= DATA LAYER ================= */
+const loadData = (key: string) => {
+  const data = localStorage.getItem(key);
+  return data ? JSON.parse(data) : [];
+};
+
+const saveData = (key: string, data: any) => {
+  localStorage.setItem(key, JSON.stringify(data));
+};
+
 /* ================= UI COMPONENTS ================= */
 const Input = (props: any) => (
   <input {...props} style={{
@@ -24,14 +34,14 @@ const Button = ({ children, onClick, color = "#2563eb" }: any) => (
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
-    marginBottom: "10px",
-    marginRight: "10px"
+    marginRight: "10px",
+    marginBottom: "10px"
   }}>
     {children}
   </button>
 );
 
-const Card = ({ title, value, color }: any) => (
+const Card = ({ title, value }: any) => (
   <div style={{
     flex: 1,
     background: "white",
@@ -40,7 +50,7 @@ const Card = ({ title, value, color }: any) => (
     boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
   }}>
     <div style={{ fontSize: "14px", color: "#6b7280" }}>{title}</div>
-    <div style={{ fontSize: "24px", color }}>{value}</div>
+    <div style={{ fontSize: "24px" }}>{value}</div>
   </div>
 );
 
@@ -59,28 +69,17 @@ export default function App() {
   const [eggCount, setEggCount] = useState("");
   const [feedAmount, setFeedAmount] = useState("");
 
-  /* ================= STORAGE ================= */
+  /* ================= LOAD ================= */
   useEffect(() => {
-    const c = localStorage.getItem("chickens");
-    const e = localStorage.getItem("eggs");
-    const f = localStorage.getItem("feed");
-
-    if (c) setChickens(JSON.parse(c));
-    if (e) setEggs(JSON.parse(e));
-    if (f) setFeed(JSON.parse(f));
+    setChickens(loadData("chickens"));
+    setEggs(loadData("eggs"));
+    setFeed(loadData("feed"));
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("chickens", JSON.stringify(chickens));
-  }, [chickens]);
-
-  useEffect(() => {
-    localStorage.setItem("eggs", JSON.stringify(eggs));
-  }, [eggs]);
-
-  useEffect(() => {
-    localStorage.setItem("feed", JSON.stringify(feed));
-  }, [feed]);
+  /* ================= SAVE ================= */
+  useEffect(() => saveData("chickens", chickens), [chickens]);
+  useEffect(() => saveData("eggs", eggs), [eggs]);
+  useEffect(() => saveData("feed", feed), [feed]);
 
   /* ================= ACTIONS ================= */
   const addChicken = () => {
@@ -111,17 +110,9 @@ export default function App() {
   const exportCSV = () => {
     let csv = "Type,Date,Value\n";
 
-    eggs.forEach(e => {
-      csv += `Eggs,${e.date},${e.count}\n`;
-    });
-
-    feed.forEach(f => {
-      csv += `Feed,${f.date},${f.amount}\n`;
-    });
-
-    chickens.forEach(c => {
-      csv += `Chicken,${c.name},${c.breed}-${c.age}\n`;
-    });
+    eggs.forEach(e => csv += `Eggs,${e.date},${e.count}\n`);
+    feed.forEach(f => csv += `Feed,${f.date},${f.amount}\n`);
+    chickens.forEach(c => csv += `Chicken,${c.name},${c.breed}-${c.age}\n`);
 
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -173,14 +164,14 @@ export default function App() {
             <h1>Dashboard</h1>
 
             <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
-              <Card title="Chickens" value={chickens.length} color="#2563eb" />
-              <Card title="Total Eggs" value={totalEggs} color="#f59e0b" />
-              <Card title="Total Feed (kg)" value={totalFeed} color="#3b82f6" />
+              <Card title="Chickens" value={chickens.length} />
+              <Card title="Total Eggs" value={totalEggs} />
+              <Card title="Total Feed (kg)" value={totalFeed} />
             </div>
 
-            <h3 style={{ marginTop: "20px" }}>Export Data</h3>
+            <h3 style={{ marginTop: "20px" }}>Backup</h3>
             <Button onClick={exportCSV} color="#16a34a">
-              Download CSV Report
+              Download CSV
             </Button>
           </>
         )}
