@@ -1,4 +1,15 @@
+import { useState } from "react";
+
 export default function App() {
+  const [chickens, setChickens] = useState<string[]>([]);
+
+  const addChicken = () => {
+    const name = prompt("Enter chicken name:");
+    if (name) {
+      setChickens([...chickens, name]);
+    }
+  };
+
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
       
@@ -20,16 +31,27 @@ export default function App() {
         
         <h1 style={{ marginBottom: "20px" }}>Chickens</h1>
 
-        <button style={{
-          padding: "10px 15px",
-          background: "#2563eb",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer"
-        }}>
+        <button
+          onClick={addChicken}
+          style={{
+            padding: "10px 15px",
+            background: "#2563eb",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            marginBottom: "20px"
+          }}
+        >
           Add Chicken
         </button>
+
+        {/* Chicken List */}
+        <ul>
+          {chickens.map((chicken, index) => (
+            <li key={index}>{chicken}</li>
+          ))}
+        </ul>
 
       </div>
 
