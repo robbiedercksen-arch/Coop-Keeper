@@ -6,27 +6,42 @@ type Chicken = {
   age: string;
 };
 
+type EggEntry = {
+  date: string;
+  count: number;
+};
+
 export default function App() {
   const [chickens, setChickens] = useState<Chicken[]>([]);
+  const [eggs, setEggs] = useState<EggEntry[]>([]);
+
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
   const [age, setAge] = useState("");
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [page, setPage] = useState<"dashboard" | "chickens">("dashboard");
 
-  // Load saved chickens
+  const [eggCount, setEggCount] = useState("");
+  const [page, setPage] = useState<"dashboard" | "chickens" | "eggs">("dashboard");
+
+  // LOAD
   useEffect(() => {
-    const saved = localStorage.getItem("chickens");
-    if (saved) {
-      setChickens(JSON.parse(saved));
-    }
+    const savedChickens = localStorage.getItem("chickens");
+    const savedEggs = localStorage.getItem("eggs");
+
+    if (savedChickens) setChickens(JSON.parse(savedChickens));
+    if (savedEggs) setEggs(JSON.parse(savedEggs));
   }, []);
 
-  // Save chickens
+  // SAVE
   useEffect(() => {
     localStorage.setItem("chickens", JSON.stringify(chickens));
   }, [chickens]);
 
+  useEffect(() => {
+    localStorage.setItem("eggs", JSON.stringify(eggs));
+  }, [eggs]);
+
+  // CHICKENS
   const handleSubmit = () => {
     if (!name || !breed || !age) return;
 
@@ -45,18 +60,39 @@ export default function App() {
   };
 
   const deleteChicken = (index: number) => {
-    const updated = chickens.filter((_, i) => i !== index);
-    setChickens(updated);
+    setChickens(chickens.filter((_, i) => i !== index));
   };
 
   const startEdit = (index: number) => {
-    const chicken = chickens[index];
-    setName(chicken.name);
-    setBreed(chicken.breed);
-    setAge(chicken.age);
+    const c = chickens[index];
+    setName(c.name);
+    setBreed(c.breed);
+    setAge(c.age);
     setEditIndex(index);
     setPage("chickens");
   };
+
+  // EGGS
+  const addEggs = () => {
+    if (!eggCount) return;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const newEntry = {
+      date: today,
+      count: parseInt(eggCount)
+    };
+
+    setEggs([...eggs, newEntry]);
+    setEggCount("");
+  };
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const eggsToday =
+    eggs.find((e) => e.date === today)?.count || 0;
+
+  const totalEggs = eggs.reduce((sum, e) => sum + e.count, 0);
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
@@ -68,143 +104,81 @@ export default function App() {
         color: "white",
         padding: "20px"
       }}>
-        <h2 style={{ marginBottom: "20px" }}>🐔 Coop Keeper</h2>
+        <h2>🐔 Coop Keeper</h2>
 
-        <p
-          onClick={() => setPage("dashboard")}
-          style={{ marginBottom: "10px", cursor: "pointer" }}
-        >
-          Dashboard
-        </p>
-
-        <p
-          onClick={() => setPage("chickens")}
-          style={{ marginBottom: "10px", cursor: "pointer" }}
-        >
-          Chickens
-        </p>
+        <p onClick={() => setPage("dashboard")} style={{ cursor: "pointer" }}>Dashboard</p>
+        <p onClick={() => setPage("chickens")} style={{ cursor: "pointer" }}>Chickens</p>
+        <p onClick={() => setPage("eggs")} style={{ cursor: "pointer" }}>Eggs</p>
       </div>
 
-      {/* Main Content */}
+      {/* Main */}
       <div style={{ flex: 1, padding: "30px", background: "#f9fafb" }}>
 
         {/* DASHBOARD */}
         {page === "dashboard" && (
           <>
-            <h1 style={{ marginBottom: "20px" }}>Dashboard</h1>
+            <h1>Dashboard</h1>
 
             <div style={{ display: "flex", gap: "20px" }}>
-              
-              <div style={{
-                background: "white",
-                padding: "20px",
-                borderRadius: "10px",
-                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-                minWidth: "200px"
-              }}>
-                <h3>Total Chickens</h3>
-                <p style={{ fontSize: "24px", fontWeight: "bold" }}>
-                  {chickens.length}
-                </p>
+              <div style={cardStyle}>
+                <h3>Chickens</h3>
+                <p>{chickens.length}</p>
               </div>
 
+              <div style={cardStyle}>
+                <h3>Eggs Today</h3>
+                <p>{eggsToday}</p>
+              </div>
+
+              <div style={cardStyle}>
+                <h3>Total Eggs</h3>
+                <p>{totalEggs}</p>
+              </div>
             </div>
           </>
         )}
 
-        {/* CHICKENS PAGE */}
+        {/* CHICKENS */}
         {page === "chickens" && (
           <>
-            <h1 style={{ marginBottom: "20px" }}>Chickens</h1>
+            <h1>Chickens</h1>
 
-            {/* Form */}
-            <div style={{ marginBottom: "20px" }}>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Name"
-                style={{ padding: "10px", marginRight: "10px" }}
-              />
-              <input
-                value={breed}
-                onChange={(e) => setBreed(e.target.value)}
-                placeholder="Breed"
-                style={{ padding: "10px", marginRight: "10px" }}
-              />
-              <input
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                placeholder="Age"
-                style={{ padding: "10px", marginRight: "10px" }}
-              />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+            <input value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="Breed" />
+            <input value={age} onChange={(e) => setAge(e.target.value)} placeholder="Age" />
 
-              <button
-                onClick={handleSubmit}
-                style={{
-                  padding: "10px 15px",
-                  background: editIndex !== null ? "#f59e0b" : "#2563eb",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer"
-                }}
-              >
-                {editIndex !== null ? "Update Chicken" : "Add Chicken"}
-              </button>
-            </div>
+            <button onClick={handleSubmit}>
+              {editIndex !== null ? "Update" : "Add"}
+            </button>
 
-            {/* List */}
-            <div>
-              {chickens.map((chicken, index) => (
-                <div
-                  key={index}
-                  style={{
-                    background: "white",
-                    padding: "15px",
-                    marginBottom: "10px",
-                    borderRadius: "8px",
-                    boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
-                  }}
-                >
-                  <strong>{chicken.name}</strong>
-                  <br />
-                  Breed: {chicken.breed}
-                  <br />
-                  Age: {chicken.age}
+            {chickens.map((c, i) => (
+              <div key={i} style={cardStyle}>
+                {c.name} - {c.breed} - {c.age}
+                <br />
+                <button onClick={() => startEdit(i)}>Edit</button>
+                <button onClick={() => deleteChicken(i)}>Delete</button>
+              </div>
+            ))}
+          </>
+        )}
 
-                  <br /><br />
+        {/* EGGS */}
+        {page === "eggs" && (
+          <>
+            <h1>Egg Tracking</h1>
 
-                  <button
-                    onClick={() => startEdit(index)}
-                    style={{
-                      padding: "5px 10px",
-                      background: "#f59e0b",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                      marginRight: "10px"
-                    }}
-                  >
-                    Edit
-                  </button>
+            <input
+              value={eggCount}
+              onChange={(e) => setEggCount(e.target.value)}
+              placeholder="Egg count"
+            />
+            <button onClick={addEggs}>Add Eggs</button>
 
-                  <button
-                    onClick={() => deleteChicken(index)}
-                    style={{
-                      padding: "5px 10px",
-                      background: "red",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer"
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              ))}
-            </div>
+            {eggs.map((e, i) => (
+              <div key={i} style={cardStyle}>
+                {e.date} - {e.count} eggs
+              </div>
+            ))}
           </>
         )}
 
@@ -212,3 +186,11 @@ export default function App() {
     </div>
   );
 }
+
+// Simple card style
+const cardStyle = {
+  background: "white",
+  padding: "15px",
+  borderRadius: "8px",
+  boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
+};
