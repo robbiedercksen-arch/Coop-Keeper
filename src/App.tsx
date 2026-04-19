@@ -24,24 +24,29 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
-      
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        fontFamily: "Arial"
+      }}
+    >
       {/* Sidebar */}
-      <div style={{
-        width: "220px",
-        background: "#111827",
-        color: "white",
-        padding: "20px"
-      }}>
+      <div
+        style={{
+          width: "220px",
+          background: "#111827",
+          color: "white",
+          padding: "20px"
+        }}
+      >
         <h2 style={{ marginBottom: "20px" }}>🐔 Coop Keeper</h2>
-
-        <p style={{ marginBottom: "10px", cursor: "pointer" }}>Dashboard</p>
-        <p style={{ marginBottom: "10px", cursor: "pointer" }}>Chickens</p>
+        <p style={{ marginBottom: "10px" }}>Dashboard</p>
+        <p style={{ marginBottom: "10px" }}>Chickens</p>
       </div>
 
       {/* Main Content */}
       <div style={{ flex: 1, padding: "30px", background: "#f9fafb" }}>
-        
         <h1 style={{ marginBottom: "20px" }}>Chickens</h1>
 
         {/* Inputs */}
@@ -84,39 +89,46 @@ export default function App() {
 
         {/* List */}
         <div>
-  {chickens.map((chicken, index) => (
-    <div key={index} style={{
-      background: "white",
-      padding: "15px",
-      marginBottom: "10px",
-      borderRadius: "8px",
-      boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
-    }}>
-      <strong>{chicken.name}</strong><br />
-      Breed: {chicken.breed} <br />
-      Age: {chicken.age}
+          {chickens.map((chicken, index) => (
+            <div
+              key={index}
+              style={{
+                background: "white",
+                padding: "15px",
+                marginBottom: "10px",
+                borderRadius: "8px",
+                boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
+              }}
+            >
+              <strong>{chicken.name}</strong>
+              <br />
+              Breed: {chicken.breed}
+              <br />
+              Age: {chicken.age}
 
-      <br /><br />
+              <br />
+              <br />
 
-      <button
-        onClick={() => {
-          const updated = chickens.filter((_, i) => i !== index);
-          setChickens(updated);
-        }}
-        style={{
-          padding: "5px 10px",
-          background: "red",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer"
-        }}
-      >
-        Delete
-      </button>
+              <button
+                onClick={() => {
+                  const updated = chickens.filter((_, i) => i !== index);
+                  setChickens(updated);
+                }}
+                style={{
+                  padding: "5px 10px",
+                  background: "red",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer"
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
-  ))}
-</div>   {/* closes Main Content */}
-</div>   {/* closes Root container */}
-);
+  );
 }
