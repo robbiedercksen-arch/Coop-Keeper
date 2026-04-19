@@ -5,6 +5,9 @@ useEffect(() => {
     setChickens(JSON.parse(saved));
   }
 }, []);
+useEffect(() => {
+  localStorage.setItem("chickens", JSON.stringify(chickens));
+}, [chickens]);
 
 type Chicken = {
   name: string;
