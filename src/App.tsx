@@ -24,7 +24,6 @@ export default function App() {
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
   const [age, setAge] = useState("");
-  const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const [eggCount, setEggCount] = useState("");
   const [feedAmount, setFeedAmount] = useState("");
@@ -57,25 +56,26 @@ export default function App() {
     localStorage.setItem("feed", JSON.stringify(feed));
   }, [feed]);
 
-  // CHICKENS
-  const handleSubmit = () => {
+  // ADD CHICKEN
+  const addChicken = () => {
     if (!name || !breed || !age) return;
 
-    if (editIndex !== null) {
-      const updated = [...chickens];
-      updated[editIndex] = { name, breed, age };
-      setChickens(updated);
-      setEditIndex(null);
-    } else {
-      setChickens([...chickens, { name, breed, age }]);
-    }
+    setChickens([...chickens, { name, breed, age }]);
 
     setName("");
     setBreed("");
     setAge("");
   };
 
-  // FEED (SMART MERGE)
+  // ADD EGGS
+  const addEggs = () => {
+    if (!eggCount) return;
+
+    setEggs([...eggs, { date: today, count: parseInt(eggCount) }]);
+    setEggCount("");
+  };
+
+  // ADD FEED (SMART MERGE)
   const addFeed = () => {
     if (!feedAmount) return;
 
@@ -97,7 +97,7 @@ export default function App() {
   return (
     <div style={layout.container}>
 
-      {/* Sidebar */}
+      {/* SIDEBAR */}
       <div style={layout.sidebar}>
         <h2>🐔 Coop Keeper</h2>
 
@@ -115,15 +115,87 @@ export default function App() {
         ))}
       </div>
 
-      {/* Main */}
+      {/* MAIN */}
       <div style={layout.main}>
 
-        {/* FEED PAGE */}
+        {/* DASHBOARD */}
+        {page === "dashboard" && (
+          <>
+            <h1>Dashboard</h1>
+            <Card>Total Chickens: {chickens.length}</Card>
+            <Card>Total Eggs Entries: {eggs.length}</Card>
+            <Card>Total Feed Entries: {feed.length}</Card>
+          </>
+        )}
+
+        {/* CHICKENS */}
+        {page === "chickens" && (
+          <>
+            <h1>Chickens</h1>
+
+            <div style={layout.formRow}>
+              <input
+                style={styles.input}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Name"
+              />
+              <input
+                style={styles.input}
+                value={breed}
+                onChange={(e) => setBreed(e.target.value)}
+                placeholder="Breed"
+              />
+              <input
+                style={styles.input}
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder="Age"
+              />
+              <button style={styles.primaryBtn} onClick={addChicken}>
+                Add
+              </button>
+            </div>
+
+            {chickens.map((c, i) => (
+              <Card key={i}>
+                <strong>{c.name}</strong><br />
+                {c.breed} • {c.age}
+              </Card>
+            ))}
+          </>
+        )}
+
+        {/* EGGS */}
+        {page === "eggs" && (
+          <>
+            <h1>Eggs</h1>
+
+            <div style={layout.formRow}>
+              <input
+                style={styles.input}
+                value={eggCount}
+                onChange={(e) => setEggCount(e.target.value)}
+                placeholder="Egg count"
+              />
+              <button style={styles.primaryBtn} onClick={addEggs}>
+                Add
+              </button>
+            </div>
+
+            {eggs.map((e, i) => (
+              <Card key={i}>
+                {e.date} • {e.count} eggs
+              </Card>
+            ))}
+          </>
+        )}
+
+        {/* FEED */}
         {page === "feed" && (
           <>
-            <h1 style={{ marginBottom: "20px" }}>Feed</h1>
+            <h1>Feed</h1>
 
-            {/* FIXED FORM ROW */}
             <div style={layout.formRow}>
               <input
                 style={styles.input}
@@ -131,13 +203,11 @@ export default function App() {
                 onChange={(e) => setFeedAmount(e.target.value)}
                 placeholder="Feed (kg)"
               />
-
               <button style={styles.primaryBtn} onClick={addFeed}>
                 Add
               </button>
             </div>
 
-            {/* LIST */}
             {feed.map((f, i) => (
               <Card key={i}>
                 {f.date} • {f.amount} kg
@@ -151,7 +221,7 @@ export default function App() {
   );
 }
 
-/* ---------- STYLES ---------- */
+/* STYLES */
 
 const layout = {
   container: { display: "flex", height: "100vh", fontFamily: "Arial" },
@@ -168,9 +238,9 @@ const layout = {
   },
   formRow: {
     display: "flex",
-    alignItems: "center",
     gap: "10px",
-    marginBottom: "20px"
+    marginBottom: "20px",
+    flexWrap: "wrap"
   }
 };
 
@@ -178,8 +248,7 @@ const styles = {
   input: {
     padding: "10px",
     borderRadius: "6px",
-    border: "1px solid #ccc",
-    width: "200px"
+    border: "1px solid #ccc"
   },
   primaryBtn: {
     padding: "10px 16px",
