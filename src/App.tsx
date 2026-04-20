@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 // 🔑 PUT YOUR KEY HERE
 const supabase = createClient(
-  "https://gzoxsnsbzbjmbatdxwyhh.supabase.co",
+  "https://gzoxsnsbzjbmatdxwyhh.supabase.co",
   "sb_publishable_EYpEiEJ_Q4ElsyvyI1ZDtw_q9lOgU_A"
 );
 
