@@ -8,28 +8,56 @@ function App() {
   const [newChicken, setNewChicken] = useState("");
   const [isOffline, setIsOffline] = useState(false);
 
-  // ✅ LOAD USER (OFFLINE SAFE)
+  // ✅ LOAD USER (WITH TIMEOUT + OFFLINE FALLBACK)
   useEffect(() => {
     const loadUser = async () => {
+      let resolved = false;
+
+      // ⏱ Force fallback after 2 seconds
+      const timeout = setTimeout(() => {
+        if (!resolved) {
+          console.log("User load timeout → offline fallback");
+
+          const savedUser = localStorage.getItem("user");
+
+          if (savedUser) {
+            setUser(JSON.parse(savedUser));
+            setIsOffline(true);
+          } else {
+            setUser(null);
+          }
+        }
+      }, 2000);
+
       try {
         const { data } = await supabase.auth.getUser();
 
-        if (data?.user) {
-          setUser(data.user);
-          localStorage.setItem("user", JSON.stringify(data.user));
-        } else {
-          throw new Error("No user");
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timeout);
+
+          if (data?.user) {
+            setUser(data.user);
+            localStorage.setItem("user", JSON.stringify(data.user));
+          } else {
+            setUser(null);
+          }
         }
       } catch (err) {
-        console.log("Offline user fallback");
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timeout);
 
-        const savedUser = localStorage.getItem("user");
+          console.log("Offline user fallback");
 
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-          setIsOffline(true);
-        } else {
-          setUser(null);
+          const savedUser = localStorage.getItem("user");
+
+          if (savedUser) {
+            setUser(JSON.parse(savedUser));
+            setIsOffline(true);
+          } else {
+            setUser(null);
+          }
         }
       }
     };
@@ -54,7 +82,6 @@ function App() {
         setChickens(chickensData || []);
         setEggs(eggsData || []);
 
-        // Save for offline
         localStorage.setItem("chickens", JSON.stringify(chickensData));
         localStorage.setItem("eggs", JSON.stringify(eggsData));
       } catch (err) {
@@ -100,20 +127,15 @@ function App() {
   };
 
   // ✅ CALCULATIONS
-  const totalEggs = (eggs || []).reduce((sum, e) => sum + (e.count || 0), 0);
-  const revenue = (eggs || []).reduce((sum, e) => sum + (e.price || 0), 0);
-  const feedCost = (eggs || []).reduce(
-    (sum, e) => sum + (e.feed_cost || 0),
-    0
-  );
+  const totalEggs = eggs.reduce((sum, e) => sum + (e.count || 0), 0);
+  const revenue = eggs.reduce((sum, e) => sum + (e.price || 0), 0);
+  const feedCost = eggs.reduce((sum, e) => sum + (e.feed_cost || 0), 0);
 
-  // ❗ NEVER RETURN NULL (prevents white screen)
+  // ❗ NEVER BLOCK UI AGAIN
   if (!user) {
     return (
       <div style={{ padding: 20 }}>
-        ⚠️ {isOffline
-          ? "Offline mode (using saved user)"
-          : "Loading user..."}
+        ⚠️ Please login once while online
       </div>
     );
   }
@@ -147,7 +169,7 @@ function App() {
       <button onClick={addChicken}>Add</button>
 
       <ul>
-        {(chickens || []).map((c) => (
+        {chickens.map((c) => (
           <li key={c.id}>{c.name}</li>
         ))}
       </ul>
@@ -156,7 +178,7 @@ function App() {
 
       <h2>🥚 Eggs History</h2>
       <ul>
-        {(eggs || []).map((e) => (
+        {eggs.map((e) => (
           <li key={e.id}>
             {e.date} - {e.count}
           </li>
