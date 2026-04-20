@@ -133,6 +133,30 @@ export default function App() {
   );
   const profit = totalRevenue - totalFeed;
 
+  // 🔥 TODAY SUMMARY
+  const today = new Date().toISOString().split("T")[0];
+
+  const todaysEggs = eggs.filter((e) => e.date === today);
+
+  const todayTotal = todaysEggs.reduce((sum, e) => sum + e.count, 0);
+
+  const todayRevenue = todaysEggs.reduce(
+    (sum, e) => sum + e.count * (e.price || 0),
+    0
+  );
+
+  const chickenStats: any = {};
+  todaysEggs.forEach((e) => {
+    chickenStats[e.chicken_id] =
+      (chickenStats[e.chicken_id] || 0) + e.count;
+  });
+
+  const bestChickenId = Object.keys(chickenStats).sort(
+    (a, b) => chickenStats[b] - chickenStats[a]
+  )[0];
+
+  const bestChicken = chickens.find((c) => c.id === bestChickenId);
+
   if (!session) {
     return (
       <div style={styles.center}>
@@ -154,9 +178,19 @@ export default function App() {
         <button style={styles.logout} onClick={signOut}>Logout</button>
       </div>
 
+      {/* TODAY CARD */}
+      <div style={{ ...styles.card, background: "#eef2ff" }}>
+        <h3>📅 Today</h3>
+        <p>Eggs: {todayTotal}</p>
+        <p>Revenue: {todayRevenue.toFixed(2)}</p>
+        <p>
+          Best Chicken: {bestChicken ? bestChicken.name : "—"}
+        </p>
+      </div>
+
       {/* Dashboard */}
       <div style={styles.card}>
-        <h3>📊 Dashboard</h3>
+        <h3>📊 Overall</h3>
         <p>Total Eggs: {totalEggs}</p>
         <p>Revenue: {totalRevenue.toFixed(2)}</p>
         <p>Feed Cost: {totalFeed.toFixed(2)}</p>
