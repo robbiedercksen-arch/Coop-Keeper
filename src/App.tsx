@@ -35,7 +35,7 @@ export default function App() {
   const [chickenSex, setChickenSex] = useState("");
   const [chickenStatus, setChickenStatus] = useState("");
 
-  // ✅ SETTINGS (NOW PERSISTENT)
+  // ✅ SETTINGS
   const [eggPrice, setEggPrice] = useState("");
   const [feedCost, setFeedCost] = useState("");
 
@@ -43,7 +43,7 @@ export default function App() {
     fetchEggs();
     fetchFeed();
     fetchChickens();
-    loadSettings(); // 🔥 important
+    loadSettings();
   }, []);
 
   // ================= FETCH =================
@@ -64,7 +64,10 @@ export default function App() {
 
   // ================= SETTINGS =================
   const loadSettings = async () => {
-    const { data } = await supabase.from("settings").select("*").limit(1);
+    const { data } = await supabase
+      .from("settings")
+      .select("*")
+      .limit(1);
 
     if (data && data.length > 0) {
       setEggPrice(data[0].egg_price?.toString() || "");
@@ -73,14 +76,22 @@ export default function App() {
   };
 
   const saveSettings = async (newEggPrice: any, newFeedCost: any) => {
-    // clear existing
-    await supabase.from("settings").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    const safeEggPrice = Number(newEggPrice || 0);
+    const safeFeedCost = Number(newFeedCost || 0);
 
-    // insert new
-    await supabase.from("settings").insert([{
-      egg_price: Number(newEggPrice),
-      feed_cost: Number(newFeedCost)
-    }]);
+    // delete old rows
+    await supabase
+      .from("settings")
+      .delete()
+      .neq("id", "00000000-0000-0000-0000-000000000000");
+
+    // insert new row
+    await supabase.from("settings").insert([
+      {
+        egg_price: safeEggPrice,
+        feed_cost: safeFeedCost
+      }
+    ]);
   };
 
   // ================= ADD =================
@@ -109,14 +120,17 @@ export default function App() {
   };
 
   const addChicken = async () => {
-    if (!chickenName || !chickenBreed || !chickenSex || !chickenStatus) return;
+    if (!chickenName || !chickenBreed || !chickenSex || !chickenStatus)
+      return;
 
-    await supabase.from("chickens").insert([{
-      name: chickenName,
-      breed: chickenBreed,
-      sex: chickenSex,
-      status: chickenStatus
-    }]);
+    await supabase.from("chickens").insert([
+      {
+        name: chickenName,
+        breed: chickenBreed,
+        sex: chickenSex,
+        status: chickenStatus
+      }
+    ]);
 
     setChickenName("");
     setChickenBreed("");
@@ -150,7 +164,9 @@ export default function App() {
 
   const totalEggs = eggsData.reduce((sum, e) => sum + e.count, 0);
   const totalFeed = feedData.reduce((sum, f) => sum + f.amount, 0);
-  const efficiency = totalEggs ? (totalFeed / totalEggs).toFixed(2) : 0;
+  const efficiency = totalEggs
+    ? (totalFeed / totalEggs).toFixed(2)
+    : 0;
 
   const revenue = totalEggs * Number(eggPrice || 0);
   const feedExpense = totalFeed * Number(feedCost || 0);
@@ -158,9 +174,15 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
-      
       {/* Sidebar */}
-      <div style={{ width: "220px", background: "#111827", color: "white", padding: "20px" }}>
+      <div
+        style={{
+          width: "220px",
+          background: "#111827",
+          color: "white",
+          padding: "20px"
+        }}
+      >
         <h2>🐔 Coop Keeper</h2>
         <p onClick={() => setPage("dashboard")}>dashboard</p>
         <p onClick={() => setPage("eggs")}>eggs</p>
@@ -170,7 +192,6 @@ export default function App() {
 
       {/* Main */}
       <div style={{ flex: 1, padding: "20px", background: "#f9fafb" }}>
-
         {/* DASHBOARD */}
         {page === "dashboard" && (
           <>
@@ -200,8 +221,9 @@ export default function App() {
               placeholder="Egg price"
               value={eggPrice}
               onChange={(e) => {
-                setEggPrice(e.target.value);
-                saveSettings(e.target.value, feedCost);
+                const val = e.target.value;
+                setEggPrice(val);
+                saveSettings(val, feedCost);
               }}
             />
 
@@ -209,8 +231,9 @@ export default function App() {
               placeholder="Feed cost"
               value={feedCost}
               onChange={(e) => {
-                setFeedCost(e.target.value);
-                saveSettings(eggPrice, e.target.value);
+                const val = e.target.value;
+                setFeedCost(val);
+                saveSettings(eggPrice, val);
               }}
             />
 
@@ -225,16 +248,30 @@ export default function App() {
           <>
             <h2>Chickens</h2>
 
-            <input placeholder="Name" value={chickenName} onChange={(e) => setChickenName(e.target.value)} />
-            <input placeholder="Breed" value={chickenBreed} onChange={(e) => setChickenBreed(e.target.value)} />
+            <input
+              placeholder="Name"
+              value={chickenName}
+              onChange={(e) => setChickenName(e.target.value)}
+            />
+            <input
+              placeholder="Breed"
+              value={chickenBreed}
+              onChange={(e) => setChickenBreed(e.target.value)}
+            />
 
-            <select value={chickenSex} onChange={(e) => setChickenSex(e.target.value)}>
+            <select
+              value={chickenSex}
+              onChange={(e) => setChickenSex(e.target.value)}
+            >
               <option value="">Sex</option>
               <option>Hen</option>
               <option>Rooster</option>
             </select>
 
-            <select value={chickenStatus} onChange={(e) => setChickenStatus(e.target.value)}>
+            <select
+              value={chickenStatus}
+              onChange={(e) => setChickenStatus(e.target.value)}
+            >
               <option value="">Status</option>
               <option>Alive</option>
               <option>Sold</option>
@@ -254,12 +291,22 @@ export default function App() {
         {page === "eggs" && (
           <>
             <h2>Eggs</h2>
-            <input type="date" value={eggDate} onChange={(e) => setEggDate(e.target.value)} />
-            <input type="number" value={eggCount} onChange={(e) => setEggCount(e.target.value)} />
+            <input
+              type="date"
+              value={eggDate}
+              onChange={(e) => setEggDate(e.target.value)}
+            />
+            <input
+              type="number"
+              value={eggCount}
+              onChange={(e) => setEggCount(e.target.value)}
+            />
             <button onClick={addEggs}>Add Eggs</button>
 
             {eggsData.map((e, i) => (
-              <div key={i}>{e.date} - {e.count}</div>
+              <div key={i}>
+                {e.date} - {e.count}
+              </div>
             ))}
           </>
         )}
@@ -268,16 +315,25 @@ export default function App() {
         {page === "feed" && (
           <>
             <h2>Feed</h2>
-            <input type="date" value={feedDate} onChange={(e) => setFeedDate(e.target.value)} />
-            <input type="number" value={feedAmount} onChange={(e) => setFeedAmount(e.target.value)} />
+            <input
+              type="date"
+              value={feedDate}
+              onChange={(e) => setFeedDate(e.target.value)}
+            />
+            <input
+              type="number"
+              value={feedAmount}
+              onChange={(e) => setFeedAmount(e.target.value)}
+            />
             <button onClick={addFeed}>Add Feed</button>
 
             {feedData.map((f, i) => (
-              <div key={i}>{f.date} - {f.amount} kg</div>
+              <div key={i}>
+                {f.date} - {f.amount} kg
+              </div>
             ))}
           </>
         )}
-
       </div>
     </div>
   );
