@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-/* 🔑 ADD YOUR SUPABASE KEYS HERE */
+// 🔑 YOUR SUPABASE DETAILS
 const supabase = createClient(
-  "https://gzoxsnsbzjbmatdxwyhh.supabase.co",
-  "sb_publishable_EYpEiEJ_Q4ElsyvyI1ZDtw_q9lOgU_A"
+  "https://gzoxsnsbzbjmbatdxwyhh.supabase.co",
+  "YOUR_PUBLIC_KEY_HERE"
 );
 
-/* ================= TYPES ================= */
 type Chicken = {
   id?: string;
   name: string;
@@ -16,9 +15,8 @@ type Chicken = {
   status: string;
 };
 
-/* ================= APP ================= */
 export default function App() {
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState("chickens");
   const [chickens, setChickens] = useState<Chicken[]>([]);
 
   const [name, setName] = useState("");
@@ -26,23 +24,17 @@ export default function App() {
   const [sex, setSex] = useState("");
   const [status, setStatus] = useState("");
 
-  /* ================= LOAD DATA ================= */
+  // 📥 LOAD chickens from Supabase
   useEffect(() => {
     fetchChickens();
   }, []);
 
   const fetchChickens = async () => {
     const { data, error } = await supabase.from("chickens").select("*");
-
-    if (error) {
-      console.error("Error fetching chickens:", error);
-      return;
-    }
-
-    if (data) setChickens(data);
+    if (!error && data) setChickens(data);
   };
 
-  /* ================= ADD ================= */
+  // ➕ ADD chicken
   const addChicken = async () => {
     if (!name || !breed || !sex || !status) return;
 
@@ -50,155 +42,73 @@ export default function App() {
       { name, breed, sex, status }
     ]);
 
-    if (error) {
-      console.error("Error adding chicken:", error);
-      return;
+    if (!error) {
+      setName("");
+      setBreed("");
+      setSex("");
+      setStatus("");
+      fetchChickens();
     }
-
-    setName("");
-    setBreed("");
-    setSex("");
-    setStatus("");
-
-    fetchChickens();
   };
 
-  /* ================= DELETE ================= */
-  const deleteChicken = async (id?: string) => {
-    if (!id) return;
-
+  // ❌ DELETE chicken
+  const deleteChicken = async (id: string) => {
     await supabase.from("chickens").delete().eq("id", id);
     fetchChickens();
   };
 
-  /* ================= UI ================= */
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
-
-      {/* SIDEBAR */}
+      
+      {/* Sidebar */}
       <div style={{
         width: "220px",
         background: "#111827",
         color: "white",
         padding: "20px"
       }}>
-        <h2 style={{ marginBottom: "20px" }}>🐔 Coop Keeper</h2>
+        <h2>🐔 Coop Keeper</h2>
 
-        {["dashboard", "chickens"].map((p) => (
-          <div
-            key={p}
-            onClick={() => setPage(p)}
-            style={{
-              marginBottom: "10px",
-              padding: "10px",
-              cursor: "pointer",
-              borderRadius: "6px",
-              background: page === p ? "#374151" : "transparent"
-            }}
-          >
-            {p}
-          </div>
-        ))}
+        <p onClick={() => setPage("dashboard")} style={{ cursor: "pointer" }}>dashboard</p>
+        <p onClick={() => setPage("chickens")} style={{ cursor: "pointer" }}>chickens</p>
+        <p onClick={() => setPage("eggs")} style={{ cursor: "pointer" }}>eggs</p>
+        <p onClick={() => setPage("feed")} style={{ cursor: "pointer" }}>feed</p>
       </div>
 
-      {/* MAIN CONTENT */}
-      <div style={{ flex: 1, padding: "30px", background: "#f9fafb" }}>
+      {/* Main */}
+      <div style={{ flex: 1, padding: "30px" }}>
 
-        {/* DASHBOARD */}
-        {page === "dashboard" && (
-          <>
-            <h1>Dashboard</h1>
-            <p>Total Chickens: {chickens.length}</p>
-          </>
-        )}
-
-        {/* CHICKENS */}
+        {/* CHICKENS PAGE */}
         {page === "chickens" && (
           <>
             <h1>Chickens</h1>
 
-            {/* INPUTS */}
-            <div style={{ marginBottom: "15px" }}>
-              <input
-                placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                style={{ padding: "10px", marginRight: "10px" }}
-              />
-              <input
-                placeholder="Breed"
-                value={breed}
-                onChange={(e) => setBreed(e.target.value)}
-                style={{ padding: "10px", marginRight: "10px" }}
-              />
-              <input
-                placeholder="Sex (Hen/Rooster)"
-                value={sex}
-                onChange={(e) => setSex(e.target.value)}
-                style={{ padding: "10px", marginRight: "10px" }}
-              />
-              <input
-                placeholder="Status (Alive/Sold)"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                style={{ padding: "10px", marginRight: "10px" }}
-              />
-            </div>
+            <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+            <input placeholder="Breed" value={breed} onChange={(e) => setBreed(e.target.value)} />
+            <input placeholder="Sex (Hen/Rooster)" value={sex} onChange={(e) => setSex(e.target.value)} />
+            <input placeholder="Status (Alive/Sold)" value={status} onChange={(e) => setStatus(e.target.value)} />
 
-            {/* BUTTON */}
-            <button
-              onClick={addChicken}
-              style={{
-                padding: "10px 15px",
-                background: "#2563eb",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                marginBottom: "20px"
-              }}
-            >
-              Add Chicken
-            </button>
+            <br /><br />
 
-            {/* LIST */}
+            <button onClick={addChicken}>Add Chicken</button>
+
             <div>
               {chickens.map((c) => (
-                <div
-                  key={c.id}
-                  style={{
-                    background: "white",
-                    padding: "15px",
-                    marginBottom: "10px",
-                    borderRadius: "8px",
-                    boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
-                  }}
-                >
+                <div key={c.id}>
                   <strong>{c.name}</strong><br />
-                  Breed: {c.breed}<br />
-                  Sex: {c.sex}<br />
-                  Status: {c.status}
-
-                  <br /><br />
-
-                  <button
-                    onClick={() => deleteChicken(c.id)}
-                    style={{
-                      padding: "5px 10px",
-                      background: "red",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer"
-                    }}
-                  >
-                    Delete
-                  </button>
+                  {c.breed} | {c.sex} | {c.status}
+                  <br />
+                  <button onClick={() => deleteChicken(c.id!)}>Delete</button>
                 </div>
               ))}
             </div>
           </>
         )}
+
+        {/* OTHER PAGES */}
+        {page === "dashboard" && <h1>Dashboard (next step)</h1>}
+        {page === "eggs" && <h1>Eggs (next)</h1>}
+        {page === "feed" && <h1>Feed (next)</h1>}
 
       </div>
     </div>
