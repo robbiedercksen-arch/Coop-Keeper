@@ -4,32 +4,27 @@ import { supabase } from "./supabaseClient";
 function App() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState("");
 
-  // Load user session
+  // Load user
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const { data, error } = await supabase.auth.getUser();
+        const { data } = await supabase.auth.getUser();
 
-        if (error) {
-          console.error("User fetch error:", error);
-          setUser(null);
+        if (data?.user) {
+          setUser(data.user);
+          localStorage.setItem("user", JSON.stringify(data.user));
         } else {
-          setUser(data?.user || null);
-
-          // Save user locally (helps offline)
-          if (data?.user) {
-            localStorage.setItem("user", JSON.stringify(data.user));
+          const localUser = localStorage.getItem("user");
+          if (localUser) {
+            setUser(JSON.parse(localUser));
           }
         }
-      } catch (err) {
-        console.log("Offline or error, loading from localStorage");
-
+      } catch {
         const localUser = localStorage.getItem("user");
         if (localUser) {
           setUser(JSON.parse(localUser));
-        } else {
-          setUser(null);
         }
       } finally {
         setLoading(false);
@@ -39,27 +34,60 @@ function App() {
     loadUser();
   }, []);
 
-  // Loading state
-  if (loading) {
-    return <div style={{ padding: 20 }}>Loading user...</div>;
-  }
+  // Login function
+  const handleLogin = async () => {
+    if (!email) return alert("Enter email");
 
-  // Not logged in
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+    });
+
+    if (error) {
+      alert("Login failed");
+    } else {
+      alert("Check your email for login link");
+    }
+  };
+
+  // Logout
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
+  if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
+
+  // LOGIN SCREEN
   if (!user) {
     return (
       <div style={{ padding: 20 }}>
-        ⚠️ Please login once while online
+        <h2>🐔 Coop Keeper Login</h2>
+
+        <input
+          type="email"
+          placeholder="Enter email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={{ padding: 10, marginRight: 10 }}
+        />
+
+        <button onClick={handleLogin}>Login</button>
+
+        <p style={{ marginTop: 20 }}>
+          ⚠️ You must login once while online
+        </p>
       </div>
     );
   }
 
-  // Main App UI
+  // MAIN APP
   return (
     <div style={{ padding: 20 }}>
       <h1>🐔 Coop Keeper</h1>
       <p>Welcome back!</p>
 
-      {/* Your app content will go here */}
+      <button onClick={handleLogout}>Logout</button>
     </div>
   );
 }
