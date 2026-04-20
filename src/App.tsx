@@ -28,6 +28,10 @@ export default function App() {
   const [feedDate, setFeedDate] = useState("");
   const [feedAmount, setFeedAmount] = useState("");
 
+  // Profit inputs
+  const [eggPrice, setEggPrice] = useState("");
+  const [feedCost, setFeedCost] = useState("");
+
   useEffect(() => {
     fetchEggs();
     fetchFeed();
@@ -67,7 +71,7 @@ export default function App() {
     fetchFeed();
   };
 
-  // Combine data for dashboard
+  // Combine last 7 days
   const getCombinedData = () => {
     const days: any = {};
 
@@ -94,10 +98,16 @@ export default function App() {
     return Object.values(days);
   };
 
-  // Totals + efficiency
+  // Totals
   const totalEggs = eggsData.reduce((sum, e) => sum + e.count, 0);
   const totalFeed = feedData.reduce((sum, f) => sum + f.amount, 0);
+
   const efficiency = totalEggs ? (totalFeed / totalEggs).toFixed(2) : 0;
+
+  // 💰 Profit calculation
+  const revenue = totalEggs * Number(eggPrice || 0);
+  const feedExpense = totalFeed * Number(feedCost || 0);
+  const profit = revenue - feedExpense;
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
@@ -138,6 +148,29 @@ export default function App() {
             <h3>Total Eggs: {totalEggs}</h3>
             <h3>Total Feed: {totalFeed} kg</h3>
             <h3>Feed per Egg: {efficiency} kg</h3>
+
+            <hr />
+
+            <h2>💰 Profit Calculator</h2>
+
+            <input
+              type="number"
+              placeholder="Egg price (per egg)"
+              value={eggPrice}
+              onChange={(e) => setEggPrice(e.target.value)}
+              style={{ marginRight: "10px" }}
+            />
+
+            <input
+              type="number"
+              placeholder="Feed cost (per kg)"
+              value={feedCost}
+              onChange={(e) => setFeedCost(e.target.value)}
+            />
+
+            <h3>Revenue: {revenue.toFixed(2)}</h3>
+            <h3>Feed Cost: {feedExpense.toFixed(2)}</h3>
+            <h2>Profit: {profit.toFixed(2)}</h2>
           </>
         )}
 
