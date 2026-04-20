@@ -9,7 +9,6 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-// ✅ YOUR SUPABASE (auto-filled)
 const supabase = createClient(
   "https://gzoxsnsbzjbmatdxwyhh.supabase.co",
   "sb_publishable_EYpEiEJ_Q4ElsyvyI1ZDtw_q9lOgU_A"
@@ -23,44 +22,65 @@ export default function App() {
   const [eggDate, setEggDate] = useState("");
   const [eggCount, setEggCount] = useState("");
 
-  // Load eggs
+  // Feed
+  const [feedData, setFeedData] = useState<any[]>([]);
+  const [feedDate, setFeedDate] = useState("");
+  const [feedAmount, setFeedAmount] = useState("");
+
   useEffect(() => {
     fetchEggs();
+    fetchFeed();
   }, []);
 
   const fetchEggs = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("eggs")
       .select("*")
       .order("date", { ascending: true });
 
-    if (!error && data) {
-      setEggsData(data);
-    }
+    if (data) setEggsData(data);
   };
 
-  // Add eggs
+  const fetchFeed = async () => {
+    const { data } = await supabase
+      .from("feed")
+      .select("*")
+      .order("date", { ascending: true });
+
+    if (data) setFeedData(data);
+  };
+
   const addEggs = async () => {
     if (!eggDate || !eggCount) return;
 
     const { error } = await supabase.from("eggs").insert([
-      {
-        date: eggDate,
-        count: Number(eggCount)
-      }
+      { date: eggDate, count: Number(eggCount) }
     ]);
 
-    if (error) {
-      alert("Egg error: " + error.message);
-    } else {
+    if (error) alert(error.message);
+    else {
       setEggDate("");
       setEggCount("");
       fetchEggs();
     }
   };
 
-  // Prepare chart data
-  const getLast7Days = () => {
+  const addFeed = async () => {
+    if (!feedDate || !feedAmount) return;
+
+    const { error } = await supabase.from("feed").insert([
+      { date: feedDate, amount: Number(feedAmount) }
+    ]);
+
+    if (error) alert(error.message);
+    else {
+      setFeedDate("");
+      setFeedAmount("");
+      fetchFeed();
+    }
+  };
+
+  const getLast7DaysEggs = () => {
     const days: any = {};
 
     for (let i = 6; i >= 0; i--) {
@@ -94,12 +114,9 @@ export default function App() {
       }}>
         <h2>🐔 Coop Keeper</h2>
 
-        <p style={{ cursor: "pointer" }} onClick={() => setPage("dashboard")}>
-          dashboard
-        </p>
-        <p style={{ cursor: "pointer" }} onClick={() => setPage("eggs")}>
-          eggs
-        </p>
+        <p onClick={() => setPage("dashboard")}>dashboard</p>
+        <p onClick={() => setPage("eggs")}>eggs</p>
+        <p onClick={() => setPage("feed")}>feed</p>
       </div>
 
       {/* Main */}
@@ -111,63 +128,42 @@ export default function App() {
             <h2>Egg Production (Last 7 Days)</h2>
 
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={getLast7Days()}>
+              <LineChart data={getLast7DaysEggs()}>
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="eggs" />
+                <Line dataKey="eggs" />
               </LineChart>
             </ResponsiveContainer>
           </>
         )}
 
-        {/* EGGS PAGE */}
+        {/* EGGS */}
         {page === "eggs" && (
           <>
             <h2>Eggs</h2>
 
-            <div style={{ marginBottom: "15px" }}>
-              <input
-                type="date"
-                value={eggDate}
-                onChange={(e) => setEggDate(e.target.value)}
-                style={{ padding: "10px", marginRight: "10px" }}
-              />
+            <input type="date" value={eggDate} onChange={(e) => setEggDate(e.target.value)} />
+            <input type="number" value={eggCount} onChange={(e) => setEggCount(e.target.value)} />
+            <button onClick={addEggs}>Add Eggs</button>
 
-              <input
-                type="number"
-                placeholder="Egg count"
-                value={eggCount}
-                onChange={(e) => setEggCount(e.target.value)}
-                style={{ padding: "10px", marginRight: "10px" }}
-              />
-            </div>
-
-            <button
-              onClick={addEggs}
-              style={{
-                padding: "10px 15px",
-                background: "#2563eb",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                marginBottom: "20px"
-              }}
-            >
-              Add Eggs
-            </button>
-
-            {/* List */}
             {eggsData.map((e, i) => (
-              <div key={i} style={{
-                background: "white",
-                padding: "10px",
-                marginBottom: "10px",
-                borderRadius: "6px"
-              }}>
-                {e.date} - {e.count} eggs
-              </div>
+              <div key={i}>{e.date} - {e.count}</div>
+            ))}
+          </>
+        )}
+
+        {/* FEED */}
+        {page === "feed" && (
+          <>
+            <h2>Feed</h2>
+
+            <input type="date" value={feedDate} onChange={(e) => setFeedDate(e.target.value)} />
+            <input type="number" placeholder="kg" value={feedAmount} onChange={(e) => setFeedAmount(e.target.value)} />
+            <button onClick={addFeed}>Add Feed</button>
+
+            {feedData.map((f, i) => (
+              <div key={i}>{f.date} - {f.amount} kg</div>
             ))}
           </>
         )}
