@@ -18,25 +18,21 @@ const supabase = createClient(
 export default function App() {
   const [page, setPage] = useState("dashboard");
 
-  // Eggs
   const [eggsData, setEggsData] = useState<any[]>([]);
   const [eggDate, setEggDate] = useState("");
   const [eggCount, setEggCount] = useState("");
   const [selectedChicken, setSelectedChicken] = useState("");
 
-  // Feed
   const [feedData, setFeedData] = useState<any[]>([]);
   const [feedDate, setFeedDate] = useState("");
   const [feedAmount, setFeedAmount] = useState("");
 
-  // Chickens
   const [chickens, setChickens] = useState<any[]>([]);
   const [chickenName, setChickenName] = useState("");
   const [chickenBreed, setChickenBreed] = useState("");
   const [chickenSex, setChickenSex] = useState("");
   const [chickenStatus, setChickenStatus] = useState("");
 
-  // Settings
   const [eggPrice, setEggPrice] = useState("");
   const [feedCost, setFeedCost] = useState("");
 
@@ -47,7 +43,6 @@ export default function App() {
     loadSettings();
   }, []);
 
-  // ================= FETCH =================
   const fetchEggs = async () => {
     const { data } = await supabase.from("eggs").select("*");
     if (data) setEggsData(data);
@@ -63,10 +58,8 @@ export default function App() {
     if (data) setChickens(data);
   };
 
-  // ================= SETTINGS =================
   const loadSettings = async () => {
     const { data } = await supabase.from("settings").select("*").limit(1);
-
     if (data && data.length > 0) {
       setEggPrice(data[0].egg_price?.toString() || "");
       setFeedCost(data[0].feed_cost?.toString() || "");
@@ -74,11 +67,7 @@ export default function App() {
   };
 
   const saveSettings = async (newEggPrice: any, newFeedCost: any) => {
-    await supabase
-      .from("settings")
-      .delete()
-      .neq("id", "00000000-0000-0000-0000-000000000000");
-
+    await supabase.from("settings").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     await supabase.from("settings").insert([
       {
         egg_price: Number(newEggPrice || 0),
@@ -87,7 +76,6 @@ export default function App() {
     ]);
   };
 
-  // ================= ADD =================
   const addEggs = async () => {
     if (!eggDate || !eggCount || !selectedChicken) {
       alert("Select chicken + date + eggs");
@@ -139,7 +127,36 @@ export default function App() {
     fetchChickens();
   };
 
-  // ================= DASHBOARD =================
+  // ===== PERFORMANCE LOGIC =====
+  const getChickenStats = () => {
+    const stats: any = {};
+
+    eggsData.forEach((e) => {
+      if (!e.chicken_id) return;
+
+      if (!stats[e.chicken_id]) stats[e.chicken_id] = 0;
+      stats[e.chicken_id] += e.count;
+    });
+
+    return stats;
+  };
+
+  const chickenStats = getChickenStats();
+
+  let topChicken: any = null;
+  let worstChicken: any = null;
+
+  Object.entries(chickenStats).forEach(([id, count]: any) => {
+    if (!topChicken || count > topChicken.count) {
+      topChicken = { id, count };
+    }
+
+    if (!worstChicken || count < worstChicken.count) {
+      worstChicken = { id, count };
+    }
+  });
+
+  // ===== DASHBOARD =====
   const getCombinedData = () => {
     const days: any = {};
 
@@ -164,7 +181,6 @@ export default function App() {
 
   const totalEggs = eggsData.reduce((sum, e) => sum + e.count, 0);
   const totalFeed = feedData.reduce((sum, f) => sum + f.amount, 0);
-  const efficiency = totalEggs ? (totalFeed / totalEggs).toFixed(2) : 0;
 
   const revenue = totalEggs * Number(eggPrice || 0);
   const feedExpense = totalFeed * Number(feedCost || 0);
@@ -172,7 +188,6 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
-      {/* Sidebar */}
       <div style={{ width: "220px", background: "#111827", color: "white", padding: "20px" }}>
         <h2>🐔 Coop Keeper</h2>
         <p onClick={() => setPage("dashboard")}>dashboard</p>
@@ -181,9 +196,7 @@ export default function App() {
         <p onClick={() => setPage("chickens")}>chickens</p>
       </div>
 
-      {/* Main */}
-      <div style={{ flex: 1, padding: "20px", background: "#f9fafb" }}>
-        {/* DASHBOARD */}
+      <div style={{ flex: 1, padding: "20px" }}>
         {page === "dashboard" && (
           <>
             <h2>Performance</h2>
@@ -199,10 +212,30 @@ export default function App() {
               </LineChart>
             </ResponsiveContainer>
 
-            <h3>Total Chickens: {chickens.length}</h3>
             <h3>Total Eggs: {totalEggs}</h3>
             <h3>Total Feed: {totalFeed} kg</h3>
-            <h3>Feed per Egg: {efficiency} kg</h3>
+
+            <h2>🏆 Chicken Performance</h2>
+
+            <p>
+              Top Chicken:{" "}
+              {topChicken
+                ? chickens.find((c) => c.id === topChicken.id)?.name +
+                  " (" +
+                  topChicken.count +
+                  " eggs)"
+                : "N/A"}
+            </p>
+
+            <p>
+              Worst Chicken:{" "}
+              {worstChicken
+                ? chickens.find((c) => c.id === worstChicken.id)?.name +
+                  " (" +
+                  worstChicken.count +
+                  " eggs)"
+                : "N/A"}
+            </p>
 
             <hr />
 
@@ -228,43 +261,10 @@ export default function App() {
               }}
             />
 
-            <h3>Revenue: {revenue.toFixed(2)}</h3>
-            <h3>Feed Cost: {feedExpense.toFixed(2)}</h3>
-            <h2>Profit: {profit.toFixed(2)}</h2>
+            <h3>Profit: {profit.toFixed(2)}</h3>
           </>
         )}
 
-        {/* CHICKENS */}
-        {page === "chickens" && (
-          <>
-            <h2>Chickens</h2>
-
-            <input placeholder="Name" value={chickenName} onChange={(e) => setChickenName(e.target.value)} />
-            <input placeholder="Breed" value={chickenBreed} onChange={(e) => setChickenBreed(e.target.value)} />
-
-            <select value={chickenSex} onChange={(e) => setChickenSex(e.target.value)}>
-              <option value="">Sex</option>
-              <option>Hen</option>
-              <option>Rooster</option>
-            </select>
-
-            <select value={chickenStatus} onChange={(e) => setChickenStatus(e.target.value)}>
-              <option value="">Status</option>
-              <option>Alive</option>
-              <option>Sold</option>
-            </select>
-
-            <button onClick={addChicken}>Add Chicken</button>
-
-            {chickens.map((c, i) => (
-              <div key={i}>
-                {c.name} | {c.breed} | {c.sex} | {c.status}
-              </div>
-            ))}
-          </>
-        )}
-
-        {/* EGGS */}
         {page === "eggs" && (
           <>
             <h2>Eggs</h2>
@@ -295,7 +295,6 @@ export default function App() {
           </>
         )}
 
-        {/* FEED */}
         {page === "feed" && (
           <>
             <h2>Feed</h2>
@@ -308,6 +307,35 @@ export default function App() {
             {feedData.map((f, i) => (
               <div key={i}>
                 {f.date} - {f.amount} kg
+              </div>
+            ))}
+          </>
+        )}
+
+        {page === "chickens" && (
+          <>
+            <h2>Chickens</h2>
+
+            <input placeholder="Name" value={chickenName} onChange={(e) => setChickenName(e.target.value)} />
+            <input placeholder="Breed" value={chickenBreed} onChange={(e) => setChickenBreed(e.target.value)} />
+
+            <select value={chickenSex} onChange={(e) => setChickenSex(e.target.value)}>
+              <option value="">Sex</option>
+              <option>Hen</option>
+              <option>Rooster</option>
+            </select>
+
+            <select value={chickenStatus} onChange={(e) => setChickenStatus(e.target.value)}>
+              <option value="">Status</option>
+              <option>Alive</option>
+              <option>Sold</option>
+            </select>
+
+            <button onClick={addChicken}>Add Chicken</button>
+
+            {chickens.map((c, i) => (
+              <div key={i}>
+                {c.name} | {c.breed} | {c.sex} | {c.status}
               </div>
             ))}
           </>
