@@ -74,7 +74,10 @@ export default function App() {
   };
 
   const saveSettings = async (newEggPrice: any, newFeedCost: any) => {
-    await supabase.from("settings").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    await supabase
+      .from("settings")
+      .delete()
+      .neq("id", "00000000-0000-0000-0000-000000000000");
 
     await supabase.from("settings").insert([
       {
@@ -280,11 +283,15 @@ export default function App() {
 
             <button onClick={addEggs}>Add Eggs</button>
 
-            {eggsData.map((e, i) => (
-              <div key={i}>
-                {e.date} - {e.count}
-              </div>
-            ))}
+            {eggsData.map((e, i) => {
+              const chicken = chickens.find(c => c.id === e.chicken_id);
+
+              return (
+                <div key={i}>
+                  {e.date} - {chicken ? chicken.name : "Unknown"} - {e.count}
+                </div>
+              );
+            })}
           </>
         )}
 
