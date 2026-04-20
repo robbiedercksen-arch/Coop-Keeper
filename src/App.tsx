@@ -23,6 +23,9 @@ export default function App() {
   const [eggPrice, setEggPrice] = useState(0);
   const [feedCost, setFeedCost] = useState(0);
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editCount, setEditCount] = useState(0);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -92,6 +95,21 @@ export default function App() {
     fetchEggs();
   }
 
+  async function deleteEgg(id: string) {
+    await supabase.from("eggs").delete().eq("id", id);
+    fetchEggs();
+  }
+
+  async function updateEgg(id: string) {
+    await supabase
+      .from("eggs")
+      .update({ count: editCount })
+      .eq("id", id);
+
+    setEditingId(null);
+    fetchEggs();
+  }
+
   async function signUp() {
     await supabase.auth.signUp({ email, password });
   }
@@ -105,180 +123,102 @@ export default function App() {
   }
 
   const totalEggs = eggs.reduce((sum, e) => sum + e.count, 0);
-  const totalRevenue = eggs.reduce(
-    (sum, e) => sum + e.count * (e.price || 0),
-    0
-  );
-  const totalFeed = eggs.reduce(
-    (sum, e) => sum + (e.feed_cost || 0),
-    0
-  );
-  const profit = totalRevenue - totalFeed;
 
   if (!session) {
     return (
-      <div style={styles.center}>
-        <div style={styles.card}>
-          <h2>🐔 Coop Keeper</h2>
-          <input style={styles.input} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-          <input style={styles.input} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-          <button style={styles.button} onClick={signIn}>Login</button>
-          <button style={styles.buttonSecondary} onClick={signUp}>Sign Up</button>
-        </div>
+      <div style={{ padding: 20 }}>
+        <h2>Login</h2>
+        <input onChange={(e) => setEmail(e.target.value)} />
+        <input type="password" onChange={(e) => setPassword(e.target.value)} />
+        <button onClick={signIn}>Login</button>
+        <button onClick={signUp}>Sign Up</button>
       </div>
     );
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h2>🐔 Coop Keeper</h2>
-        <button style={styles.logout} onClick={signOut}>Logout</button>
-      </div>
+    <div style={{ padding: 20 }}>
+      <h2>🐔 Coop Keeper</h2>
+      <button onClick={signOut}>Logout</button>
 
-      {/* Dashboard */}
-      <div style={styles.card}>
-        <h3>📊 Dashboard</h3>
-        <p>Total Eggs: {totalEggs}</p>
-        <p>Revenue: {totalRevenue.toFixed(2)}</p>
-        <p>Feed Cost: {totalFeed.toFixed(2)}</p>
-        <p><b>Profit: {profit.toFixed(2)}</b></p>
-      </div>
+      <h3>📊 Total Eggs: {totalEggs}</h3>
 
-      {/* Chickens */}
-      <div style={styles.card}>
-        <h3>🐔 Chickens</h3>
-        <div style={styles.row}>
-          <input
-            style={styles.input}
-            placeholder="Chicken name"
-            value={newChicken}
-            onChange={(e) => setNewChicken(e.target.value)}
-          />
-          <button style={styles.buttonSmall} onClick={addChicken}>Add</button>
-        </div>
+      <hr />
 
+      <h3>🐔 Chickens</h3>
+      <input
+        placeholder="Chicken name"
+        value={newChicken}
+        onChange={(e) => setNewChicken(e.target.value)}
+      />
+      <button onClick={addChicken}>Add Chicken</button>
+
+      <ul>
         {chickens.map((c) => (
-          <div key={c.id} style={styles.listItem}>
+          <li key={c.id}>
             {c.name}
-            <button style={styles.delete} onClick={() => deleteChicken(c.id)}>❌</button>
-          </div>
+            <button onClick={() => deleteChicken(c.id)}>❌</button>
+          </li>
         ))}
-      </div>
+      </ul>
 
-      {/* Add Eggs */}
-      <div style={styles.card}>
-        <h3>🥚 Add Eggs</h3>
+      <hr />
 
-        <select style={styles.input} onChange={(e) => setSelectedChicken(e.target.value)}>
-          <option value="">Select Chicken</option>
-          {chickens.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+      <h3>Add Eggs</h3>
 
-        <input style={styles.input} type="date" onChange={(e) => setDate(e.target.value)} />
-        <input style={styles.input} type="number" placeholder="Egg count" onChange={(e) => setCount(Number(e.target.value))} />
-        <input style={styles.input} type="number" placeholder="Egg price" onChange={(e) => setEggPrice(Number(e.target.value))} />
-        <input style={styles.input} type="number" placeholder="Feed cost" onChange={(e) => setFeedCost(Number(e.target.value))} />
+      <select onChange={(e) => setSelectedChicken(e.target.value)}>
+        <option value="">Select Chicken</option>
+        {chickens.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
 
-        <button style={styles.button} onClick={addEggs}>Add Entry</button>
-      </div>
+      <input type="date" onChange={(e) => setDate(e.target.value)} />
+      <input
+        type="number"
+        placeholder="Egg count"
+        onChange={(e) => setCount(Number(e.target.value))}
+      />
 
-      {/* History */}
-      <div style={styles.card}>
-        <h3>📜 History</h3>
-        {eggs.map((e, i) => {
-          const chicken = chickens.find((c) => c.id === e.chicken_id);
-          return (
-            <div key={i} style={styles.listItem}>
-              {e.date} - {chicken?.name || "Unknown"} - {e.count}
-            </div>
-          );
-        })}
-      </div>
+      <button onClick={addEggs}>Add Entry</button>
+
+      <hr />
+
+      <h3>📜 History</h3>
+
+      {eggs.map((e) => {
+        const chicken = chickens.find((c) => c.id === e.chicken_id);
+
+        return (
+          <div key={e.id} style={{ marginBottom: 10 }}>
+            {editingId === e.id ? (
+              <>
+                <input
+                  type="number"
+                  value={editCount}
+                  onChange={(ev) => setEditCount(Number(ev.target.value))}
+                />
+                <button onClick={() => updateEgg(e.id)}>Save</button>
+              </>
+            ) : (
+              <>
+                {e.date} - {chicken?.name || "Unknown"} - {e.count}
+                <button
+                  onClick={() => {
+                    setEditingId(e.id);
+                    setEditCount(e.count);
+                  }}
+                >
+                  ✏️
+                </button>
+                <button onClick={() => deleteEgg(e.id)}>❌</button>
+              </>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
-
-const styles: any = {
-  container: {
-    maxWidth: 500,
-    margin: "auto",
-    padding: 15,
-    fontFamily: "Arial",
-    background: "#f3f4f6",
-    minHeight: "100vh",
-  },
-  center: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-    background: "#f3f4f6",
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
-  card: {
-    background: "white",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
-  },
-  input: {
-    width: "100%",
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 6,
-    border: "1px solid #ccc",
-  },
-  button: {
-    width: "100%",
-    padding: 12,
-    background: "#4f46e5",
-    color: "white",
-    border: "none",
-    borderRadius: 6,
-  },
-  buttonSmall: {
-    padding: 10,
-    background: "#4f46e5",
-    color: "white",
-    border: "none",
-    borderRadius: 6,
-    marginLeft: 10,
-  },
-  buttonSecondary: {
-    width: "100%",
-    padding: 12,
-    background: "#ddd",
-    border: "none",
-    borderRadius: 6,
-    marginTop: 10,
-  },
-  logout: {
-    padding: 8,
-    background: "#ef4444",
-    color: "white",
-    border: "none",
-    borderRadius: 6,
-  },
-  listItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    padding: 8,
-    borderBottom: "1px solid #eee",
-  },
-  delete: {
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-  },
-  row: {
-    display: "flex",
-  },
-};
