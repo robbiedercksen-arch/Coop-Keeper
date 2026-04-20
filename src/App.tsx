@@ -1,131 +1,91 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
 
-// 🔑 PUT YOUR KEY HERE
+// ✅ YOUR SUPABASE (auto-filled)
 const supabase = createClient(
   "https://gzoxsnsbzjbmatdxwyhh.supabase.co",
   "sb_publishable_EYpEiEJ_Q4ElsyvyI1ZDtw_q9lOgU_A"
 );
 
-type Chicken = {
-  id?: string;
-  name: string;
-  breed: string;
-  sex: string;
-  status: string;
-};
-
-type Egg = {
-  id?: string;
-  date: string;
-  count: number;
-};
-
 export default function App() {
-  const [page, setPage] = useState("chickens");
+  const [page, setPage] = useState("dashboard");
 
-  const [chickens, setChickens] = useState<Chicken[]>([]);
-  const [eggs, setEggs] = useState<Egg[]>([]);
-
-  const [name, setName] = useState("");
-  const [breed, setBreed] = useState("");
-  const [sex, setSex] = useState("");
-  const [status, setStatus] = useState("");
-
+  // Eggs
+  const [eggsData, setEggsData] = useState<any[]>([]);
   const [eggDate, setEggDate] = useState("");
   const [eggCount, setEggCount] = useState("");
 
-  // 🚀 LOAD DATA
+  // Load eggs
   useEffect(() => {
-    fetchChickens();
     fetchEggs();
   }, []);
-
-  const fetchChickens = async () => {
-    const { data, error } = await supabase.from("chickens").select("*");
-    if (error) {
-      console.log("Chicken load error:", error);
-      alert(error.message);
-    }
-    if (data) setChickens(data);
-  };
 
   const fetchEggs = async () => {
     const { data, error } = await supabase
       .from("eggs")
       .select("*")
-      .order("date", { ascending: false });
+      .order("date", { ascending: true });
 
-    if (error) {
-      console.log("Egg load error:", error);
-      alert(error.message);
+    if (!error && data) {
+      setEggsData(data);
     }
-
-    if (data) setEggs(data);
   };
 
-  // ➕ ADD CHICKEN
-  const addChicken = async () => {
-    if (!name || !breed || !sex || !status) return;
-
-    const { error } = await supabase.from("chickens").insert([
-      { name, breed, sex, status }
-    ]);
-
-    if (error) {
-      alert("Error: " + error.message);
-      return;
-    }
-
-    setName("");
-    setBreed("");
-    setSex("");
-    setStatus("");
-    fetchChickens();
-  };
-
-  // ❌ DELETE CHICKEN
-  const deleteChicken = async (id: string) => {
-    const { error } = await supabase.from("chickens").delete().eq("id", id);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    fetchChickens();
-  };
-
-  // 🥚 ADD EGGS (FIXED)
+  // Add eggs
   const addEggs = async () => {
-    if (!eggDate || !eggCount) {
-      alert("Please enter date and count");
-      return;
-    }
+    if (!eggDate || !eggCount) return;
 
-    const { data, error } = await supabase.from("eggs").insert([
+    const { error } = await supabase.from("eggs").insert([
       {
         date: eggDate,
         count: Number(eggCount)
       }
     ]);
 
-    console.log("Egg insert:", data, error);
-
     if (error) {
       alert("Egg error: " + error.message);
-      return;
+    } else {
+      setEggDate("");
+      setEggCount("");
+      fetchEggs();
+    }
+  };
+
+  // Prepare chart data
+  const getLast7Days = () => {
+    const days: any = {};
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split("T")[0];
+      days[key] = 0;
     }
 
-    setEggDate("");
-    setEggCount("");
-    fetchEggs();
+    eggsData.forEach((e) => {
+      if (days[e.date] !== undefined) {
+        days[e.date] += e.count;
+      }
+    });
+
+    return Object.keys(days).map((date) => ({
+      date: date.slice(5),
+      eggs: days[date]
+    }));
   };
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
-
-      {/* SIDEBAR */}
+      
+      {/* Sidebar */}
       <div style={{
         width: "220px",
         background: "#111827",
@@ -134,77 +94,83 @@ export default function App() {
       }}>
         <h2>🐔 Coop Keeper</h2>
 
-        <p onClick={() => setPage("dashboard")} style={{ cursor: "pointer" }}>dashboard</p>
-        <p onClick={() => setPage("chickens")} style={{ cursor: "pointer" }}>chickens</p>
-        <p onClick={() => setPage("eggs")} style={{ cursor: "pointer" }}>eggs</p>
-        <p onClick={() => setPage("feed")} style={{ cursor: "pointer" }}>feed</p>
+        <p style={{ cursor: "pointer" }} onClick={() => setPage("dashboard")}>
+          dashboard
+        </p>
+        <p style={{ cursor: "pointer" }} onClick={() => setPage("eggs")}>
+          eggs
+        </p>
       </div>
 
-      {/* MAIN */}
-      <div style={{ flex: 1, padding: "30px" }}>
+      {/* Main */}
+      <div style={{ flex: 1, padding: "20px", background: "#f9fafb" }}>
 
-        {/* 🐔 CHICKENS */}
-        {page === "chickens" && (
+        {/* DASHBOARD */}
+        {page === "dashboard" && (
           <>
-            <h1>Chickens</h1>
+            <h2>Egg Production (Last 7 Days)</h2>
 
-            <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-            <input placeholder="Breed" value={breed} onChange={(e) => setBreed(e.target.value)} />
-            <input placeholder="Sex" value={sex} onChange={(e) => setSex(e.target.value)} />
-            <input placeholder="Status" value={status} onChange={(e) => setStatus(e.target.value)} />
-
-            <br /><br />
-
-            <button onClick={addChicken}>Add Chicken</button>
-
-            <div>
-              {chickens.map((c) => (
-                <div key={c.id}>
-                  <strong>{c.name}</strong><br />
-                  {c.breed} | {c.sex} | {c.status}
-                  <br />
-                  <button onClick={() => deleteChicken(c.id!)}>Delete</button>
-                </div>
-              ))}
-            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={getLast7Days()}>
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="eggs" />
+              </LineChart>
+            </ResponsiveContainer>
           </>
         )}
 
-        {/* 🥚 EGGS */}
+        {/* EGGS PAGE */}
         {page === "eggs" && (
           <>
-            <h1>Eggs</h1>
+            <h2>Eggs</h2>
 
-            <input
-              type="date"
-              value={eggDate}
-              onChange={(e) => setEggDate(e.target.value)}
-            />
+            <div style={{ marginBottom: "15px" }}>
+              <input
+                type="date"
+                value={eggDate}
+                onChange={(e) => setEggDate(e.target.value)}
+                style={{ padding: "10px", marginRight: "10px" }}
+              />
 
-            <input
-              type="number"
-              placeholder="Egg count"
-              value={eggCount}
-              onChange={(e) => setEggCount(e.target.value)}
-            />
-
-            <br /><br />
-
-            <button onClick={addEggs}>Add Eggs</button>
-
-            <div>
-              {eggs.map((e) => (
-                <div key={e.id}>
-                  {e.date} — {e.count} eggs
-                </div>
-              ))}
+              <input
+                type="number"
+                placeholder="Egg count"
+                value={eggCount}
+                onChange={(e) => setEggCount(e.target.value)}
+                style={{ padding: "10px", marginRight: "10px" }}
+              />
             </div>
+
+            <button
+              onClick={addEggs}
+              style={{
+                padding: "10px 15px",
+                background: "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                marginBottom: "20px"
+              }}
+            >
+              Add Eggs
+            </button>
+
+            {/* List */}
+            {eggsData.map((e, i) => (
+              <div key={i} style={{
+                background: "white",
+                padding: "10px",
+                marginBottom: "10px",
+                borderRadius: "6px"
+              }}>
+                {e.date} - {e.count} eggs
+              </div>
+            ))}
           </>
         )}
-
-        {/* PLACEHOLDERS */}
-        {page === "dashboard" && <h1>Dashboard coming next 🔥</h1>}
-        {page === "feed" && <h1>Feed next</h1>}
 
       </div>
     </div>
