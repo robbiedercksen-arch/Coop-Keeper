@@ -10,6 +10,7 @@ import {
   Legend
 } from "recharts";
 
+// ✅ YOUR SUPABASE (saved for you)
 const supabase = createClient(
   "https://gzoxsnsbzjbmatdxwyhh.supabase.co",
   "sb_publishable_EYpEiEJ_Q4ElsyvyI1ZDtw_q9lOgU_A"
@@ -35,9 +36,14 @@ export default function App() {
   const [chickenSex, setChickenSex] = useState("");
   const [chickenStatus, setChickenStatus] = useState("");
 
-  // Profit
-  const [eggPrice, setEggPrice] = useState("");
-  const [feedCost, setFeedCost] = useState("");
+  // ✅ Profit (NOW SAVES)
+  const [eggPrice, setEggPrice] = useState(
+    localStorage.getItem("eggPrice") || ""
+  );
+
+  const [feedCost, setFeedCost] = useState(
+    localStorage.getItem("feedCost") || ""
+  );
 
   useEffect(() => {
     fetchEggs();
@@ -62,7 +68,11 @@ export default function App() {
 
   const addEggs = async () => {
     if (!eggDate || !eggCount) return;
-    await supabase.from("eggs").insert([{ date: eggDate, count: Number(eggCount) }]);
+
+    await supabase.from("eggs").insert([
+      { date: eggDate, count: Number(eggCount) }
+    ]);
+
     setEggDate("");
     setEggCount("");
     fetchEggs();
@@ -70,7 +80,11 @@ export default function App() {
 
   const addFeed = async () => {
     if (!feedDate || !feedAmount) return;
-    await supabase.from("feed").insert([{ date: feedDate, amount: Number(feedAmount) }]);
+
+    await supabase.from("feed").insert([
+      { date: feedDate, amount: Number(feedAmount) }
+    ]);
+
     setFeedDate("");
     setFeedAmount("");
     fetchFeed();
@@ -162,8 +176,23 @@ export default function App() {
 
             <h2>💰 Profit</h2>
 
-            <input placeholder="Egg price" value={eggPrice} onChange={(e) => setEggPrice(e.target.value)} />
-            <input placeholder="Feed cost" value={feedCost} onChange={(e) => setFeedCost(e.target.value)} />
+            <input
+              placeholder="Egg price"
+              value={eggPrice}
+              onChange={(e) => {
+                setEggPrice(e.target.value);
+                localStorage.setItem("eggPrice", e.target.value);
+              }}
+            />
+
+            <input
+              placeholder="Feed cost"
+              value={feedCost}
+              onChange={(e) => {
+                setFeedCost(e.target.value);
+                localStorage.setItem("feedCost", e.target.value);
+              }}
+            />
 
             <h3>Revenue: {revenue.toFixed(2)}</h3>
             <h3>Feed Cost: {feedExpense.toFixed(2)}</h3>
