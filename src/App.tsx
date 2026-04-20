@@ -4,88 +4,62 @@ import { supabase } from "./supabaseClient";
 function App() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [offline, setOffline] = useState(!navigator.onLine);
 
-  // Track online/offline
+  // Load user session
   useEffect(() => {
-    const updateOnlineStatus = () => setOffline(!navigator.onLine);
-    window.addEventListener("online", updateOnlineStatus);
-    window.addEventListener("offline", updateOnlineStatus);
-
-    return () => {
-      window.removeEventListener("online", updateOnlineStatus);
-      window.removeEventListener("offline", updateOnlineStatus);
-    };
-  }, []);
-
-  // Load user (FIXED)
-  useEffect(() => {
-    async function loadUser() {
+    const loadUser = async () => {
       try {
-        // 1. Load from localStorage first (offline support)
-        const savedUser = localStorage.getItem("user");
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-        }
+        const { data, error } = await supabase.auth.getUser();
 
-        // 2. Sync with Supabase (online)
-        const { data } = await supabase.auth.getUser();
+        if (error) {
+          console.error("User fetch error:", error);
+          setUser(null);
+        } else {
+          setUser(data?.user || null);
 
-        if (data?.user) {
-          setUser(data.user);
-          localStorage.setItem("user", JSON.stringify(data.user));
+          // Save user locally (helps offline)
+          if (data?.user) {
+            localStorage.setItem("user", JSON.stringify(data.user));
+          }
         }
       } catch (err) {
-        console.error("User load error:", err);
-      }
+        console.log("Offline or error, loading from localStorage");
 
-      setLoading(false);
-    }
+        const localUser = localStorage.getItem("user");
+        if (localUser) {
+          setUser(JSON.parse(localUser));
+        } else {
+          setUser(null);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
     loadUser();
   }, []);
 
-  // Listen for login/logout (IMPORTANT)
-  useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          localStorage.setItem("user", JSON.stringify(session.user));
-        } else {
-          setUser(null);
-          localStorage.removeItem("user");
-        }
-      }
-    );
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
-
   // Loading state
   if (loading) {
-    return <div>Loading...</div>;
+    return <div style={{ padding: 20 }}>Loading user...</div>;
   }
 
   // Not logged in
   if (!user) {
-    return <div>⚠️ Please login once while online</div>;
+    return (
+      <div style={{ padding: 20 }}>
+        ⚠️ Please login once while online
+      </div>
+    );
   }
 
-  // MAIN APP UI (you can expand this again)
+  // Main App UI
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: 20 }}>
       <h1>🐔 Coop Keeper</h1>
-
-      {offline && (
-        <p style={{ color: "orange" }}>
-          ⚠️ Offline Mode
-        </p>
-      )}
-
       <p>Welcome back!</p>
+
+      {/* Your app content will go here */}
     </div>
   );
 }
