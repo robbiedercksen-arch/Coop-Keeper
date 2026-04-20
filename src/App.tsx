@@ -8,14 +8,36 @@ function App() {
   const [newChicken, setNewChicken] = useState("");
   const [isOffline, setIsOffline] = useState(false);
 
-  // ✅ Load user
+  // ✅ LOAD USER (OFFLINE SAFE)
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-    });
+    const loadUser = async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+
+        if (data?.user) {
+          setUser(data.user);
+          localStorage.setItem("user", JSON.stringify(data.user));
+        } else {
+          throw new Error("No user");
+        }
+      } catch (err) {
+        console.log("Offline user fallback");
+
+        const savedUser = localStorage.getItem("user");
+
+        if (savedUser) {
+          setUser(JSON.parse(savedUser));
+          setIsOffline(true);
+        } else {
+          setUser(null);
+        }
+      }
+    };
+
+    loadUser();
   }, []);
 
-  // ✅ Load data (SAFE for offline)
+  // ✅ LOAD DATA (OFFLINE SAFE)
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -32,15 +54,14 @@ function App() {
         setChickens(chickensData || []);
         setEggs(eggsData || []);
 
-        // ✅ Save to localStorage (for offline)
+        // Save for offline
         localStorage.setItem("chickens", JSON.stringify(chickensData));
         localStorage.setItem("eggs", JSON.stringify(eggsData));
       } catch (err) {
-        console.log("Offline mode");
+        console.log("Offline data fallback");
 
         setIsOffline(true);
 
-        // ✅ Load from localStorage instead
         const savedChickens = localStorage.getItem("chickens");
         const savedEggs = localStorage.getItem("eggs");
 
@@ -52,12 +73,11 @@ function App() {
     loadData();
   }, []);
 
-  // ✅ Add chicken
+  // ✅ ADD CHICKEN (OFFLINE SAFE)
   const addChicken = async () => {
     if (!newChicken) return;
 
     if (isOffline) {
-      // Save locally if offline
       const updated = [...chickens, { id: Date.now(), name: newChicken }];
       setChickens(updated);
       localStorage.setItem("chickens", JSON.stringify(updated));
@@ -67,7 +87,7 @@ function App() {
 
     const { data } = await supabase
       .from("chickens")
-      .insert([{ name: newChicken }])
+      .insert([{ name: newChicken, user_id: user.id }])
       .select();
 
     if (data) {
@@ -79,7 +99,7 @@ function App() {
     setNewChicken("");
   };
 
-  // ✅ Totals
+  // ✅ CALCULATIONS
   const totalEggs = (eggs || []).reduce((sum, e) => sum + (e.count || 0), 0);
   const revenue = (eggs || []).reduce((sum, e) => sum + (e.price || 0), 0);
   const feedCost = (eggs || []).reduce(
@@ -87,11 +107,13 @@ function App() {
     0
   );
 
-  // ✅ NEVER return null (prevents white screen)
+  // ❗ NEVER RETURN NULL (prevents white screen)
   if (!user) {
     return (
       <div style={{ padding: 20 }}>
-        {isOffline ? "Offline mode - login unavailable" : "Loading user..."}
+        ⚠️ {isOffline
+          ? "Offline mode (using saved user)"
+          : "Loading user..."}
       </div>
     );
   }
