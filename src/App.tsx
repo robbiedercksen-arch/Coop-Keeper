@@ -8,12 +8,16 @@ const supabase = createClient(
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [eggs, setEggs] = useState<any[]>([]);
+  const [chickens, setChickens] = useState<any[]>([]);
+
   const [date, setDate] = useState("");
   const [count, setCount] = useState(0);
+  const [selectedChicken, setSelectedChicken] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -26,16 +30,28 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (session) fetchEggs();
+    if (session) {
+      fetchEggs();
+      fetchChickens();
+    }
   }, [session]);
 
   async function fetchEggs() {
     const { data } = await supabase
       .from("eggs")
       .select("*")
-      .order("date", { ascending: false });
+      .eq("user_id", session.user.id);
 
     setEggs(data || []);
+  }
+
+  async function fetchChickens() {
+    const { data } = await supabase
+      .from("chickens")
+      .select("*")
+      .eq("user_id", session.user.id);
+
+    setChickens(data || []);
   }
 
   async function addEggs() {
@@ -46,23 +62,17 @@ export default function App() {
         date,
         count,
         user_id: session.user.id,
+        chicken_id: selectedChicken || null,
       },
     ]);
 
-    if (error) {
-      alert(error.message);
-    } else {
-      fetchEggs();
-    }
+    if (error) alert(error.message);
+    else fetchEggs();
   }
 
   async function signUp() {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signUp({ email, password });
     if (error) alert(error.message);
-    else alert("Check your email to confirm!");
   }
 
   async function signIn() {
@@ -77,23 +87,33 @@ export default function App() {
     await supabase.auth.signOut();
   }
 
-  // 🔐 NOT LOGGED IN
+  // 📊 CALCULATIONS
+  const eggsPerChicken = chickens.map((chicken) => {
+    const total = eggs
+      .filter((e) => e.chicken_id === chicken.id)
+      .reduce((sum, e) => sum + e.count, 0);
+
+    return {
+      name: chicken.name,
+      total,
+    };
+  });
+
+  const totalEggs = eggs.reduce((sum, e) => sum + e.count, 0);
+
+  const bestChicken = eggsPerChicken.sort((a, b) => b.total - a.total)[0];
+
   if (!session) {
     return (
       <div style={{ padding: 20 }}>
-        <h2>Login / Signup</h2>
+        <h2>Login</h2>
 
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
         <br />
 
         <input
           type="password"
           placeholder="Password"
-          value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         <br />
@@ -104,17 +124,49 @@ export default function App() {
     );
   }
 
-  // ✅ LOGGED IN
   return (
     <div style={{ padding: 20 }}>
-      <h2>Egg Tracker</h2>
+      <h2>🐔 Coop Keeper Dashboard</h2>
 
       <button onClick={signOut}>Logout</button>
 
-      <br />
+      <hr />
+
+      {/* 📊 DASHBOARD */}
+      <h3>📊 Overview</h3>
+      <p>Total Eggs: {totalEggs}</p>
+      <p>
+        Best Chicken:{" "}
+        {bestChicken ? `${bestChicken.name} (${bestChicken.total})` : "N/A"}
+      </p>
+
+      <h4>Eggs per Chicken</h4>
+      <ul>
+        {eggsPerChicken.map((c, i) => (
+          <li key={i}>
+            {c.name}: {c.total}
+          </li>
+        ))}
+      </ul>
+
+      <hr />
+
+      {/* 🥚 ADD EGGS */}
+      <h3>Add Eggs</h3>
+
+      <select onChange={(e) => setSelectedChicken(e.target.value)}>
+        <option value="">Select Chicken</option>
+        {chickens.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+
       <br />
 
       <input type="date" onChange={(e) => setDate(e.target.value)} />
+
       <input
         type="number"
         placeholder="Egg count"
@@ -122,14 +174,6 @@ export default function App() {
       />
 
       <button onClick={addEggs}>Add Eggs</button>
-
-      <ul>
-        {eggs.map((e, i) => (
-          <li key={i}>
-            {e.date} - {e.count}
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
