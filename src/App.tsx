@@ -10,7 +10,6 @@ import {
   Legend
 } from "recharts";
 
-// ✅ YOUR SUPABASE (saved for you)
 const supabase = createClient(
   "https://gzoxsnsbzjbmatdxwyhh.supabase.co",
   "sb_publishable_EYpEiEJ_Q4ElsyvyI1ZDtw_q9lOgU_A"
@@ -36,21 +35,18 @@ export default function App() {
   const [chickenSex, setChickenSex] = useState("");
   const [chickenStatus, setChickenStatus] = useState("");
 
-  // ✅ Profit (NOW SAVES)
-  const [eggPrice, setEggPrice] = useState(
-    localStorage.getItem("eggPrice") || ""
-  );
-
-  const [feedCost, setFeedCost] = useState(
-    localStorage.getItem("feedCost") || ""
-  );
+  // ✅ SETTINGS (NOW PERSISTENT)
+  const [eggPrice, setEggPrice] = useState("");
+  const [feedCost, setFeedCost] = useState("");
 
   useEffect(() => {
     fetchEggs();
     fetchFeed();
     fetchChickens();
+    loadSettings(); // 🔥 important
   }, []);
 
+  // ================= FETCH =================
   const fetchEggs = async () => {
     const { data } = await supabase.from("eggs").select("*");
     if (data) setEggsData(data);
@@ -66,6 +62,28 @@ export default function App() {
     if (data) setChickens(data);
   };
 
+  // ================= SETTINGS =================
+  const loadSettings = async () => {
+    const { data } = await supabase.from("settings").select("*").limit(1);
+
+    if (data && data.length > 0) {
+      setEggPrice(data[0].egg_price?.toString() || "");
+      setFeedCost(data[0].feed_cost?.toString() || "");
+    }
+  };
+
+  const saveSettings = async (newEggPrice: any, newFeedCost: any) => {
+    // clear existing
+    await supabase.from("settings").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+
+    // insert new
+    await supabase.from("settings").insert([{
+      egg_price: Number(newEggPrice),
+      feed_cost: Number(newFeedCost)
+    }]);
+  };
+
+  // ================= ADD =================
   const addEggs = async () => {
     if (!eggDate || !eggCount) return;
 
@@ -107,6 +125,7 @@ export default function App() {
     fetchChickens();
   };
 
+  // ================= DASHBOARD =================
   const getCombinedData = () => {
     const days: any = {};
 
@@ -152,6 +171,7 @@ export default function App() {
       {/* Main */}
       <div style={{ flex: 1, padding: "20px", background: "#f9fafb" }}>
 
+        {/* DASHBOARD */}
         {page === "dashboard" && (
           <>
             <h2>Performance</h2>
@@ -181,7 +201,7 @@ export default function App() {
               value={eggPrice}
               onChange={(e) => {
                 setEggPrice(e.target.value);
-                localStorage.setItem("eggPrice", e.target.value);
+                saveSettings(e.target.value, feedCost);
               }}
             />
 
@@ -190,7 +210,7 @@ export default function App() {
               value={feedCost}
               onChange={(e) => {
                 setFeedCost(e.target.value);
-                localStorage.setItem("feedCost", e.target.value);
+                saveSettings(eggPrice, e.target.value);
               }}
             />
 
@@ -200,6 +220,7 @@ export default function App() {
           </>
         )}
 
+        {/* CHICKENS */}
         {page === "chickens" && (
           <>
             <h2>Chickens</h2>
@@ -229,6 +250,7 @@ export default function App() {
           </>
         )}
 
+        {/* EGGS */}
         {page === "eggs" && (
           <>
             <h2>Eggs</h2>
@@ -242,6 +264,7 @@ export default function App() {
           </>
         )}
 
+        {/* FEED */}
         {page === "feed" && (
           <>
             <h2>Feed</h2>
