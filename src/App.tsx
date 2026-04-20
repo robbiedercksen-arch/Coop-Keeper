@@ -101,102 +101,195 @@ export default function App() {
     await supabase.auth.signOut();
   }
 
-  // 📊 CALCULATIONS
   const totalEggs = eggs.reduce((sum, e) => sum + e.count, 0);
-
   const totalRevenue = eggs.reduce(
     (sum, e) => sum + e.count * (e.price || 0),
     0
   );
-
   const totalFeed = eggs.reduce(
     (sum, e) => sum + (e.feed_cost || 0),
     0
   );
-
   const profit = totalRevenue - totalFeed;
 
-  // 📈 CHART DATA
   const chartData = eggs.map((e) => ({
     date: e.date,
     eggs: e.count,
-    revenue: e.count * (e.price || 0),
   }));
 
   if (!session) {
     return (
-      <div style={{ padding: 20 }}>
-        <h2>Login</h2>
-        <input onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-        <br />
-        <input
-          type="password"
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-        />
-        <br />
-        <button onClick={signIn}>Login</button>
-        <button onClick={signUp}>Sign Up</button>
+      <div style={styles.container}>
+        <div style={styles.card}>
+          <h2>🐔 Coop Keeper</h2>
+          <input
+            style={styles.input}
+            placeholder="Email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            style={styles.input}
+            type="password"
+            placeholder="Password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button style={styles.button} onClick={signIn}>
+            Login
+          </button>
+          <button style={styles.buttonSecondary} onClick={signUp}>
+            Sign Up
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>🐔 Coop Keeper</h2>
-      <button onClick={signOut}>Logout</button>
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h2>🐔 Coop Keeper</h2>
+        <button style={styles.logout} onClick={signOut}>
+          Logout
+        </button>
+      </div>
 
-      <hr />
+      <div style={styles.grid}>
+        <div style={styles.card}>
+          <h3>Total Eggs</h3>
+          <h1>{totalEggs}</h1>
+        </div>
 
-      <h3>📊 Dashboard</h3>
-      <p>Total Eggs: {totalEggs}</p>
-      <p>Revenue: {totalRevenue.toFixed(2)}</p>
-      <p>Feed Cost: {totalFeed.toFixed(2)}</p>
-      <p>Profit: {profit.toFixed(2)}</p>
+        <div style={styles.card}>
+          <h3>Revenue</h3>
+          <h1>{totalRevenue.toFixed(2)}</h1>
+        </div>
 
-      <LineChart width={500} height={250} data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" />
-        <YAxis />
-        <Tooltip />
-        <Line type="monotone" dataKey="eggs" />
-      </LineChart>
+        <div style={styles.card}>
+          <h3>Feed Cost</h3>
+          <h1>{totalFeed.toFixed(2)}</h1>
+        </div>
 
-      <hr />
+        <div style={styles.card}>
+          <h3>Profit</h3>
+          <h1>{profit.toFixed(2)}</h1>
+        </div>
+      </div>
 
-      <h3>Add Entry</h3>
+      <div style={styles.card}>
+        <h3>Production Trend</h3>
+        <LineChart width={600} height={250} data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis />
+          <Tooltip />
+          <Line type="monotone" dataKey="eggs" stroke="#4f46e5" />
+        </LineChart>
+      </div>
 
-      <select onChange={(e) => setSelectedChicken(e.target.value)}>
-        <option value="">Select Chicken</option>
-        {chickens.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
+      <div style={styles.card}>
+        <h3>Add Entry</h3>
 
-      <br />
+        <select
+          style={styles.input}
+          onChange={(e) => setSelectedChicken(e.target.value)}
+        >
+          <option value="">Select Chicken</option>
+          {chickens.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
 
-      <input type="date" onChange={(e) => setDate(e.target.value)} />
-      <input
-        type="number"
-        placeholder="Egg count"
-        onChange={(e) => setCount(Number(e.target.value))}
-      />
+        <input
+          style={styles.input}
+          type="date"
+          onChange={(e) => setDate(e.target.value)}
+        />
 
-      <input
-        type="number"
-        placeholder="Egg price"
-        onChange={(e) => setEggPrice(Number(e.target.value))}
-      />
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Egg count"
+          onChange={(e) => setCount(Number(e.target.value))}
+        />
 
-      <input
-        type="number"
-        placeholder="Feed cost"
-        onChange={(e) => setFeedCost(Number(e.target.value))}
-      />
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Egg price"
+          onChange={(e) => setEggPrice(Number(e.target.value))}
+        />
 
-      <button onClick={addEggs}>Add</button>
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Feed cost"
+          onChange={(e) => setFeedCost(Number(e.target.value))}
+        />
+
+        <button style={styles.button} onClick={addEggs}>
+          Add Entry
+        </button>
+      </div>
     </div>
   );
 }
+
+// 🎨 STYLES
+const styles: any = {
+  container: {
+    padding: 20,
+    fontFamily: "Arial",
+    background: "#f3f4f6",
+    minHeight: "100vh",
+  },
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 15,
+  },
+  card: {
+    background: "white",
+    padding: 20,
+    borderRadius: 12,
+    boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+    marginBottom: 20,
+  },
+  input: {
+    width: "100%",
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 8,
+    border: "1px solid #ccc",
+  },
+  button: {
+    width: "100%",
+    padding: 12,
+    background: "#4f46e5",
+    color: "white",
+    border: "none",
+    borderRadius: 8,
+    cursor: "pointer",
+  },
+  buttonSecondary: {
+    width: "100%",
+    padding: 12,
+    background: "#e5e7eb",
+    border: "none",
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  logout: {
+    padding: 10,
+    background: "#ef4444",
+    color: "white",
+    border: "none",
+    borderRadius: 8,
+  },
+};
