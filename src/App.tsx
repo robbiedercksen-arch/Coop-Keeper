@@ -19,7 +19,9 @@ export default function App() {
   const [count, setCount] = useState(0);
   const [selectedChicken, setSelectedChicken] = useState("");
 
-  // 🔐 AUTH
+  const [eggPrice, setEggPrice] = useState(0);
+  const [feedCost, setFeedCost] = useState(0);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -30,7 +32,6 @@ export default function App() {
     });
   }, []);
 
-  // 📊 LOAD DATA
   useEffect(() => {
     if (session) {
       fetchEggs();
@@ -65,6 +66,8 @@ export default function App() {
         count,
         user_id: session.user.id,
         chicken_id: selectedChicken || null,
+        price: eggPrice,
+        feed_cost: feedCost,
       },
     ]);
 
@@ -73,12 +76,8 @@ export default function App() {
   }
 
   async function signUp() {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signUp({ email, password });
     if (error) alert(error.message);
-    else alert("Signup successful!");
   }
 
   async function signIn() {
@@ -94,6 +93,20 @@ export default function App() {
   }
 
   // 📊 CALCULATIONS
+  const totalEggs = eggs.reduce((sum, e) => sum + e.count, 0);
+
+  const totalRevenue = eggs.reduce(
+    (sum, e) => sum + e.count * (e.price || 0),
+    0
+  );
+
+  const totalFeed = eggs.reduce(
+    (sum, e) => sum + (e.feed_cost || 0),
+    0
+  );
+
+  const profit = totalRevenue - totalFeed;
+
   const eggsPerChicken = chickens.map((chicken) => {
     const total = eggs
       .filter((e) => e.chicken_id === chicken.id)
@@ -105,70 +118,40 @@ export default function App() {
     };
   });
 
-  const totalEggs = eggs.reduce((sum, e) => sum + e.count, 0);
-
-  const bestChicken =
-    eggsPerChicken.length > 0
-      ? [...eggsPerChicken].sort((a, b) => b.total - a.total)[0]
-      : null;
-
-  // 🔐 LOGIN SCREEN
   if (!session) {
     return (
       <div style={{ padding: 20 }}>
-        <h2>🐔 Coop Keeper Login</h2>
-
-        <input
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <h2>Login</h2>
+        <input onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
         <br />
-
         <input
           type="password"
-          placeholder="Password"
           onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
         />
         <br />
-
         <button onClick={signIn}>Login</button>
         <button onClick={signUp}>Sign Up</button>
       </div>
     );
   }
 
-  // 🐔 DASHBOARD
   return (
     <div style={{ padding: 20 }}>
-      <h2>🐔 Coop Keeper Dashboard</h2>
-
+      <h2>🐔 Coop Keeper</h2>
       <button onClick={signOut}>Logout</button>
 
       <hr />
 
-      {/* 📊 OVERVIEW */}
-      <h3>📊 Overview</h3>
+      <h3>📊 Dashboard</h3>
       <p>Total Eggs: {totalEggs}</p>
-      <p>
-        Best Chicken:{" "}
-        {bestChicken
-          ? `${bestChicken.name} (${bestChicken.total})`
-          : "No data"}
-      </p>
-
-      <h4>Eggs per Chicken</h4>
-      <ul>
-        {eggsPerChicken.map((c, i) => (
-          <li key={i}>
-            {c.name}: {c.total}
-          </li>
-        ))}
-      </ul>
+      <p>Revenue: {totalRevenue.toFixed(2)}</p>
+      <p>Feed Cost: {totalFeed.toFixed(2)}</p>
+      <p>Profit: {profit.toFixed(2)}</p>
 
       <hr />
 
-      {/* 🥚 ADD EGGS */}
-      <h3>Add Eggs</h3>
+      <h3>Add Entry</h3>
 
       <select onChange={(e) => setSelectedChicken(e.target.value)}>
         <option value="">Select Chicken</option>
@@ -182,29 +165,25 @@ export default function App() {
       <br />
 
       <input type="date" onChange={(e) => setDate(e.target.value)} />
-
       <input
         type="number"
         placeholder="Egg count"
         onChange={(e) => setCount(Number(e.target.value))}
       />
 
-      <button onClick={addEggs}>Add Eggs</button>
+      <input
+        type="number"
+        placeholder="Egg price"
+        onChange={(e) => setEggPrice(Number(e.target.value))}
+      />
 
-      <hr />
+      <input
+        type="number"
+        placeholder="Feed cost"
+        onChange={(e) => setFeedCost(Number(e.target.value))}
+      />
 
-      {/* 🧾 LIST */}
-      <h3>Egg History</h3>
-      <ul>
-        {eggs.map((e, i) => {
-          const chicken = chickens.find((c) => c.id === e.chicken_id);
-          return (
-            <li key={i}>
-              {e.date} - {chicken ? chicken.name : "Unknown"} - {e.count}
-            </li>
-          );
-        })}
-      </ul>
+      <button onClick={addEggs}>Add</button>
     </div>
   );
 }
