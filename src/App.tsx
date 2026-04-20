@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 // 🔑 PUT YOUR KEY HERE
 const supabase = createClient(
   "https://gzoxsnsbzbjmbatdxwyhh.supabase.co",
-  "YOUR_PUBLIC_KEY_HERE"
+  "sb_publishable_EYpEiEJ_Q4ElsyvyI1ZDtw_q9lOgU_A"
 );
 
 type Chicken = {
