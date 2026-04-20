@@ -131,43 +131,6 @@ export default function App() {
   };
 
   // ===== STATS =====
-  const getChickenStats = () => {
-    const stats: any = {};
-
-    eggsData.forEach((e) => {
-      if (!e.chicken_id) return;
-      if (!stats[e.chicken_id]) stats[e.chicken_id] = 0;
-      stats[e.chicken_id] += e.count;
-    });
-
-    return stats;
-  };
-
-  const chickenStats = getChickenStats();
-
-  let topChicken: any = null;
-  let worstChicken: any = null;
-
-  Object.entries(chickenStats).forEach(([id, count]: any) => {
-    if (!topChicken || count > topChicken.count) {
-      topChicken = { id, count };
-    }
-    if (!worstChicken || count < worstChicken.count) {
-      worstChicken = { id, count };
-    }
-  });
-
-  const getEggsPerChicken = () => {
-    return Object.entries(chickenStats).map(([id, count]: any) => {
-      const chicken = chickens.find((c) => c.id === id);
-      return {
-        name: chicken ? chicken.name : "Unknown",
-        eggs: count
-      };
-    });
-  };
-
-  // ===== PROFIT =====
   const totalEggs = eggsData.reduce((sum, e) => sum + e.count, 0);
   const totalFeed = feedData.reduce((sum, f) => sum + f.amount, 0);
 
@@ -175,32 +138,54 @@ export default function App() {
   const feedExpense = totalFeed * Number(feedCost || 0);
   const profit = revenue - feedExpense;
 
+  const getChickenStats = () => {
+    const stats: any = {};
+    eggsData.forEach((e) => {
+      if (!e.chicken_id) return;
+      if (!stats[e.chicken_id]) stats[e.chicken_id] = 0;
+      stats[e.chicken_id] += e.count;
+    });
+    return stats;
+  };
+
   const getProfitPerChicken = () => {
     const stats = getChickenStats();
-
     const chickenCount = chickens.length || 1;
-    const totalFeedCost = totalFeed * Number(feedCost || 0);
-    const feedPerChicken = totalFeedCost / chickenCount;
+    const feedPerChicken = (totalFeed * Number(feedCost || 0)) / chickenCount;
 
     return chickens.map((c) => {
       const eggs = stats[c.id] || 0;
       const income = eggs * Number(eggPrice || 0);
       const profit = income - feedPerChicken;
 
-      return {
-        name: c.name,
-        eggs,
-        income,
-        cost: feedPerChicken,
-        profit
-      };
+      return { name: c.name, eggs, profit };
     });
   };
 
-  const getRecommendation = (profit: number) => {
-    if (profit > 0) return "🟢 KEEP";
-    if (profit === 0) return "🟡 BREAK EVEN";
-    return "🔴 SELL";
+  // ===== ALERTS =====
+  const getAlerts = () => {
+    const alerts: string[] = [];
+
+    if (profit < 0) {
+      alerts.push("⚠️ You are losing money!");
+    }
+
+    const chickenProfit = getProfitPerChicken();
+
+    chickenProfit.forEach((c) => {
+      if (c.eggs === 0) {
+        alerts.push(`🐔 ${c.name} is not laying eggs`);
+      }
+      if (c.profit < 0) {
+        alerts.push(`💸 ${c.name} is costing you money`);
+      }
+    });
+
+    if (totalEggs > 0 && totalFeed / totalEggs > 0.5) {
+      alerts.push("⚠️ Feed usage is too high per egg");
+    }
+
+    return alerts;
   };
 
   return (
@@ -216,86 +201,24 @@ export default function App() {
       <div style={{ flex: 1, padding: "20px" }}>
         {page === "dashboard" && (
           <>
-            <h2>📊 Eggs vs Feed</h2>
+            <h2>🚨 Alerts</h2>
 
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={getEggsPerChicken()}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line dataKey="eggs" />
-              </LineChart>
-            </ResponsiveContainer>
+            {getAlerts().length === 0 ? (
+              <p>✅ Everything looks good</p>
+            ) : (
+              getAlerts().map((a, i) => (
+                <div key={i} style={{ color: "red" }}>{a}</div>
+              ))
+            )}
 
-            <h2>📊 Eggs per Chicken</h2>
+            <h2>💰 Profit</h2>
+            <h3>{profit.toFixed(2)}</h3>
 
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={getEggsPerChicken()}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="eggs" />
-              </BarChart>
-            </ResponsiveContainer>
-
-            <h2>🏆 Performance</h2>
-
-            <p>
-              Top Chicken:{" "}
-              {topChicken
-                ? chickens.find((c) => c.id === topChicken.id)?.name +
-                  " (" +
-                  topChicken.count +
-                  " eggs)"
-                : "N/A"}
-            </p>
-
-            <p>
-              Worst Chicken:{" "}
-              {worstChicken
-                ? chickens.find((c) => c.id === worstChicken.id)?.name +
-                  " (" +
-                  worstChicken.count +
-                  " eggs)"
-                : "N/A"}
-            </p>
-
-            <h2>💰 Farm Profit</h2>
-
-            <input
-              placeholder="Egg price"
-              value={eggPrice}
-              onChange={(e) => {
-                const val = e.target.value;
-                setEggPrice(val);
-                saveSettings(val, feedCost);
-              }}
-            />
-
-            <input
-              placeholder="Feed cost"
-              value={feedCost}
-              onChange={(e) => {
-                const val = e.target.value;
-                setFeedCost(val);
-                saveSettings(eggPrice, val);
-              }}
-            />
-
-            <h3>Total Profit: {profit.toFixed(2)}</h3>
-
-            <h2>🐔 Chicken Profit Analysis</h2>
+            <h2>🐔 Chicken Analysis</h2>
 
             {getProfitPerChicken().map((c, i) => (
-              <div key={i} style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
-                <strong>{c.name}</strong><br />
-                Eggs: {c.eggs}<br />
-                Income: {c.income.toFixed(2)}<br />
-                Feed Cost: {c.cost.toFixed(2)}<br />
-                Profit: {c.profit.toFixed(2)}<br />
-                Decision: {getRecommendation(c.profit)}
+              <div key={i}>
+                {c.name} - Eggs: {c.eggs} - Profit: {c.profit.toFixed(2)}
               </div>
             ))}
           </>
@@ -316,11 +239,6 @@ export default function App() {
             <input type="number" value={eggCount} onChange={(e) => setEggCount(e.target.value)} />
 
             <button onClick={addEggs}>Add Eggs</button>
-
-            {eggsData.map((e, i) => {
-              const chicken = chickens.find(c => c.id === e.chicken_id);
-              return <div key={i}>{e.date} - {chicken ? chicken.name : "Unknown"} - {e.count}</div>;
-            })}
           </>
         )}
 
@@ -330,37 +248,14 @@ export default function App() {
             <input type="date" value={feedDate} onChange={(e) => setFeedDate(e.target.value)} />
             <input type="number" value={feedAmount} onChange={(e) => setFeedAmount(e.target.value)} />
             <button onClick={addFeed}>Add Feed</button>
-
-            {feedData.map((f, i) => (
-              <div key={i}>{f.date} - {f.amount} kg</div>
-            ))}
           </>
         )}
 
         {page === "chickens" && (
           <>
             <h2>Chickens</h2>
-
             <input placeholder="Name" value={chickenName} onChange={(e) => setChickenName(e.target.value)} />
-            <input placeholder="Breed" value={chickenBreed} onChange={(e) => setChickenBreed(e.target.value)} />
-
-            <select value={chickenSex} onChange={(e) => setChickenSex(e.target.value)}>
-              <option value="">Sex</option>
-              <option>Hen</option>
-              <option>Rooster</option>
-            </select>
-
-            <select value={chickenStatus} onChange={(e) => setChickenStatus(e.target.value)}>
-              <option value="">Status</option>
-              <option>Alive</option>
-              <option>Sold</option>
-            </select>
-
             <button onClick={addChicken}>Add Chicken</button>
-
-            {chickens.map((c, i) => (
-              <div key={i}>{c.name} | {c.breed} | {c.sex} | {c.status}</div>
-            ))}
           </>
         )}
       </div>
