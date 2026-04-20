@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -68,6 +70,7 @@ export default function App() {
 
   const saveSettings = async (newEggPrice: any, newFeedCost: any) => {
     await supabase.from("settings").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+
     await supabase.from("settings").insert([
       {
         egg_price: Number(newEggPrice || 0),
@@ -127,7 +130,7 @@ export default function App() {
     fetchChickens();
   };
 
-  // ===== PERFORMANCE LOGIC =====
+  // ===== PERFORMANCE =====
   const getChickenStats = () => {
     const stats: any = {};
 
@@ -155,6 +158,27 @@ export default function App() {
       worstChicken = { id, count };
     }
   });
+
+  // ===== BAR CHART DATA =====
+  const getEggsPerChicken = () => {
+    const stats: any = {};
+
+    eggsData.forEach((e) => {
+      if (!e.chicken_id) return;
+
+      if (!stats[e.chicken_id]) stats[e.chicken_id] = 0;
+      stats[e.chicken_id] += e.count;
+    });
+
+    return Object.entries(stats).map(([id, count]: any) => {
+      const chicken = chickens.find((c) => c.id === id);
+
+      return {
+        name: chicken ? chicken.name : "Unknown",
+        eggs: count
+      };
+    });
+  };
 
   // ===== DASHBOARD =====
   const getCombinedData = () => {
@@ -201,7 +225,7 @@ export default function App() {
           <>
             <h2>Performance</h2>
 
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <LineChart data={getCombinedData()}>
                 <XAxis dataKey="date" />
                 <YAxis />
@@ -210,6 +234,18 @@ export default function App() {
                 <Line dataKey="eggs" />
                 <Line dataKey="feed" />
               </LineChart>
+            </ResponsiveContainer>
+
+            <h2>📊 Eggs per Chicken</h2>
+
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={getEggsPerChicken()}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="eggs" />
+              </BarChart>
             </ResponsiveContainer>
 
             <h3>Total Eggs: {totalEggs}</h3>
