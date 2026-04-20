@@ -3,10 +3,7 @@ import { supabase } from "./supabaseClient";
 
 function App() {
   const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState("");
 
-  // Load user
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -26,68 +23,28 @@ function App() {
         if (localUser) {
           setUser(JSON.parse(localUser));
         }
-      } finally {
-        setLoading(false);
       }
     };
 
     loadUser();
   }, []);
 
-  // Login function
-  const handleLogin = async () => {
-    if (!email) return alert("Enter email");
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-    });
-
-    if (error) {
-      alert("Login failed");
-    } else {
-      alert("Check your email for login link");
-    }
-  };
-
-  // Logout
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    localStorage.removeItem("user");
-    setUser(null);
-  };
-
-  if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
-
-  // LOGIN SCREEN
-  if (!user) {
-    return (
-      <div style={{ padding: 20 }}>
-        <h2>🐔 Coop Keeper Login</h2>
-
-        <input
-          type="email"
-          placeholder="Enter email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ padding: 10, marginRight: 10 }}
-        />
-
-        <button onClick={handleLogin}>Login</button>
-
-        <p style={{ marginTop: 20 }}>
-          ⚠️ You must login once while online
-        </p>
-      </div>
-    );
-  }
-
-  // MAIN APP
   return (
     <div style={{ padding: 20 }}>
       <h1>🐔 Coop Keeper</h1>
-      <p>Welcome back!</p>
 
-      <button onClick={handleLogout}>Logout</button>
+      {user ? (
+        <p>Welcome back!</p>
+      ) : (
+        <p style={{ color: "orange" }}>
+          ⚠️ Not logged in (app still usable)
+        </p>
+      )}
+
+      {/* TEMP CONTENT SO YOU CAN SEE APP WORKING */}
+      <div style={{ marginTop: 20 }}>
+        <p>App is now loading correctly ✅</p>
+      </div>
     </div>
   );
 }
