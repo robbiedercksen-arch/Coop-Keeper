@@ -19,6 +19,7 @@ export default function App() {
   const [count, setCount] = useState(0);
   const [selectedChicken, setSelectedChicken] = useState("");
 
+  // 🔐 AUTH
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -29,6 +30,7 @@ export default function App() {
     });
   }, []);
 
+  // 📊 LOAD DATA
   useEffect(() => {
     if (session) {
       fetchEggs();
@@ -71,8 +73,12 @@ export default function App() {
   }
 
   async function signUp() {
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
     if (error) alert(error.message);
+    else alert("Signup successful!");
   }
 
   async function signIn() {
@@ -101,14 +107,21 @@ export default function App() {
 
   const totalEggs = eggs.reduce((sum, e) => sum + e.count, 0);
 
-  const bestChicken = eggsPerChicken.sort((a, b) => b.total - a.total)[0];
+  const bestChicken =
+    eggsPerChicken.length > 0
+      ? [...eggsPerChicken].sort((a, b) => b.total - a.total)[0]
+      : null;
 
+  // 🔐 LOGIN SCREEN
   if (!session) {
     return (
       <div style={{ padding: 20 }}>
-        <h2>Login</h2>
+        <h2>🐔 Coop Keeper Login</h2>
 
-        <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+        <input
+          placeholder="Email"
+          onChange={(e) => setEmail(e.target.value)}
+        />
         <br />
 
         <input
@@ -124,6 +137,7 @@ export default function App() {
     );
   }
 
+  // 🐔 DASHBOARD
   return (
     <div style={{ padding: 20 }}>
       <h2>🐔 Coop Keeper Dashboard</h2>
@@ -132,12 +146,14 @@ export default function App() {
 
       <hr />
 
-      {/* 📊 DASHBOARD */}
+      {/* 📊 OVERVIEW */}
       <h3>📊 Overview</h3>
       <p>Total Eggs: {totalEggs}</p>
       <p>
         Best Chicken:{" "}
-        {bestChicken ? `${bestChicken.name} (${bestChicken.total})` : "N/A"}
+        {bestChicken
+          ? `${bestChicken.name} (${bestChicken.total})`
+          : "No data"}
       </p>
 
       <h4>Eggs per Chicken</h4>
@@ -174,6 +190,21 @@ export default function App() {
       />
 
       <button onClick={addEggs}>Add Eggs</button>
+
+      <hr />
+
+      {/* 🧾 LIST */}
+      <h3>Egg History</h3>
+      <ul>
+        {eggs.map((e, i) => {
+          const chicken = chickens.find((c) => c.id === e.chicken_id);
+          return (
+            <li key={i}>
+              {e.date} - {chicken ? chicken.name : "Unknown"} - {e.count}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
