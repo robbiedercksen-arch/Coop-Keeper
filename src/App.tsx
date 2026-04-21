@@ -1,52 +1,62 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 
-function App() {
+export default function App() {
   const [user, setUser] = useState<any>(null);
+  const [offline, setOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
+    // Detect offline/online
+    const updateStatus = () => setOffline(!navigator.onLine);
+    window.addEventListener("online", updateStatus);
+    window.addEventListener("offline", updateStatus);
 
-        if (data?.user) {
-          setUser(data.user);
-          localStorage.setItem("user", JSON.stringify(data.user));
-        } else {
-          const localUser = localStorage.getItem("user");
-          if (localUser) {
-            setUser(JSON.parse(localUser));
-          }
-        }
-      } catch {
-        const localUser = localStorage.getItem("user");
-        if (localUser) {
-          setUser(JSON.parse(localUser));
-        }
-      }
+    // Try get user (safe)
+    if (supabase) {
+      supabase.auth.getUser().then(({ data }) => {
+        setUser(data?.user ?? null);
+      });
+    }
+
+    return () => {
+      window.removeEventListener("online", updateStatus);
+      window.removeEventListener("offline", updateStatus);
     };
-
-    loadUser();
   }, []);
 
   return (
     <div style={{ padding: 20 }}>
       <h1>🐔 Coop Keeper</h1>
 
-      {user ? (
-        <p>Welcome back!</p>
-      ) : (
+      {offline && (
+        <p style={{ color: "orange" }}>
+          ⚠️ Offline Mode (limited features)
+        </p>
+      )}
+
+      {!user && !offline && (
         <p style={{ color: "orange" }}>
           ⚠️ Not logged in (app still usable)
         </p>
       )}
 
-      {/* TEMP CONTENT SO YOU CAN SEE APP WORKING */}
+      {user && <p>Welcome back 👋</p>}
+
+      {/* REAL CONTENT */}
       <div style={{ marginTop: 20 }}>
-        <p>App is now loading correctly ✅</p>
+        <h2>Today</h2>
+        <p>Eggs: 8</p>
+        <p>Revenue: 4.00</p>
+        <p>Best Chicken: Saartjie</p>
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <h2>Overall</h2>
+        <p>Total Eggs: 8</p>
+        <p>Revenue: 4.00</p>
+        <p>Feed Cost: 4.00</p>
+        <p><b>Profit: 0.00</b></p>
       </div>
     </div>
   );
 }
-
-export default App;
