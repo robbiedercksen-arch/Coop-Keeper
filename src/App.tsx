@@ -5,24 +5,39 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [offline, setOffline] = useState(!navigator.onLine);
 
-  const [eggs, setEggs] = useState(0);
-  const [revenue, setRevenue] = useState(0);
+  const [eggs, setEggs] = useState<number>(0);
+  const [revenue, setRevenue] = useState<number>(0);
 
-  // Load saved data
+  // 🔥 LOAD FROM LOCAL STORAGE (ONCE)
   useEffect(() => {
-    const savedEggs = localStorage.getItem("eggs");
-    const savedRevenue = localStorage.getItem("revenue");
+    try {
+      const saved = localStorage.getItem("coopData");
 
-    if (savedEggs) setEggs(parseInt(savedEggs));
-    if (savedRevenue) setRevenue(parseFloat(savedRevenue));
+      if (saved) {
+        const data = JSON.parse(saved);
+        setEggs(data.eggs || 0);
+        setRevenue(data.revenue || 0);
+      }
+    } catch (err) {
+      console.error("Failed to load local data", err);
+    }
   }, []);
 
-  // Save data whenever it changes
+  // 🔥 SAVE TO LOCAL STORAGE (EVERY CHANGE)
   useEffect(() => {
-    localStorage.setItem("eggs", eggs.toString());
-    localStorage.setItem("revenue", revenue.toString());
+    try {
+      const data = {
+        eggs,
+        revenue,
+      };
+
+      localStorage.setItem("coopData", JSON.stringify(data));
+    } catch (err) {
+      console.error("Failed to save local data", err);
+    }
   }, [eggs, revenue]);
 
+  // 🌐 ONLINE/OFFLINE + USER
   useEffect(() => {
     const updateStatus = () => setOffline(!navigator.onLine);
     window.addEventListener("online", updateStatus);
@@ -40,9 +55,17 @@ export default function App() {
     };
   }, []);
 
+  // ➕ ADD EGG
   const addEgg = () => {
     setEggs((prev) => prev + 1);
-    setRevenue((prev) => prev + 0.5); // adjust price later
+    setRevenue((prev) => prev + 0.5);
+  };
+
+  // 🔁 RESET
+  const reset = () => {
+    setEggs(0);
+    setRevenue(0);
+    localStorage.removeItem("coopData");
   };
 
   return (
@@ -70,7 +93,7 @@ export default function App() {
         <p>Revenue: {revenue.toFixed(2)}</p>
       </div>
 
-      {/* ACTION */}
+      {/* ACTIONS */}
       <div style={{ marginTop: 20 }}>
         <button
           onClick={addEgg}
@@ -87,13 +110,9 @@ export default function App() {
         </button>
       </div>
 
-      {/* RESET (for testing) */}
       <div style={{ marginTop: 10 }}>
         <button
-          onClick={() => {
-            setEggs(0);
-            setRevenue(0);
-          }}
+          onClick={reset}
           style={{
             padding: "8px 16px",
             background: "#ef4444",
