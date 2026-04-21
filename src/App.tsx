@@ -1,44 +1,35 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 
+type Chicken = {
+  name: string;
+  eggs: number;
+};
+
 export default function App() {
   const [user, setUser] = useState<any>(null);
   const [offline, setOffline] = useState(!navigator.onLine);
 
-  const [eggs, setEggs] = useState<number>(0);
-  const [revenue, setRevenue] = useState<number>(0);
-  const [loaded, setLoaded] = useState(false); // 🔥 KEY FIX
+  const [chickens, setChickens] = useState<Chicken[]>([]);
+  const [newChicken, setNewChicken] = useState("");
+  const [loaded, setLoaded] = useState(false);
 
-  // 🔥 LOAD DATA FIRST
+  // 🔥 LOAD
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("coopData");
+    const saved = localStorage.getItem("coopChickens");
 
-      if (saved) {
-        const data = JSON.parse(saved);
-        setEggs(data.eggs || 0);
-        setRevenue(data.revenue || 0);
-      }
-    } catch (err) {
-      console.error("Load error", err);
+    if (saved) {
+      setChickens(JSON.parse(saved));
     }
 
-    setLoaded(true); // ✅ only after loading
+    setLoaded(true);
   }, []);
 
-  // 🔥 SAVE ONLY AFTER LOADED
+  // 🔥 SAVE
   useEffect(() => {
-    if (!loaded) return; // 🚨 PREVENT overwrite
-
-    try {
-      localStorage.setItem(
-        "coopData",
-        JSON.stringify({ eggs, revenue })
-      );
-    } catch (err) {
-      console.error("Save error", err);
-    }
-  }, [eggs, revenue, loaded]);
+    if (!loaded) return;
+    localStorage.setItem("coopChickens", JSON.stringify(chickens));
+  }, [chickens, loaded]);
 
   // 🌐 STATUS
   useEffect(() => {
@@ -58,48 +49,76 @@ export default function App() {
     };
   }, []);
 
-  // ➕ ADD
-  const addEgg = () => {
-    setEggs((prev) => prev + 1);
-    setRevenue((prev) => prev + 0.5);
+  // ➕ ADD CHICKEN
+  const addChicken = () => {
+    if (!newChicken.trim()) return;
+
+    setChickens([
+      ...chickens,
+      { name: newChicken.trim(), eggs: 0 }
+    ]);
+
+    setNewChicken("");
+  };
+
+  // 🥚 ADD EGG
+  const addEgg = (index: number) => {
+    const updated = [...chickens];
+    updated[index].eggs += 1;
+    setChickens(updated);
   };
 
   // 🔁 RESET
   const reset = () => {
-    setEggs(0);
-    setRevenue(0);
-    localStorage.removeItem("coopData");
+    setChickens([]);
+    localStorage.removeItem("coopChickens");
   };
+
+  const totalEggs = chickens.reduce((sum, c) => sum + c.eggs, 0);
 
   return (
     <div style={{ padding: 20 }}>
       <h1>🐔 Coop Keeper</h1>
 
-      {offline && (
-        <p style={{ color: "orange" }}>
-          ⚠️ Offline Mode (data saved locally)
-        </p>
-      )}
-
+      {offline && <p style={{ color: "orange" }}>⚠️ Offline Mode</p>}
       {!user && !offline && (
         <p style={{ color: "orange" }}>
           ⚠️ Not logged in (app still usable)
         </p>
       )}
-
       {user && <p>Welcome back 👋</p>}
 
+      {/* ADD CHICKEN */}
       <div style={{ marginTop: 20 }}>
-        <h2>📅 Today</h2>
-        <p>Eggs: {eggs}</p>
-        <p>Revenue: {revenue.toFixed(2)}</p>
+        <input
+          value={newChicken}
+          onChange={(e) => setNewChicken(e.target.value)}
+          placeholder="Chicken name"
+        />
+        <button onClick={addChicken}>Add Chicken</button>
       </div>
 
+      {/* LIST */}
       <div style={{ marginTop: 20 }}>
-        <button onClick={addEgg}>➕ Add Egg</button>
+        <h2>🐔 Chickens</h2>
+
+        {chickens.map((chicken, index) => (
+          <div key={index} style={{ marginBottom: 10 }}>
+            <b>{chicken.name}</b> — Eggs: {chicken.eggs}
+            <button onClick={() => addEgg(index)} style={{ marginLeft: 10 }}>
+              ➕ Egg
+            </button>
+          </div>
+        ))}
       </div>
 
-      <div style={{ marginTop: 10 }}>
+      {/* TOTAL */}
+      <div style={{ marginTop: 20 }}>
+        <h2>📊 Total Eggs: {totalEggs}</h2>
+      </div>
+
+      {/* RESET */}
+      <div style={{ marginTop: 20 }}>
         <button onClick={reset}>Reset</button>
       </div>
     </div>
