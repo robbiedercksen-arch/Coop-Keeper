@@ -1,9 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "./supabaseClient";
-
-type Chicken = {
-  name: string;
-};
 
 type DailyData = {
   eggs: number;
@@ -11,53 +6,47 @@ type DailyData = {
 };
 
 export default function App() {
-  const [user, setUser] = useState<any>(null);
   const [offline, setOffline] = useState(!navigator.onLine);
-
-  const [chickens, setChickens] = useState<Chicken[]>([]);
-  const [newChicken, setNewChicken] = useState("");
-
   const [dailyData, setDailyData] = useState<Record<string, DailyData>>({});
   const [loaded, setLoaded] = useState(false);
 
   const eggPrice = 0.5;
-
   const today = new Date().toISOString().split("T")[0];
 
-  // 🔥 LOAD
+  // 🔥 LOAD DATA
   useEffect(() => {
-    const saved = localStorage.getItem("coopDaily");
-
-    if (saved) {
-      const data = JSON.parse(saved);
-      setChickens(data.chickens || []);
-      setDailyData(data.dailyData || {});
+    try {
+      const saved = localStorage.getItem("coopDaily");
+      if (saved) {
+        const data = JSON.parse(saved);
+        setDailyData(data.dailyData || {});
+      }
+    } catch (err) {
+      console.error("Load error:", err);
     }
 
     setLoaded(true);
   }, []);
 
-  // 🔥 SAVE
+  // 🔥 SAVE DATA
   useEffect(() => {
     if (!loaded) return;
 
-    localStorage.setItem(
-      "coopDaily",
-      JSON.stringify({ chickens, dailyData })
-    );
-  }, [chickens, dailyData, loaded]);
+    try {
+      localStorage.setItem(
+        "coopDaily",
+        JSON.stringify({ dailyData })
+      );
+    } catch (err) {
+      console.error("Save error:", err);
+    }
+  }, [dailyData, loaded]);
 
-  // 🌐 STATUS
+  // 🌐 ONLINE STATUS
   useEffect(() => {
     const updateStatus = () => setOffline(!navigator.onLine);
     window.addEventListener("online", updateStatus);
     window.addEventListener("offline", updateStatus);
-
-    if (supabase) {
-      supabase.auth.getUser().then(({ data }) => {
-        setUser(data?.user ?? null);
-      });
-    }
 
     return () => {
       window.removeEventListener("online", updateStatus);
@@ -65,15 +54,7 @@ export default function App() {
     };
   }, []);
 
-  // ➕ ADD CHICKEN
-  const addChicken = () => {
-    if (!newChicken.trim()) return;
-
-    setChickens([...chickens, { name: newChicken.trim() }]);
-    setNewChicken("");
-  };
-
-  // 🥚 ADD EGG (TODAY)
+  // 🥚 ADD EGG
   const addEgg = () => {
     const todayData = dailyData[today] || { eggs: 0, feed: 0 };
 
@@ -86,7 +67,7 @@ export default function App() {
     });
   };
 
-  // 🌽 ADD FEED (TODAY)
+  // 🌽 ADD FEED
   const addFeed = () => {
     const amount = prompt("Enter feed cost:");
     if (!amount) return;
@@ -104,7 +85,6 @@ export default function App() {
 
   // 🔁 RESET
   const reset = () => {
-    setChickens([]);
     setDailyData({});
     localStorage.removeItem("coopDaily");
   };
@@ -117,29 +97,17 @@ export default function App() {
     <div style={{ padding: 20 }}>
       <h1>🐔 Coop Keeper</h1>
 
-      {offline && <p style={{ color: "orange" }}>⚠️ Offline Mode</p>}
-      {!user && !offline && (
+      {offline && (
         <p style={{ color: "orange" }}>
-          ⚠️ Not logged in (app still usable)
+          ⚠️ Offline Mode
         </p>
       )}
-      {user && <p>Welcome back 👋</p>}
-
-      {/* ADD CHICKEN */}
-      <div style={{ marginTop: 20 }}>
-        <input
-          value={newChicken}
-          onChange={(e) => setNewChicken(e.target.value)}
-          placeholder="Chicken name"
-        />
-        <button onClick={addChicken}>Add Chicken</button>
-      </div>
 
       {/* ACTIONS */}
       <div style={{ marginTop: 20 }}>
-        <button onClick={addEgg}>🥚 Add Egg (Today)</button>
+        <button onClick={addEgg}>🥚 Add Egg</button>
         <button onClick={addFeed} style={{ marginLeft: 10 }}>
-          🌽 Add Feed (Today)
+          🌽 Add Feed
         </button>
       </div>
 
