@@ -12,14 +12,20 @@ export default function App() {
 
   const [chickens, setChickens] = useState<Chicken[]>([]);
   const [newChicken, setNewChicken] = useState("");
+
+  const [feedCost, setFeedCost] = useState(0);
+  const [eggPrice] = useState(0.5);
+
   const [loaded, setLoaded] = useState(false);
 
   // 🔥 LOAD
   useEffect(() => {
-    const saved = localStorage.getItem("coopChickens");
+    const saved = localStorage.getItem("coopDataFull");
 
     if (saved) {
-      setChickens(JSON.parse(saved));
+      const data = JSON.parse(saved);
+      setChickens(data.chickens || []);
+      setFeedCost(data.feedCost || 0);
     }
 
     setLoaded(true);
@@ -28,8 +34,12 @@ export default function App() {
   // 🔥 SAVE
   useEffect(() => {
     if (!loaded) return;
-    localStorage.setItem("coopChickens", JSON.stringify(chickens));
-  }, [chickens, loaded]);
+
+    localStorage.setItem(
+      "coopDataFull",
+      JSON.stringify({ chickens, feedCost })
+    );
+  }, [chickens, feedCost, loaded]);
 
   // 🌐 STATUS
   useEffect(() => {
@@ -53,11 +63,7 @@ export default function App() {
   const addChicken = () => {
     if (!newChicken.trim()) return;
 
-    setChickens([
-      ...chickens,
-      { name: newChicken.trim(), eggs: 0 }
-    ]);
-
+    setChickens([...chickens, { name: newChicken.trim(), eggs: 0 }]);
     setNewChicken("");
   };
 
@@ -68,13 +74,24 @@ export default function App() {
     setChickens(updated);
   };
 
+  // 🌽 ADD FEED COST
+  const addFeed = () => {
+    const amount = prompt("Enter feed cost:");
+    if (!amount) return;
+
+    setFeedCost((prev) => prev + parseFloat(amount));
+  };
+
   // 🔁 RESET
   const reset = () => {
     setChickens([]);
-    localStorage.removeItem("coopChickens");
+    setFeedCost(0);
+    localStorage.removeItem("coopDataFull");
   };
 
   const totalEggs = chickens.reduce((sum, c) => sum + c.eggs, 0);
+  const revenue = totalEggs * eggPrice;
+  const profit = revenue - feedCost;
 
   return (
     <div style={{ padding: 20 }}>
@@ -112,9 +129,20 @@ export default function App() {
         ))}
       </div>
 
-      {/* TOTAL */}
+      {/* ACTIONS */}
       <div style={{ marginTop: 20 }}>
-        <h2>📊 Total Eggs: {totalEggs}</h2>
+        <button onClick={addFeed}>🌽 Add Feed Cost</button>
+      </div>
+
+      {/* STATS */}
+      <div style={{ marginTop: 20 }}>
+        <h2>📊 Stats</h2>
+        <p>Total Eggs: {totalEggs}</p>
+        <p>Revenue: {revenue.toFixed(2)}</p>
+        <p>Feed Cost: {feedCost.toFixed(2)}</p>
+        <p>
+          <b>Profit: {profit.toFixed(2)}</b>
+        </p>
       </div>
 
       {/* RESET */}
