@@ -5,13 +5,29 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [offline, setOffline] = useState(!navigator.onLine);
 
+  const [eggs, setEggs] = useState(0);
+  const [revenue, setRevenue] = useState(0);
+
+  // Load saved data
   useEffect(() => {
-    // Detect online/offline
+    const savedEggs = localStorage.getItem("eggs");
+    const savedRevenue = localStorage.getItem("revenue");
+
+    if (savedEggs) setEggs(parseInt(savedEggs));
+    if (savedRevenue) setRevenue(parseFloat(savedRevenue));
+  }, []);
+
+  // Save data whenever it changes
+  useEffect(() => {
+    localStorage.setItem("eggs", eggs.toString());
+    localStorage.setItem("revenue", revenue.toString());
+  }, [eggs, revenue]);
+
+  useEffect(() => {
     const updateStatus = () => setOffline(!navigator.onLine);
     window.addEventListener("online", updateStatus);
     window.addEventListener("offline", updateStatus);
 
-    // Safe user fetch (only if supabase is configured)
     if (supabase) {
       supabase.auth.getUser().then(({ data }) => {
         setUser(data?.user ?? null);
@@ -24,14 +40,18 @@ export default function App() {
     };
   }, []);
 
+  const addEgg = () => {
+    setEggs((prev) => prev + 1);
+    setRevenue((prev) => prev + 0.5); // adjust price later
+  };
+
   return (
     <div style={{ padding: 20 }}>
       <h1>🐔 Coop Keeper</h1>
 
-      {/* STATUS MESSAGES */}
       {offline && (
         <p style={{ color: "orange" }}>
-          ⚠️ Offline Mode (limited features)
+          ⚠️ Offline Mode (data saved locally)
         </p>
       )}
 
@@ -43,37 +63,47 @@ export default function App() {
 
       {user && <p>Welcome back 👋</p>}
 
-      {/* TODAY SECTION */}
+      {/* TODAY */}
       <div style={{ marginTop: 20 }}>
         <h2>📅 Today</h2>
-        <p>Eggs: 8</p>
-        <p>Revenue: 4.00</p>
-        <p>Best Chicken: Saartjie</p>
+        <p>Eggs: {eggs}</p>
+        <p>Revenue: {revenue.toFixed(2)}</p>
       </div>
 
-      {/* OVERALL SECTION */}
+      {/* ACTION */}
       <div style={{ marginTop: 20 }}>
-        <h2>📊 Overall</h2>
-        <p>Total Eggs: 8</p>
-        <p>Revenue: 4.00</p>
-        <p>Feed Cost: 4.00</p>
-        <p><b>Profit: 0.00</b></p>
-      </div>
-
-      {/* QUICK ACTION */}
-      <div style={{ marginTop: 30 }}>
         <button
-          onClick={() => alert("Add functionality coming next")}
+          onClick={addEgg}
           style={{
             padding: "10px 20px",
-            background: "#6366f1",
+            background: "#22c55e",
             color: "white",
             border: "none",
             borderRadius: "8px",
             cursor: "pointer"
           }}
         >
-          ➕ Add Entry
+          ➕ Add Egg
+        </button>
+      </div>
+
+      {/* RESET (for testing) */}
+      <div style={{ marginTop: 10 }}>
+        <button
+          onClick={() => {
+            setEggs(0);
+            setRevenue(0);
+          }}
+          style={{
+            padding: "8px 16px",
+            background: "#ef4444",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer"
+          }}
+        >
+          Reset
         </button>
       </div>
     </div>
