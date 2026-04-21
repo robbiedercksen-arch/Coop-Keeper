@@ -1,6 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = "https://gzoxsnsbzjbmatdxwyhh.supabase.co";
-const supabaseAnonKey = "sb_publishable_EYpEiEJ_Q4ElsyvyI1ZDtw_q9lOgU_A";
+// ⚠️ Replace these with your real values later
+const SUPABASE_URL = "https://your-project-id.supabase.co";
+const SUPABASE_ANON_KEY = "your-anon-key";
 
-export const supabase = createClient(...);
+// Safe fallback so app doesn't crash if not configured yet
+export const supabase =
+  SUPABASE_URL && SUPABASE_ANON_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
