@@ -7,8 +7,9 @@ export default function App() {
 
   const [eggs, setEggs] = useState<number>(0);
   const [revenue, setRevenue] = useState<number>(0);
+  const [loaded, setLoaded] = useState(false); // 🔥 KEY FIX
 
-  // 🔥 LOAD FROM LOCAL STORAGE (ONCE)
+  // 🔥 LOAD DATA FIRST
   useEffect(() => {
     try {
       const saved = localStorage.getItem("coopData");
@@ -19,25 +20,27 @@ export default function App() {
         setRevenue(data.revenue || 0);
       }
     } catch (err) {
-      console.error("Failed to load local data", err);
+      console.error("Load error", err);
     }
+
+    setLoaded(true); // ✅ only after loading
   }, []);
 
-  // 🔥 SAVE TO LOCAL STORAGE (EVERY CHANGE)
+  // 🔥 SAVE ONLY AFTER LOADED
   useEffect(() => {
+    if (!loaded) return; // 🚨 PREVENT overwrite
+
     try {
-      const data = {
-        eggs,
-        revenue,
-      };
-
-      localStorage.setItem("coopData", JSON.stringify(data));
+      localStorage.setItem(
+        "coopData",
+        JSON.stringify({ eggs, revenue })
+      );
     } catch (err) {
-      console.error("Failed to save local data", err);
+      console.error("Save error", err);
     }
-  }, [eggs, revenue]);
+  }, [eggs, revenue, loaded]);
 
-  // 🌐 ONLINE/OFFLINE + USER
+  // 🌐 STATUS
   useEffect(() => {
     const updateStatus = () => setOffline(!navigator.onLine);
     window.addEventListener("online", updateStatus);
@@ -55,7 +58,7 @@ export default function App() {
     };
   }, []);
 
-  // ➕ ADD EGG
+  // ➕ ADD
   const addEgg = () => {
     setEggs((prev) => prev + 1);
     setRevenue((prev) => prev + 0.5);
@@ -86,44 +89,18 @@ export default function App() {
 
       {user && <p>Welcome back 👋</p>}
 
-      {/* TODAY */}
       <div style={{ marginTop: 20 }}>
         <h2>📅 Today</h2>
         <p>Eggs: {eggs}</p>
         <p>Revenue: {revenue.toFixed(2)}</p>
       </div>
 
-      {/* ACTIONS */}
       <div style={{ marginTop: 20 }}>
-        <button
-          onClick={addEgg}
-          style={{
-            padding: "10px 20px",
-            background: "#22c55e",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer"
-          }}
-        >
-          ➕ Add Egg
-        </button>
+        <button onClick={addEgg}>➕ Add Egg</button>
       </div>
 
       <div style={{ marginTop: 10 }}>
-        <button
-          onClick={reset}
-          style={{
-            padding: "8px 16px",
-            background: "#ef4444",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer"
-          }}
-        >
-          Reset
-        </button>
+        <button onClick={reset}>Reset</button>
       </div>
     </div>
   );
