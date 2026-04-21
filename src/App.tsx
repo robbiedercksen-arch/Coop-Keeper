@@ -3,7 +3,11 @@ import { supabase } from "./supabaseClient";
 
 type Chicken = {
   name: string;
+};
+
+type DailyData = {
   eggs: number;
+  feed: number;
 };
 
 export default function App() {
@@ -13,19 +17,21 @@ export default function App() {
   const [chickens, setChickens] = useState<Chicken[]>([]);
   const [newChicken, setNewChicken] = useState("");
 
-  const [feedCost, setFeedCost] = useState(0);
-  const [eggPrice] = useState(0.5);
-
+  const [dailyData, setDailyData] = useState<Record<string, DailyData>>({});
   const [loaded, setLoaded] = useState(false);
+
+  const eggPrice = 0.5;
+
+  const today = new Date().toISOString().split("T")[0];
 
   // 🔥 LOAD
   useEffect(() => {
-    const saved = localStorage.getItem("coopDataFull");
+    const saved = localStorage.getItem("coopDaily");
 
     if (saved) {
       const data = JSON.parse(saved);
       setChickens(data.chickens || []);
-      setFeedCost(data.feedCost || 0);
+      setDailyData(data.dailyData || {});
     }
 
     setLoaded(true);
@@ -36,10 +42,10 @@ export default function App() {
     if (!loaded) return;
 
     localStorage.setItem(
-      "coopDataFull",
-      JSON.stringify({ chickens, feedCost })
+      "coopDaily",
+      JSON.stringify({ chickens, dailyData })
     );
-  }, [chickens, feedCost, loaded]);
+  }, [chickens, dailyData, loaded]);
 
   // 🌐 STATUS
   useEffect(() => {
@@ -63,35 +69,49 @@ export default function App() {
   const addChicken = () => {
     if (!newChicken.trim()) return;
 
-    setChickens([...chickens, { name: newChicken.trim(), eggs: 0 }]);
+    setChickens([...chickens, { name: newChicken.trim() }]);
     setNewChicken("");
   };
 
-  // 🥚 ADD EGG
-  const addEgg = (index: number) => {
-    const updated = [...chickens];
-    updated[index].eggs += 1;
-    setChickens(updated);
+  // 🥚 ADD EGG (TODAY)
+  const addEgg = () => {
+    const todayData = dailyData[today] || { eggs: 0, feed: 0 };
+
+    setDailyData({
+      ...dailyData,
+      [today]: {
+        ...todayData,
+        eggs: todayData.eggs + 1
+      }
+    });
   };
 
-  // 🌽 ADD FEED COST
+  // 🌽 ADD FEED (TODAY)
   const addFeed = () => {
     const amount = prompt("Enter feed cost:");
     if (!amount) return;
 
-    setFeedCost((prev) => prev + parseFloat(amount));
+    const todayData = dailyData[today] || { eggs: 0, feed: 0 };
+
+    setDailyData({
+      ...dailyData,
+      [today]: {
+        ...todayData,
+        feed: todayData.feed + parseFloat(amount)
+      }
+    });
   };
 
   // 🔁 RESET
   const reset = () => {
     setChickens([]);
-    setFeedCost(0);
-    localStorage.removeItem("coopDataFull");
+    setDailyData({});
+    localStorage.removeItem("coopDaily");
   };
 
-  const totalEggs = chickens.reduce((sum, c) => sum + c.eggs, 0);
-  const revenue = totalEggs * eggPrice;
-  const profit = revenue - feedCost;
+  const todayStats = dailyData[today] || { eggs: 0, feed: 0 };
+  const revenue = todayStats.eggs * eggPrice;
+  const profit = revenue - todayStats.feed;
 
   return (
     <div style={{ padding: 20 }}>
@@ -115,34 +135,32 @@ export default function App() {
         <button onClick={addChicken}>Add Chicken</button>
       </div>
 
-      {/* LIST */}
-      <div style={{ marginTop: 20 }}>
-        <h2>🐔 Chickens</h2>
-
-        {chickens.map((chicken, index) => (
-          <div key={index} style={{ marginBottom: 10 }}>
-            <b>{chicken.name}</b> — Eggs: {chicken.eggs}
-            <button onClick={() => addEgg(index)} style={{ marginLeft: 10 }}>
-              ➕ Egg
-            </button>
-          </div>
-        ))}
-      </div>
-
       {/* ACTIONS */}
       <div style={{ marginTop: 20 }}>
-        <button onClick={addFeed}>🌽 Add Feed Cost</button>
+        <button onClick={addEgg}>🥚 Add Egg (Today)</button>
+        <button onClick={addFeed} style={{ marginLeft: 10 }}>
+          🌽 Add Feed (Today)
+        </button>
       </div>
 
-      {/* STATS */}
+      {/* TODAY */}
       <div style={{ marginTop: 20 }}>
-        <h2>📊 Stats</h2>
-        <p>Total Eggs: {totalEggs}</p>
+        <h2>📅 Today</h2>
+        <p>Eggs: {todayStats.eggs}</p>
+        <p>Feed: {todayStats.feed.toFixed(2)}</p>
         <p>Revenue: {revenue.toFixed(2)}</p>
-        <p>Feed Cost: {feedCost.toFixed(2)}</p>
-        <p>
-          <b>Profit: {profit.toFixed(2)}</b>
-        </p>
+        <p><b>Profit: {profit.toFixed(2)}</b></p>
+      </div>
+
+      {/* HISTORY */}
+      <div style={{ marginTop: 20 }}>
+        <h2>📜 History</h2>
+
+        {Object.entries(dailyData).map(([date, data]) => (
+          <div key={date}>
+            <b>{date}</b> — Eggs: {data.eggs}, Feed: {data.feed}
+          </div>
+        ))}
       </div>
 
       {/* RESET */}
