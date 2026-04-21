@@ -3,5 +3,9 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/', // ✅ THIS IS CRITICAL
+  base: '/', // correct for Vercel root domain
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets', // 👈 IMPORTANT
+  }
 })
