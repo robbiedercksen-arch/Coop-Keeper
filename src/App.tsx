@@ -1,25 +1,30 @@
 import { useEffect, useState } from "react";
 
+type DayData = {
+  date: string;
+  eggs: number;
+  feed: number;
+};
+
 type Chicken = {
   id: number;
   name: string;
-  eggs: number;
+  history: DayData[];
 };
 
 export default function App() {
   const [chickens, setChickens] = useState<Chicken[]>([]);
   const [newChicken, setNewChicken] = useState("");
-  const [feed, setFeed] = useState(0);
   const [loaded, setLoaded] = useState(false);
 
-  // 🔹 LOAD DATA
+  const today = new Date().toISOString().split("T")[0];
+
+  // 🔹 LOAD
   useEffect(() => {
     const saved = localStorage.getItem("coopData");
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        setChickens(parsed.chickens || []);
-        setFeed(parsed.feed || 0);
+        setChickens(JSON.parse(saved).chickens || []);
       } catch {
         localStorage.removeItem("coopData");
       }
@@ -27,17 +32,15 @@ export default function App() {
     setLoaded(true);
   }, []);
 
-  // 🔹 SAVE DATA
+  // 🔹 SAVE
   useEffect(() => {
     if (!loaded) return;
 
-    const data = {
-      chickens,
-      feed,
-    };
-
-    localStorage.setItem("coopData", JSON.stringify(data));
-  }, [chickens, feed, loaded]);
+    localStorage.setItem(
+      "coopData",
+      JSON.stringify({ chickens })
+    );
+  }, [chickens, loaded]);
 
   // 🔹 ADD CHICKEN
   const addChicken = () => {
@@ -46,37 +49,96 @@ export default function App() {
     const newEntry: Chicken = {
       id: Date.now(),
       name: newChicken,
-      eggs: 0,
+      history: [],
     };
 
     setChickens([...chickens, newEntry]);
     setNewChicken("");
   };
 
-  // 🔹 ADD EGG TO SPECIFIC CHICKEN
-  const addEggToChicken = (id: number) => {
-    const updated = chickens.map((c) =>
-      c.id === id ? { ...c, eggs: c.eggs + 1 } : c
+  // 🔹 ADD EGG
+  const addEgg = (id: number) => {
+    setChickens((prev) =>
+      prev.map((c) => {
+        if (c.id !== id) return c;
+
+        const existing = c.history.find((h) => h.date === today);
+
+        if (existing) {
+          return {
+            ...c,
+            history: c.history.map((h) =>
+              h.date === today
+                ? { ...h, eggs: h.eggs + 1 }
+                : h
+            ),
+          };
+        }
+
+        return {
+          ...c,
+          history: [
+            ...c.history,
+            { date: today, eggs: 1, feed: 0 },
+          ],
+        };
+      })
     );
-    setChickens(updated);
   };
 
   // 🔹 ADD FEED
-  const addFeed = () => {
-    setFeed(feed + 10);
+  const addFeed = (id: number) => {
+    setChickens((prev) =>
+      prev.map((c) => {
+        if (c.id !== id) return c;
+
+        const existing = c.history.find((h) => h.date === today);
+
+        if (existing) {
+          return {
+            ...c,
+            history: c.history.map((h) =>
+              h.date === today
+                ? { ...h, feed: h.feed + 10 }
+                : h
+            ),
+          };
+        }
+
+        return {
+          ...c,
+          history: [
+            ...c.history,
+            { date: today, eggs: 0, feed: 10 },
+          ],
+        };
+      })
+    );
   };
 
   // 🔹 RESET
   const reset = () => {
     setChickens([]);
-    setFeed(0);
     localStorage.removeItem("coopData");
   };
 
-  // 🔹 CALCULATIONS
-  const totalEggs = chickens.reduce((sum, c) => sum + c.eggs, 0);
+  // 🔹 TOTALS TODAY
+  const totalEggs = chickens.reduce((sum, c) => {
+    const todayData = c.history.find(
+      (h) => h.date === today
+    );
+    return sum + (todayData?.eggs || 0);
+  }, 0);
+
+  const totalFeed = chickens.reduce((sum, c) => {
+    const todayData = c.history.find(
+      (h) => h.date === today
+    );
+    return sum + (todayData?.feed || 0);
+  }, 0);
+
   const revenue = totalEggs * 0.5;
-  const profit = revenue - feed;
+  const profit = revenue - totalFeed;
 
   return (
     <div style={{ padding: "20px" }}>
@@ -96,43 +158,48 @@ export default function App() {
         <button onClick={addChicken}>Add Chicken</button>
       </div>
 
-      <br />
-
-      {/* FEED */}
-      <button onClick={addFeed}>🌽 Add Feed</button>
-
       <hr />
 
       {/* TODAY */}
-      <h2>📅 Today</h2>
+      <h2>📅 Today ({today})</h2>
       <p>Eggs: {totalEggs}</p>
-      <p>Feed: {feed.toFixed(2)}</p>
+      <p>Feed: {totalFeed}</p>
       <p>Revenue: {revenue.toFixed(2)}</p>
-      <p>
-        <b>Profit: {profit.toFixed(2)}</b>
-      </p>
+      <p><b>Profit: {profit.toFixed(2)}</b></p>
 
       <hr />
 
       {/* CHICKENS */}
       <h3>🐔 Chickens</h3>
+
       {chickens.length === 0 && <p>No chickens yet</p>}
 
       {chickens.map((c) => (
-        <div key={c.id} style={{ marginBottom: "10px" }}>
-          🐔 {c.name} — Eggs: {c.eggs}
-          <button
-            onClick={() => addEggToChicken(c.id)}
-            style={{ marginLeft: "10px" }}
-          >
-            🥚 + Egg
-          </button>
+        <div key={c.id} style={{ marginBottom: "15px" }}>
+          <strong>{c.name}</strong>
+
+          <div>
+            <button onClick={() => addEgg(c.id)}>
+              🥚 Add Egg
+            </button>
+
+            <button
+              onClick={() => addFeed(c.id)}
+              style={{ marginLeft: "10px" }}
+            >
+              🌽 Add Feed
+            </button>
+          </div>
+
+          {/* HISTORY */}
+          {c.history.map((h, i) => (
+            <div key={i}>
+              {h.date} → Eggs: {h.eggs}, Feed: {h.feed}
+            </div>
+          ))}
         </div>
       ))}
 
-      <br />
-
-      {/* RESET */}
       <button onClick={reset}>Reset</button>
     </div>
   );
