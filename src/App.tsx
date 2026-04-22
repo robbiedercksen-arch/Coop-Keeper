@@ -1,89 +1,130 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type Chicken = {
+  id: number;
   name: string;
   eggs: number;
-  feed: number;
 };
 
 export default function App() {
   const [chickens, setChickens] = useState<Chicken[]>([]);
   const [newChicken, setNewChicken] = useState("");
+  const [feed, setFeed] = useState(0);
+  const [loaded, setLoaded] = useState(false); // 🔥 important fix
 
+  // 🔹 LOAD DATA (runs once)
   useEffect(() => {
     const saved = localStorage.getItem("coopData");
     if (saved) {
-      setChickens(JSON.parse(saved));
+      try {
+        const parsed = JSON.parse(saved);
+        setChickens(parsed.chickens || []);
+        setFeed(parsed.feed || 0);
+      } catch {
+        localStorage.removeItem("coopData");
+      }
     }
+    setLoaded(true); // ✅ allow saving AFTER load
   }, []);
 
+  // 🔹 SAVE DATA (only after load)
   useEffect(() => {
-    localStorage.setItem("coopData", JSON.stringify(chickens));
-  }, [chickens]);
+    if (!loaded) return; // 🚫 prevents overwrite
 
+    const data = {
+      chickens,
+      feed,
+    };
+
+    console.log("SAVING:", data);
+    localStorage.setItem("coopData", JSON.stringify(data));
+  }, [chickens, feed, loaded]);
+
+  // 🔹 Add Chicken
   const addChicken = () => {
     if (!newChicken.trim()) return;
 
-    setChickens([
-      ...chickens,
-      { name: newChicken, eggs: 0, feed: 0 },
-    ]);
+    const newEntry: Chicken = {
+      id: Date.now(),
+      name: newChicken,
+      eggs: 0,
+    };
+
+    setChickens([...chickens, newEntry]);
     setNewChicken("");
   };
 
-  const addEgg = (index: number) => {
+  // 🔹 Add Egg
+  const addEgg = () => {
+    if (chickens.length === 0) return;
+
     const updated = [...chickens];
-    updated[index].eggs += 1;
+    updated[0].eggs += 1; // simple: first chicken
     setChickens(updated);
   };
 
-  const addFeed = (index: number) => {
-    const updated = [...chickens];
-    updated[index].feed += 1;
-    setChickens(updated);
+  // 🔹 Add Feed
+  const addFeed = () => {
+    setFeed(feed + 10);
   };
 
+  // 🔹 Reset
+  const reset = () => {
+    setChickens([]);
+    setFeed(0);
+    localStorage.removeItem("coopData");
+  };
+
+  // 🔹 Calculations
   const totalEggs = chickens.reduce((sum, c) => sum + c.eggs, 0);
-  const totalFeed = chickens.reduce((sum, c) => sum + c.feed, 0);
   const revenue = totalEggs * 0.5;
-  const profit = revenue - totalFeed;
+  const profit = revenue - feed;
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: "20px" }}>
       <h1>🐔 Coop Keeper</h1>
 
       <p style={{ color: "orange" }}>
-        ⚠ Not logged in (app still usable)
+        ⚠️ Not logged in (app still usable)
       </p>
 
-      <div style={{ marginBottom: 20 }}>
+      {/* Add Chicken */}
+      <div>
         <input
+          placeholder="Chicken name"
           value={newChicken}
           onChange={(e) => setNewChicken(e.target.value)}
-          placeholder="Chicken name"
         />
         <button onClick={addChicken}>Add Chicken</button>
       </div>
 
-      {chickens.map((chicken, index) => (
-        <div key={index} style={{ marginBottom: 15 }}>
-          <strong>{chicken.name}</strong><br />
-          Eggs: {chicken.eggs} | Feed: {chicken.feed}
-          <br />
-          <button onClick={() => addEgg(index)}>🥚 Add Egg</button>
-          <button onClick={() => addFeed(index)}>🌽 Add Feed</button>
-        </div>
-      ))}
+      <br />
+
+      {/* Actions */}
+      <button onClick={addEgg}>🥚 Add Egg</button>
+      <button onClick={addFeed}>🌽 Add Feed</button>
 
       <hr />
 
+      {/* Today */}
       <h2>📅 Today</h2>
       <p>Eggs: {totalEggs}</p>
-      <p>Feed: {totalFeed}</p>
+      <p>Feed: {feed.toFixed(2)}</p>
       <p>Revenue: {revenue.toFixed(2)}</p>
-      <p><strong>Profit: {profit.toFixed(2)}</strong></p>
+      <p><b>Profit: {profit.toFixed(2)}</b></p>
 
-      <button onClick={() => setChickens([])}>Reset</button>
+      {/* Chickens */}
+      <h3>🐔 Chickens</h3>
+      {chickens.map((c) => (
+        <div key={c.id}>
+          {c.name} — Eggs: {c.eggs}
+        </div>
+      ))}
+
+      <br />
+
+      {/* Reset */}
+      <button onClick={reset}>Reset</button>
     </div>
   );
 }
