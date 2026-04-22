@@ -10,9 +10,9 @@ export default function App() {
   const [chickens, setChickens] = useState<Chicken[]>([]);
   const [newChicken, setNewChicken] = useState("");
   const [feed, setFeed] = useState(0);
-  const [loaded, setLoaded] = useState(false); // 🔥 important fix
+  const [loaded, setLoaded] = useState(false);
 
-  // 🔹 LOAD DATA (runs once)
+  // 🔹 LOAD DATA
   useEffect(() => {
     const saved = localStorage.getItem("coopData");
     if (saved) {
@@ -24,23 +24,22 @@ export default function App() {
         localStorage.removeItem("coopData");
       }
     }
-    setLoaded(true); // ✅ allow saving AFTER load
+    setLoaded(true);
   }, []);
 
-  // 🔹 SAVE DATA (only after load)
+  // 🔹 SAVE DATA
   useEffect(() => {
-    if (!loaded) return; // 🚫 prevents overwrite
+    if (!loaded) return;
 
     const data = {
       chickens,
       feed,
     };
 
-    console.log("SAVING:", data);
     localStorage.setItem("coopData", JSON.stringify(data));
   }, [chickens, feed, loaded]);
 
-  // 🔹 Add Chicken
+  // 🔹 ADD CHICKEN
   const addChicken = () => {
     if (!newChicken.trim()) return;
 
@@ -54,28 +53,27 @@ export default function App() {
     setNewChicken("");
   };
 
-  // 🔹 Add Egg
-  const addEgg = () => {
-    if (chickens.length === 0) return;
-
-    const updated = [...chickens];
-    updated[0].eggs += 1; // simple: first chicken
+  // 🔹 ADD EGG TO SPECIFIC CHICKEN
+  const addEggToChicken = (id: number) => {
+    const updated = chickens.map((c) =>
+      c.id === id ? { ...c, eggs: c.eggs + 1 } : c
+    );
     setChickens(updated);
   };
 
-  // 🔹 Add Feed
+  // 🔹 ADD FEED
   const addFeed = () => {
     setFeed(feed + 10);
   };
 
-  // 🔹 Reset
+  // 🔹 RESET
   const reset = () => {
     setChickens([]);
     setFeed(0);
     localStorage.removeItem("coopData");
   };
 
-  // 🔹 Calculations
+  // 🔹 CALCULATIONS
   const totalEggs = chickens.reduce((sum, c) => sum + c.eggs, 0);
   const revenue = totalEggs * 0.5;
   const profit = revenue - feed;
@@ -88,7 +86,7 @@ export default function App() {
         ⚠️ Not logged in (app still usable)
       </p>
 
-      {/* Add Chicken */}
+      {/* ADD CHICKEN */}
       <div>
         <input
           placeholder="Chicken name"
@@ -100,30 +98,41 @@ export default function App() {
 
       <br />
 
-      {/* Actions */}
-      <button onClick={addEgg}>🥚 Add Egg</button>
+      {/* FEED */}
       <button onClick={addFeed}>🌽 Add Feed</button>
 
       <hr />
 
-      {/* Today */}
+      {/* TODAY */}
       <h2>📅 Today</h2>
       <p>Eggs: {totalEggs}</p>
       <p>Feed: {feed.toFixed(2)}</p>
       <p>Revenue: {revenue.toFixed(2)}</p>
-      <p><b>Profit: {profit.toFixed(2)}</b></p>
+      <p>
+        <b>Profit: {profit.toFixed(2)}</b>
+      </p>
 
-      {/* Chickens */}
+      <hr />
+
+      {/* CHICKENS */}
       <h3>🐔 Chickens</h3>
+      {chickens.length === 0 && <p>No chickens yet</p>}
+
       {chickens.map((c) => (
-        <div key={c.id}>
-          {c.name} — Eggs: {c.eggs}
+        <div key={c.id} style={{ marginBottom: "10px" }}>
+          🐔 {c.name} — Eggs: {c.eggs}
+          <button
+            onClick={() => addEggToChicken(c.id)}
+            style={{ marginLeft: "10px" }}
+          >
+            🥚 + Egg
+          </button>
         </div>
       ))}
 
       <br />
 
-      {/* Reset */}
+      {/* RESET */}
       <button onClick={reset}>Reset</button>
     </div>
   );
