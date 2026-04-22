@@ -1,140 +1,94 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
-type DailyData = {
+type Chicken = {
+  name: string;
   eggs: number;
   feed: number;
 };
 
 export default function App() {
-  const [offline, setOffline] = useState(!navigator.onLine);
-  const [dailyData, setDailyData] = useState<Record<string, DailyData>>({});
-  const [loaded, setLoaded] = useState(false);
+  const [chickens, setChickens] = useState<Chicken[]>([]);
+  const [newChicken, setNewChicken] = useState("");
 
-  const eggPrice = 0.5;
-  const today = new Date().toISOString().split("T")[0];
-
-  // 🔥 LOAD DATA
+  // Load from localStorage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("coopDaily");
-      if (saved) {
-        const data = JSON.parse(saved);
-        setDailyData(data.dailyData || {});
-      }
-    } catch (err) {
-      console.error("Load error:", err);
+    const saved = localStorage.getItem("coopData");
+    if (saved) {
+      setChickens(JSON.parse(saved));
     }
-
-    setLoaded(true);
   }, []);
 
-  // 🔥 SAVE DATA
+  // Save to localStorage
   useEffect(() => {
-    if (!loaded) return;
+    localStorage.setItem("coopData", JSON.stringify(chickens));
+  }, [chickens]);
 
-    try {
-      localStorage.setItem(
-        "coopDaily",
-        JSON.stringify({ dailyData })
-      );
-    } catch (err) {
-      console.error("Save error:", err);
-    }
-  }, [dailyData, loaded]);
+  const addChicken = () => {
+    if (!newChicken.trim()) return;
 
-  // 🌐 ONLINE STATUS
-  useEffect(() => {
-    const updateStatus = () => setOffline(!navigator.onLine);
-    window.addEventListener("online", updateStatus);
-    window.addEventListener("offline", updateStatus);
-
-    return () => {
-      window.removeEventListener("online", updateStatus);
-      window.removeEventListener("offline", updateStatus);
-    };
-  }, []);
-
-  // 🥚 ADD EGG
-  const addEgg = () => {
-    const todayData = dailyData[today] || { eggs: 0, feed: 0 };
-
-    setDailyData({
-      ...dailyData,
-      [today]: {
-        ...todayData,
-        eggs: todayData.eggs + 1
-      }
-    });
+    setChickens([
+      ...chickens,
+      { name: newChicken, eggs: 0, feed: 0 },
+    ]);
+    setNewChicken("");
   };
 
-  // 🌽 ADD FEED
-  const addFeed = () => {
-    const amount = prompt("Enter feed cost:");
-    if (!amount) return;
-
-    const todayData = dailyData[today] || { eggs: 0, feed: 0 };
-
-    setDailyData({
-      ...dailyData,
-      [today]: {
-        ...todayData,
-        feed: todayData.feed + parseFloat(amount)
-      }
-    });
+  const addEgg = (index: number) => {
+    const updated = [...chickens];
+    updated[index].eggs += 1;
+    setChickens(updated);
   };
 
-  // 🔁 RESET
-  const reset = () => {
-    setDailyData({});
-    localStorage.removeItem("coopDaily");
+  const addFeed = (index: number) => {
+    const updated = [...chickens];
+    updated[index].feed += 1;
+    setChickens(updated);
   };
 
-  const todayStats = dailyData[today] || { eggs: 0, feed: 0 };
-  const revenue = todayStats.eggs * eggPrice;
-  const profit = revenue - todayStats.feed;
+  const totalEggs = chickens.reduce((sum, c) => sum + c.eggs, 0);
+  const totalFeed = chickens.reduce((sum, c) => sum + c.feed, 0);
+  const revenue = totalEggs * 0.5;
+  const profit = revenue - totalFeed;
 
   return (
     <div style={{ padding: 20 }}>
       <h1>🐔 Coop Keeper</h1>
 
-      {offline && (
-        <p style={{ color: "orange" }}>
-          ⚠️ Offline Mode
-        </p>
-      )}
+      <p style={{ color: "orange" }}>
+        ⚠ Not logged in (app still usable)
+      </p>
 
-      {/* ACTIONS */}
-      <div style={{ marginTop: 20 }}>
-        <button onClick={addEgg}>🥚 Add Egg</button>
-        <button onClick={addFeed} style={{ marginLeft: 10 }}>
-          🌽 Add Feed
-        </button>
+      {/* Add Chicken */}
+      <div style={{ marginBottom: 20 }}>
+        <input
+          value={newChicken}
+          onChange={(e) => setNewChicken(e.target.value)}
+          placeholder="Chicken name"
+        />
+        <button onClick={addChicken}>Add Chicken</button>
       </div>
 
-      {/* TODAY */}
-      <div style={{ marginTop: 20 }}>
-        <h2>📅 Today</h2>
-        <p>Eggs: {todayStats.eggs}</p>
-        <p>Feed: {todayStats.feed.toFixed(2)}</p>
-        <p>Revenue: {revenue.toFixed(2)}</p>
-        <p><b>Profit: {profit.toFixed(2)}</b></p>
-      </div>
+      {/* Chickens List */}
+      {chickens.map((chicken, index) => (
+        <div key={index} style={{ marginBottom: 15 }}>
+          <strong>{chicken.name}</strong><br />
+          Eggs: {chicken.eggs} | Feed: {chicken.feed}
+          <br />
+          <button onClick={() => addEgg(index)}>🥚 Add Egg</button>
+          <button onClick={() => addFeed(index)}>🌽 Add Feed</button>
+        </div>
+      ))}
 
-      {/* HISTORY */}
-      <div style={{ marginTop: 20 }}>
-        <h2>📜 History</h2>
+      <hr />
 
-        {Object.entries(dailyData).map(([date, data]) => (
-          <div key={date}>
-            <b>{date}</b> — Eggs: {data.eggs}, Feed: {data.feed}
-          </div>
-        ))}
-      </div>
+      {/* Totals */}
+      <h2>📅 Today</h2>
+      <p>Eggs: {totalEggs}</p>
+      <p>Feed: {totalFeed}</p>
+      <p>Revenue: {revenue.toFixed(2)}</p>
+      <p><strong>Profit: {profit.toFixed(2)}</strong></p>
 
-      {/* RESET */}
-      <div style={{ marginTop: 20 }}>
-        <button onClick={reset}>Reset</button>
-      </div>
+      <button onClick={() => setChickens([])}>Reset</button>
     </div>
   );
 }
