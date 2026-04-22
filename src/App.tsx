@@ -10,7 +10,6 @@ export default function App() {
   const [chickens, setChickens] = useState<Chicken[]>([]);
   const [newChicken, setNewChicken] = useState("");
 
-  // Load from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("coopData");
     if (saved) {
@@ -18,7 +17,6 @@ export default function App() {
     }
   }, []);
 
-  // Save to localStorage
   useEffect(() => {
     localStorage.setItem("coopData", JSON.stringify(chickens));
   }, [chickens]);
@@ -58,7 +56,6 @@ export default function App() {
         ⚠ Not logged in (app still usable)
       </p>
 
-      {/* Add Chicken */}
       <div style={{ marginBottom: 20 }}>
         <input
           value={newChicken}
@@ -68,7 +65,6 @@ export default function App() {
         <button onClick={addChicken}>Add Chicken</button>
       </div>
 
-      {/* Chickens List */}
       {chickens.map((chicken, index) => (
         <div key={index} style={{ marginBottom: 15 }}>
           <strong>{chicken.name}</strong><br />
@@ -81,7 +77,6 @@ export default function App() {
 
       <hr />
 
-      {/* Totals */}
       <h2>📅 Today</h2>
       <p>Eggs: {totalEggs}</p>
       <p>Feed: {totalFeed}</p>
