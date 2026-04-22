@@ -11,52 +11,66 @@ type Chicken = {
   id: string;
   name: string;
   history: DayData[];
+  user_id: string;
 };
 
 export default function App() {
+  const [user, setUser] = useState<any>(null);
   const [chickens, setChickens] = useState<Chicken[]>([]);
   const [newChicken, setNewChicken] = useState("");
+  const [email, setEmail] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
 
-  // 🔹 LOAD FROM SUPABASE
+  // 🔹 CHECK SESSION
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+    });
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+  }, []);
+
+  // 🔹 LOAD CHICKENS
   const loadChickens = async () => {
-    const { data, error } = await supabase
-      .from("chickens")
-      .select("*");
-
-    if (error) {
-      console.error("LOAD ERROR:", error);
-      return;
-    }
-
+    const { data } = await supabase.from("chickens").select("*");
     if (data) setChickens(data);
   };
 
   useEffect(() => {
-    loadChickens();
-  }, []);
+    if (user) loadChickens();
+  }, [user]);
+
+  // 🔹 LOGIN
+  const login = async () => {
+    await supabase.auth.signInWithOtp({
+      email,
+    });
+    alert("Check your email for login link 📧");
+  };
+
+  // 🔹 LOGOUT
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setChickens([]);
+  };
 
   // 🔹 ADD CHICKEN
   const addChicken = async () => {
-    if (!newChicken.trim()) return;
+    if (!newChicken.trim() || !user) return;
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("chickens")
       .insert([
         {
           name: newChicken,
           history: [],
+          user_id: user.id,
         },
       ])
       .select();
-
-    if (error) {
-      console.error("INSERT ERROR:", error);
-      return;
-    }
-
-    console.log("INSERT SUCCESS:", data);
 
     if (data) {
       setChickens((prev) => [...prev, data[0]]);
@@ -67,15 +81,10 @@ export default function App() {
 
   // 🔹 UPDATE CHICKEN
   const updateChicken = async (updated: Chicken) => {
-    const { error } = await supabase
+    await supabase
       .from("chickens")
       .update({ history: updated.history })
       .eq("id", updated.id);
-
-    if (error) {
-      console.error("UPDATE ERROR:", error);
-      return;
-    }
 
     setChickens((prev) =>
       prev.map((c) => (c.id === updated.id ? updated : c))
@@ -148,9 +157,26 @@ export default function App() {
   const revenue = totalEggs * 0.5;
   const profit = revenue - totalFeed;
 
+  // 🔐 LOGIN UI
+  if (!user) {
+    return (
+      <div style={{ padding: 20 }}>
+        <h2>🔐 Login</h2>
+        <input
+          placeholder="Enter email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <button onClick={login}>Login</button>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>🐔 Coop Keeper (Cloud)</h1>
+    <div style={{ padding: 20 }}>
+      <h1>🐔 Coop Keeper (User: {user.email})</h1>
+
+      <button onClick={logout}>Logout</button>
 
       <div>
         <input
@@ -171,22 +197,14 @@ export default function App() {
 
       <hr />
 
-      <h3>🐔 Chickens</h3>
-
       {chickens.map((c) => (
         <div key={c.id}>
           <strong>{c.name}</strong>
 
           <div>
-            <button onClick={() => addEgg(c)}>🥚 Add Egg</button>
-            <button onClick={() => addFeed(c)}>🌽 Add Feed</button>
+            <button onClick={() => addEgg(c)}>🥚</button>
+            <button onClick={() => addFeed(c)}>🌽</button>
           </div>
-
-          {c.history?.map((h) => (
-            <div key={h.date}>
-              {h.date} → Eggs: {h.eggs}, Feed: {h.feed}
-            </div>
-          ))}
         </div>
       ))}
     </div>
