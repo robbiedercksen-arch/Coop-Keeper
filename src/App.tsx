@@ -16,6 +16,7 @@ type Chicken = {
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [chickens, setChickens] = useState<Chicken[]>([]);
   const [newChicken, setNewChicken] = useState("");
   const [email, setEmail] = useState("");
@@ -23,34 +24,28 @@ export default function App() {
 
   const today = new Date().toISOString().split("T")[0];
 
-  // ✅ SAFE AUTH INIT (NO LOOP)
+  // 🔐 SAFE AUTH INIT (NO LOOP)
   useEffect(() => {
-    let mounted = true;
-
     const init = async () => {
       const { data } = await supabase.auth.getSession();
-      if (mounted) {
-        setUser(data.session?.user ?? null);
-      }
+      setUser(data.session?.user ?? null);
+      setLoading(false);
     };
 
     init();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        if (mounted) {
-          setUser(session?.user ?? null);
-        }
+        setUser(session?.user ?? null);
       }
     );
 
     return () => {
-      mounted = false;
       listener.subscription.unsubscribe();
     };
   }, []);
 
-  // ✅ LOAD CHICKENS ONLY ONCE PER LOGIN
+  // 🔹 LOAD CHICKENS ONLY ONCE
   useEffect(() => {
     if (!user) return;
 
@@ -68,14 +63,16 @@ export default function App() {
     }
   };
 
-  // 🔐 LOGIN
+  // 🔐 LOGIN (NO PAGE RELOAD)
   const login = async () => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) alert(error.message);
+    if (error) {
+      alert(error.message);
+    }
   };
 
   // 🆕 REGISTER
@@ -187,6 +184,11 @@ export default function App() {
 
   const revenue = totalEggs * 0.5;
   const profit = revenue - totalFeed;
+
+  // ⏳ PREVENT RENDER LOOP
+  if (loading) {
+    return <div style={{ padding: 20 }}>Loading...</div>;
+  }
 
   // 🔐 LOGIN SCREEN
   if (!user) {
