@@ -19,10 +19,11 @@ export default function App() {
   const [chickens, setChickens] = useState<Chicken[]>([]);
   const [newChicken, setNewChicken] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
 
-  // 🔐 AUTH STATE (FIXED - sync across tabs)
+  // 🔐 AUTH STATE (PERSISTENT LOGIN)
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
@@ -31,11 +32,6 @@ export default function App() {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
-
-        // 🔥 Fix: refresh app after login (all tabs update)
-        if (session?.user) {
-          window.location.reload();
-        }
       }
     );
 
@@ -44,11 +40,46 @@ export default function App() {
     };
   }, []);
 
+  // 🔐 LOGIN
+  const login = async () => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+    }
+  };
+
+  // 🆕 REGISTER
+  const register = async () => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+    } else {
+      alert("Account created ✅");
+    }
+  };
+
+  // 🔐 LOGOUT
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setChickens([]);
+  };
+
   // 🔹 LOAD CHICKENS
   const loadChickens = async () => {
+    if (!user) return;
+
     const { data, error } = await supabase
       .from("chickens")
-      .select("*");
+      .select("*")
+      .eq("user_id", user.id);
 
     if (error) {
       console.error("LOAD ERROR:", error);
@@ -61,28 +92,6 @@ export default function App() {
   useEffect(() => {
     if (user) loadChickens();
   }, [user]);
-
-  // 🔐 LOGIN (FIXED for production + mobile)
-  const login = async () => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: "https://coop-keeper-liart.vercel.app",
-      },
-    });
-
-    if (error) {
-      console.error("LOGIN ERROR:", error);
-    } else {
-      alert("Check your email for login link 📧");
-    }
-  };
-
-  // 🔐 LOGOUT
-  const logout = async () => {
-    await supabase.auth.signOut();
-    setChickens([]);
-  };
 
   // ➕ ADD CHICKEN
   const addChicken = async () => {
@@ -199,12 +208,28 @@ export default function App() {
     return (
       <div style={{ padding: 20 }}>
         <h2>🔐 Login</h2>
+
         <input
-          placeholder="Enter email"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
+
+        <br /><br />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <br /><br />
+
         <button onClick={login}>Login</button>
+        <button onClick={register} style={{ marginLeft: 10 }}>
+          Register
+        </button>
       </div>
     );
   }
@@ -235,12 +260,12 @@ export default function App() {
       <hr />
 
       {chickens.map((c) => (
-        <div key={c.id} style={{ marginBottom: "15px" }}>
+        <div key={c.id} style={{ marginBottom: 15 }}>
           <strong>{c.name}</strong>
 
           <div>
             <button onClick={() => addEgg(c)}>🥚 Add Egg</button>
-            <button onClick={() => addFeed(c)} style={{ marginLeft: "10px" }}>
+            <button onClick={() => addFeed(c)} style={{ marginLeft: 10 }}>
               🌽 Add Feed
             </button>
           </div>
