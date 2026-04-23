@@ -23,22 +23,50 @@ export default function App() {
 
   const today = new Date().toISOString().split("T")[0];
 
-  // 🔐 AUTH STATE (PERSISTENT LOGIN)
+  // ✅ SAFE AUTH INIT (NO LOOP)
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-    });
+    let mounted = true;
+
+    const init = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (mounted) {
+        setUser(data.session?.user ?? null);
+      }
+    };
+
+    init();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setUser(session?.user ?? null);
+        if (mounted) {
+          setUser(session?.user ?? null);
+        }
       }
     );
 
     return () => {
+      mounted = false;
       listener.subscription.unsubscribe();
     };
   }, []);
+
+  // ✅ LOAD CHICKENS ONLY ONCE PER LOGIN
+  useEffect(() => {
+    if (!user) return;
+
+    loadChickens();
+  }, [user?.id]);
+
+  const loadChickens = async () => {
+    const { data, error } = await supabase
+      .from("chickens")
+      .select("*")
+      .eq("user_id", user.id);
+
+    if (!error && data) {
+      setChickens(data);
+    }
+  };
 
   // 🔐 LOGIN
   const login = async () => {
@@ -47,9 +75,7 @@ export default function App() {
       password,
     });
 
-    if (error) {
-      alert(error.message);
-    }
+    if (error) alert(error.message);
   };
 
   // 🆕 REGISTER
@@ -59,43 +85,19 @@ export default function App() {
       password,
     });
 
-    if (error) {
-      alert(error.message);
-    } else {
-      alert("Account created ✅");
-    }
+    if (error) alert(error.message);
+    else alert("Account created ✅");
   };
 
-  // 🔐 LOGOUT
+  // 🚪 LOGOUT
   const logout = async () => {
     await supabase.auth.signOut();
     setChickens([]);
   };
 
-  // 🔹 LOAD CHICKENS
-  const loadChickens = async () => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from("chickens")
-      .select("*")
-      .eq("user_id", user.id);
-
-    if (error) {
-      console.error("LOAD ERROR:", error);
-      return;
-    }
-
-    if (data) setChickens(data);
-  };
-
-  useEffect(() => {
-    if (user) loadChickens();
-  }, [user]);
-
   // ➕ ADD CHICKEN
   const addChicken = async () => {
-    if (!newChicken.trim() || !user) return;
+    if (!newChicken || !user) return;
 
     const { data, error } = await supabase
       .from("chickens")
@@ -108,29 +110,18 @@ export default function App() {
       ])
       .select();
 
-    if (error) {
-      console.error("INSERT ERROR:", error);
-      return;
-    }
-
-    if (data) {
+    if (!error && data) {
       setChickens((prev) => [...prev, data[0]]);
+      setNewChicken("");
     }
-
-    setNewChicken("");
   };
 
-  // 🔄 UPDATE CHICKEN
+  // 🔄 UPDATE
   const updateChicken = async (updated: Chicken) => {
-    const { error } = await supabase
+    await supabase
       .from("chickens")
       .update({ history: updated.history })
       .eq("id", updated.id);
-
-    if (error) {
-      console.error("UPDATE ERROR:", error);
-      return;
-    }
 
     setChickens((prev) =>
       prev.map((c) => (c.id === updated.id ? updated : c))
@@ -153,10 +144,7 @@ export default function App() {
     } else {
       updated = {
         ...c,
-        history: [
-          ...(c.history || []),
-          { date: today, eggs: 1, feed: 0 },
-        ],
+        history: [...(c.history || []), { date: today, eggs: 1, feed: 0 }],
       };
     }
 
@@ -179,10 +167,7 @@ export default function App() {
     } else {
       updated = {
         ...c,
-        history: [
-          ...(c.history || []),
-          { date: today, eggs: 0, feed: 10 },
-        ],
+        history: [...(c.history || []), { date: today, eggs: 0, feed: 10 }],
       };
     }
 
@@ -260,14 +245,12 @@ export default function App() {
       <hr />
 
       {chickens.map((c) => (
-        <div key={c.id} style={{ marginBottom: 15 }}>
+        <div key={c.id}>
           <strong>{c.name}</strong>
 
           <div>
             <button onClick={() => addEgg(c)}>🥚 Add Egg</button>
-            <button onClick={() => addFeed(c)} style={{ marginLeft: 10 }}>
-              🌽 Add Feed
-            </button>
+            <button onClick={() => addFeed(c)}>🌽 Add Feed</button>
           </div>
 
           {c.history?.map((h) => (
