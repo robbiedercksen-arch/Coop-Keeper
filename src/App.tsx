@@ -22,7 +22,7 @@ export default function App() {
 
   const today = new Date().toISOString().split("T")[0];
 
-  // 🔐 CHECK SESSION
+  // 🔐 AUTH STATE (FIXED - sync across tabs)
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
@@ -31,6 +31,11 @@ export default function App() {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
+
+        // 🔥 Fix: refresh app after login (all tabs update)
+        if (session?.user) {
+          window.location.reload();
+        }
       }
     );
 
@@ -57,12 +62,12 @@ export default function App() {
     if (user) loadChickens();
   }, [user]);
 
-  // 🔐 LOGIN (FIXED)
+  // 🔐 LOGIN (FIXED for production + mobile)
   const login = async () => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: "http://localhost:5173",
+        emailRedirectTo: "https://coop-keeper-liart.vercel.app",
       },
     });
 
@@ -230,12 +235,14 @@ export default function App() {
       <hr />
 
       {chickens.map((c) => (
-        <div key={c.id}>
+        <div key={c.id} style={{ marginBottom: "15px" }}>
           <strong>{c.name}</strong>
 
           <div>
             <button onClick={() => addEgg(c)}>🥚 Add Egg</button>
-            <button onClick={() => addFeed(c)}>🌽 Add Feed</button>
+            <button onClick={() => addFeed(c)} style={{ marginLeft: "10px" }}>
+              🌽 Add Feed
+            </button>
           </div>
 
           {c.history?.map((h) => (
