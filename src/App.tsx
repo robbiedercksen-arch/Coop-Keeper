@@ -15,14 +15,13 @@ export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
-
   const [eggs, setEggs] = useState<any[]>([]);
   const [feed, setFeed] = useState<any[]>([]);
 
   const hasLoaded = useRef(false);
   const userIdRef = useRef<string | null>(null);
 
-  // 🔐 AUTH INIT
+  // 🔐 AUTH
   useEffect(() => {
     const init = async () => {
       const { data } = await supabase.auth.getSession();
@@ -31,9 +30,7 @@ export default function App() {
       setUser(currentUser);
       userIdRef.current = currentUser?.id ?? null;
 
-      if (currentUser) {
-        await checkAccess(currentUser.id);
-      }
+      if (currentUser) await checkAccess(currentUser.id);
 
       setLoading(false);
     };
@@ -41,35 +38,24 @@ export default function App() {
     init();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_, session) => {
         const newUser = session?.user ?? null;
 
-        if (
-          event === "TOKEN_REFRESHED" ||
-          userIdRef.current === newUser?.id
-        ) {
-          return;
-        }
+        if (userIdRef.current === newUser?.id) return;
 
         userIdRef.current = newUser?.id ?? null;
         setUser(newUser);
 
-        if (newUser) {
-          await checkAccess(newUser.id);
-        } else {
-          setHasAccess(false);
-        }
+        if (newUser) await checkAccess(newUser.id);
+        else setHasAccess(false);
 
         hasLoaded.current = false;
       }
     );
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    return () => listener.subscription.unsubscribe();
   }, []);
 
-  // 🔒 ACCESS CHECK
   const checkAccess = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
@@ -77,17 +63,12 @@ export default function App() {
       .eq("id", userId)
       .single();
 
-    if (!data || data.is_paid !== true) {
-      setHasAccess(false);
-      return;
-    }
-
-    setHasAccess(true);
+    setHasAccess(data?.is_paid === true);
   };
 
-  // 🛑 LOAD ALL DATA
+  // LOAD DATA
   useEffect(() => {
-    if (!user || hasAccess !== true || hasLoaded.current) return;
+    if (!user || !hasAccess || hasLoaded.current) return;
 
     hasLoaded.current = true;
 
@@ -123,40 +104,30 @@ export default function App() {
     if (data) setFeed(data);
   };
 
-  // 🔐 LOGIN
+  // ACTIONS
   const login = async () => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
     if (error) alert(error.message);
   };
 
-  // 🆕 REGISTER
   const register = async () => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
+    const { error } = await supabase.auth.signUp({ email, password });
     if (error) alert(error.message);
-    else alert("Account created. Waiting for approval.");
+    else alert("Account created. Awaiting activation.");
   };
 
-  // 🚪 LOGOUT
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    setChickens([]);
     setHasAccess(false);
     hasLoaded.current = false;
-    userIdRef.current = null;
   };
 
-  // ➕ ADD CHICKEN
   const addChicken = async () => {
-    if (!newChicken || !user) return;
+    if (!newChicken) return;
 
     const { data } = await supabase
       .from("chickens")
@@ -164,44 +135,32 @@ export default function App() {
       .select();
 
     if (data) {
-      setChickens((prev) => [...prev, data[0]]);
+      setChickens([...chickens, data[0]]);
       setNewChicken("");
     }
   };
 
-  // 🥚 ADD EGG
-  const addEgg = async (chickenId: string) => {
+  const addEgg = async (id: string) => {
     const today = new Date().toISOString().split("T")[0];
 
     await supabase.from("eggs").insert([
-      {
-        chicken_id: chickenId,
-        date: today,
-        count: 1,
-        user_id: user.id,
-      },
+      { chicken_id: id, date: today, count: 1, user_id: user.id },
     ]);
 
     loadEggs();
   };
 
-  // 🌾 ADD FEED
-  const addFeed = async (chickenId: string) => {
+  const addFeed = async (id: string) => {
     const today = new Date().toISOString().split("T")[0];
 
     await supabase.from("feed").insert([
-      {
-        chicken_id: chickenId,
-        date: today,
-        amount: 10,
-        user_id: user.id,
-      },
+      { chicken_id: id, date: today, amount: 10, user_id: user.id },
     ]);
 
     loadFeed();
   };
 
-  // 📊 DASHBOARD CALCULATIONS
+  // CALCULATIONS
   const today = new Date().toISOString().split("T")[0];
 
   const eggsToday = eggs
@@ -215,84 +174,166 @@ export default function App() {
   const revenue = eggsToday * 0.5;
   const profit = revenue - feedToday;
 
-  // ⏳ LOADING
-  if (loading) return <div>Loading...</div>;
+  // UI STATES
+  if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
 
-  // 🔐 LOGIN SCREEN
-  if (!user) {
+  if (!user)
     return (
-      <div style={{ padding: 20 }}>
-        <h2>🔐 Login</h2>
-
-        <input value={email} onChange={(e) => setEmail(e.target.value)} />
-        <br /><br />
-
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <br /><br />
-
-        <button onClick={login}>Login</button>
-        <button onClick={register}>Register</button>
+      <div style={styles.center}>
+        <div style={styles.card}>
+          <h2>🐔 Coop Keeper</h2>
+          <input
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={styles.input}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={styles.input}
+          />
+          <button style={styles.button} onClick={login}>
+            Login
+          </button>
+          <button style={styles.buttonAlt} onClick={register}>
+            Register
+          </button>
+        </div>
       </div>
     );
-  }
 
-  // 🚫 BLOCK
-  if (hasAccess !== true) {
+  if (!hasAccess)
     return (
-      <div style={{ padding: 20 }}>
-        <h2>🚫 Subscription Required</h2>
-        <button onClick={logout}>Logout</button>
+      <div style={styles.center}>
+        <div style={styles.card}>
+          <h2>🚫 Subscription Required</h2>
+          <p>Contact Robbie to activate your account</p>
+          <button style={styles.button} onClick={logout}>
+            Logout
+          </button>
+        </div>
       </div>
     );
-  }
 
-  // ✅ APP
   return (
-    <div style={{ padding: 20 }}>
-      <h1>🐔 Coop Keeper ({user.email})</h1>
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h2>🐔 Coop Keeper</h2>
+        <button style={styles.logout} onClick={logout}>
+          Logout
+        </button>
+      </div>
 
-      <button onClick={logout}>Logout</button>
+      {/* DASHBOARD */}
+      <div style={styles.grid}>
+        <div style={styles.card}>🥚 Eggs<br />{eggsToday}</div>
+        <div style={styles.card}>🌾 Feed<br />{feedToday}</div>
+        <div style={styles.card}>💰 R{revenue.toFixed(2)}</div>
+        <div style={styles.card}>
+          📈{" "}
+          <span style={{ color: profit >= 0 ? "green" : "red" }}>
+            {profit.toFixed(2)}
+          </span>
+        </div>
+      </div>
 
-      <hr />
+      {/* ADD */}
+      <div style={styles.card}>
+        <input
+          placeholder="Chicken name"
+          value={newChicken}
+          onChange={(e) => setNewChicken(e.target.value)}
+          style={styles.input}
+        />
+        <button style={styles.button} onClick={addChicken}>
+          Add Chicken
+        </button>
+      </div>
 
-      {/* 📊 DASHBOARD */}
-      <h2>📅 Today ({today})</h2>
-      <p>🥚 Eggs: {eggsToday}</p>
-      <p>🌾 Feed: {feedToday}</p>
-      <p>💰 Revenue: {revenue.toFixed(2)}</p>
-      <p>
-        📈 Profit:{" "}
-        <strong style={{ color: profit >= 0 ? "green" : "red" }}>
-          {profit.toFixed(2)}
-        </strong>
-      </p>
-
-      <hr />
-
-      {/* ➕ ADD CHICKEN */}
-      <input
-        placeholder="Chicken name"
-        value={newChicken}
-        onChange={(e) => setNewChicken(e.target.value)}
-      />
-      <button onClick={addChicken}>Add Chicken</button>
-
-      <hr />
-
-      {/* 🐔 LIST */}
+      {/* LIST */}
       {chickens.map((c) => (
-        <div key={c.id}>
+        <div key={c.id} style={styles.card}>
           <strong>{c.name}</strong>
-          <br />
-          <button onClick={() => addEgg(c.id)}>🥚 Add Egg</button>
-          <button onClick={() => addFeed(c.id)}>🌾 Add Feed</button>
-          <hr />
+          <div>
+            <button style={styles.smallBtn} onClick={() => addEgg(c.id)}>
+              🥚
+            </button>
+            <button style={styles.smallBtn} onClick={() => addFeed(c.id)}>
+              🌾
+            </button>
+          </div>
         </div>
       ))}
     </div>
   );
 }
+
+// 🎨 STYLES
+const styles: any = {
+  container: { maxWidth: 500, margin: "auto", padding: 15 },
+  center: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+  },
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 10,
+    margin: "15px 0",
+  },
+  card: {
+    background: "#fff",
+    padding: 15,
+    borderRadius: 12,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+    marginBottom: 10,
+  },
+  input: {
+    width: "100%",
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 8,
+    border: "1px solid #ddd",
+  },
+  button: {
+    width: "100%",
+    padding: 12,
+    background: "#16a34a",
+    color: "#fff",
+    border: "none",
+    borderRadius: 8,
+  },
+  buttonAlt: {
+    width: "100%",
+    padding: 12,
+    marginTop: 8,
+    background: "#ddd",
+    border: "none",
+    borderRadius: 8,
+  },
+  logout: {
+    background: "red",
+    color: "white",
+    border: "none",
+    padding: "6px 10px",
+    borderRadius: 6,
+  },
+  smallBtn: {
+    marginTop: 10,
+    marginRight: 5,
+    padding: "6px 10px",
+    borderRadius: 6,
+    border: "none",
+    background: "#eee",
+  },
+};
