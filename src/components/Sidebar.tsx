@@ -1,40 +1,19 @@
-export default function Sidebar({ activePage, setActivePage }: any) {
-  const menu = [
-    { id: "dashboard", label: "Dashboard" },
-    { id: "feeding", label: "Feeding & Water" },
-    { id: "chickens", label: "Chicken Registry" },
-    { id: "eggs", label: "Egg Tracker" },
-    { id: "breeding", label: "Breeding" },
-    { id: "planner", label: "Farm Planner" },
-    { id: "wishlist", label: "Wish List" },
-    { id: "expenses", label: "Expenses" },
-    { id: "profit", label: "Profit" },
-  ];
-
+export default function Sidebar() {
   return (
-    <div className="w-64 bg-[#1F3D2B] text-white flex flex-col p-4">
-      <div className="text-xl font-bold mb-6">🐔 Coop Keeper</div>
+    <div className="w-64 bg-white shadow-md p-4">
+      <h2 className="text-xl font-bold mb-6">🐔 Coop Keeper</h2>
 
-      <div className="flex flex-col gap-2">
-        {menu.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActivePage(item.id)}
-            className={`text-left px-3 py-2 rounded-lg transition ${
-              activePage === item.id
-                ? "bg-green-600"
-                : "hover:bg-green-800"
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-auto text-sm opacity-70">
-        <p>Robbie Dercksen</p>
-        <button className="mt-2 text-red-300">Sign out</button>
-      </div>
+      <nav className="flex flex-col gap-2">
+        <button className="text-left p-2 hover:bg-gray-100 rounded">Dashboard</button>
+        <button className="text-left p-2 hover:bg-gray-100 rounded">Feeding & Water</button>
+        <button className="text-left p-2 hover:bg-gray-100 rounded">Chicken Registry</button>
+        <button className="text-left p-2 hover:bg-gray-100 rounded">Egg Tracker</button>
+        <button className="text-left p-2 hover:bg-gray-100 rounded">Breeding</button>
+        <button className="text-left p-2 hover:bg-gray-100 rounded">Farm Planner</button>
+        <button className="text-left p-2 hover:bg-gray-100 rounded">Wish List</button>
+        <button className="text-left p-2 hover:bg-gray-100 rounded">Expenses</button>
+        <button className="text-left p-2 hover:bg-gray-100 rounded">Profit</button>
+      </nav>
     </div>
   );
 }
