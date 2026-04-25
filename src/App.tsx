@@ -15,9 +15,10 @@ export default function App() {
   const [newChicken, setNewChicken] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [hasAccess, setHasAccess] = useState(false);
 
   const hasLoaded = useRef(false);
-  const userIdRef = useRef<string | null>(null); // 🔒 track user
+  const userIdRef = useRef<string | null>(null);
 
   // 🔐 AUTH INIT
   useEffect(() => {
@@ -27,16 +28,20 @@ export default function App() {
 
       setUser(currentUser);
       userIdRef.current = currentUser?.id ?? null;
+
+      if (currentUser) {
+        await checkAccess(currentUser.id);
+      }
+
       setLoading(false);
     };
 
     init();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         const newUser = session?.user ?? null;
 
-        // 🔥 IGNORE TOKEN REFRESH + SAME USER
         if (
           event === "TOKEN_REFRESHED" ||
           userIdRef.current === newUser?.id
@@ -44,11 +49,16 @@ export default function App() {
           return;
         }
 
-        console.log("AUTH EVENT:", event);
-
         userIdRef.current = newUser?.id ?? null;
         setUser(newUser);
-        hasLoaded.current = false; // allow reload once for new user
+
+        if (newUser) {
+          await checkAccess(newUser.id);
+        } else {
+          setHasAccess(false);
+        }
+
+        hasLoaded.current = false;
       }
     );
 
@@ -57,16 +67,28 @@ export default function App() {
     };
   }, []);
 
-  // 🛑 LOAD ONCE PER USER
+  // 🔒 CHECK ACCESS
+  const checkAccess = async (userId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("is_active")
+      .eq("id", userId)
+      .single();
+
+    if (data?.is_active) {
+      setHasAccess(true);
+    } else {
+      setHasAccess(false);
+    }
+  };
+
+  // 🛑 LOAD DATA ONCE
   useEffect(() => {
-    if (!user || hasLoaded.current) return;
+    if (!user || !hasAccess || hasLoaded.current) return;
 
     hasLoaded.current = true;
-
-    console.log("🔥 LOAD ONCE");
-
     loadChickens();
-  }, [user]);
+  }, [user, hasAccess]);
 
   const loadChickens = async () => {
     const { data } = await supabase
@@ -95,15 +117,15 @@ export default function App() {
     });
 
     if (error) alert(error.message);
-    else alert("Account created");
+    else alert("Account created. Waiting for approval.");
   };
 
   // 🚪 LOGOUT
   const logout = async () => {
     await supabase.auth.signOut();
-    setChickens([]);
     setUser(null);
-    userIdRef.current = null;
+    setChickens([]);
+    setHasAccess(false);
     hasLoaded.current = false;
   };
 
@@ -130,32 +152,49 @@ export default function App() {
 
   if (loading) return <div>Loading...</div>;
 
+  // 🔐 LOGIN SCREEN
   if (!user) {
     return (
       <div style={{ padding: 20 }}>
-        <h2>Login</h2>
+        <h2>🔐 Login</h2>
 
         <input
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
         />
         <br /><br />
 
         <input
           type="password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
         />
         <br /><br />
 
         <button onClick={login}>Login</button>
-        <button onClick={register}>Register</button>
+        <button onClick={register} style={{ marginLeft: 10 }}>
+          Register
+        </button>
       </div>
     );
   }
 
+  // 🚫 BLOCKED USER
+  if (!hasAccess) {
+    return (
+      <div style={{ padding: 20 }}>
+        <h2>🚫 Subscription Required</h2>
+        <p>Your account is not active yet.</p>
+        <p>Please contact support or wait for approval.</p>
+
+        <button onClick={logout}>Logout</button>
+      </div>
+    );
+  }
+
+  // ✅ APP
   return (
     <div style={{ padding: 20 }}>
       <h1>🐔 Coop Keeper ({user.email})</h1>
