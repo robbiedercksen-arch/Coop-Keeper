@@ -1,111 +1,113 @@
-import { useEffect, useState, useRef } from "react";
-import { supabase } from "./supabaseClient";
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-type Chicken = {
-  id: string;
-  name: string;
-  user_id: string;
-};
+const supabase = createClient(
+  "https://gzoxsnsbzjbmatdxwyhh.supabase.co",
+  "sb_publishable_EYpEiEJ_Q4ElsyvyI1ZDtw_q9lOgU_A"
+);
 
 export default function App() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [chickens, setChickens] = useState<Chicken[]>([]);
-  const [newChicken, setNewChicken] = useState("");
+  const [session, setSession] = useState<any>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [hasAccess, setHasAccess] = useState(false);
+
+  const [chickens, setChickens] = useState<any[]>([]);
+  const [newChicken, setNewChicken] = useState("");
+
   const [eggs, setEggs] = useState<any[]>([]);
   const [feed, setFeed] = useState<any[]>([]);
 
-  const hasLoaded = useRef(false);
-  const userIdRef = useRef<string | null>(null);
+  const [isPaid, setIsPaid] = useState<boolean | null>(null);
 
-  // 🔐 AUTH INIT
+  // ================= AUTH =================
   useEffect(() => {
-    const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      const currentUser = data.session?.user ?? null;
-
-      setUser(currentUser);
-      userIdRef.current = currentUser?.id ?? null;
-
-      if (currentUser) await checkAccess(currentUser.id);
-
-      setLoading(false);
-    };
-
-    init();
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
-        const newUser = session?.user ?? null;
-
-        if (userIdRef.current === newUser?.id) return;
-
-        userIdRef.current = newUser?.id ?? null;
-        setUser(newUser);
-
-        if (newUser) await checkAccess(newUser.id);
-        else setHasAccess(false);
-
-        hasLoaded.current = false;
+      (_event, session) => {
+        setSession(session);
       }
     );
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
-  // 🔒 CHECK PAYMENT
-  const checkAccess = async (userId: string) => {
+  // ================= LOAD DATA =================
+  useEffect(() => {
+    if (!session) return;
+
+    const userId = session.user.id;
+
+    loadProfile(userId);
+    loadChickens(userId);
+    loadEggs(userId);
+    loadFeed(userId);
+  }, [session]);
+
+  const loadProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("is_paid")
+      .select("*")
       .eq("id", userId)
       .single();
 
-    setHasAccess(data?.is_paid === true);
+    setIsPaid(data?.is_paid || false);
   };
 
-  // 📦 LOAD DATA
-  useEffect(() => {
-    if (!user || !hasAccess || hasLoaded.current) return;
-
-    hasLoaded.current = true;
-
-    loadChickens();
-    loadEggs();
-    loadFeed();
-  }, [user, hasAccess]);
-
-  const loadChickens = async () => {
+  const loadChickens = async (userId: string) => {
     const { data } = await supabase
       .from("chickens")
       .select("*")
-      .eq("user_id", user.id);
+      .eq("user_id", userId);
 
-    if (data) setChickens(data);
+    setChickens(data || []);
   };
 
-  const loadEggs = async () => {
+  const loadEggs = async (userId: string) => {
     const { data } = await supabase
       .from("eggs")
       .select("*")
-      .eq("user_id", user.id);
+      .eq("user_id", userId);
 
-    if (data) setEggs(data);
+    setEggs(data || []);
   };
 
-  const loadFeed = async () => {
+  const loadFeed = async (userId: string) => {
     const { data } = await supabase
       .from("feed")
       .select("*")
-      .eq("user_id", user.id);
+      .eq("user_id", userId);
 
-    if (data) setFeed(data);
+    setFeed(data || []);
   };
 
-  // 🔐 LOGIN
+  // ================= AUTH ACTIONS =================
+  const register = async () => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    if (data.user) {
+      await supabase.from("profiles").insert({
+        id: data.user.id,
+        email: email,
+        is_paid: false,
+      });
+    }
+
+    alert("Registered! You can now login.");
+  };
+
   const login = async () => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -115,99 +117,72 @@ export default function App() {
     if (error) alert(error.message);
   };
 
-  // 🆕 REGISTER
-  const register = async () => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) alert(error.message);
-    else alert("Account created. Awaiting activation.");
-  };
-
-  // 🚪 LOGOUT
   const logout = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    setHasAccess(false);
-    hasLoaded.current = false;
   };
 
-  // ➕ ADD CHICKEN
+  // ================= ACTIONS =================
   const addChicken = async () => {
     if (!newChicken) return;
 
-    const { data } = await supabase
-      .from("chickens")
-      .insert([{ name: newChicken, user_id: user.id }])
-      .select();
+    await supabase.from("chickens").insert({
+      name: newChicken,
+      user_id: session.user.id,
+    });
 
-    if (data) {
-      setChickens([...chickens, data[0]]);
-      setNewChicken("");
-    }
+    setNewChicken("");
+    loadChickens(session.user.id);
   };
 
-  // 🥚 ADD EGG
-  const addEgg = async (id: string) => {
-    const today = new Date().toISOString().split("T")[0];
+  const addEgg = async (chickenId: string) => {
+    await supabase.from("eggs").insert({
+      chicken_id: chickenId,
+      count: 1,
+      date: new Date(),
+      user_id: session.user.id,
+      price: 0.5,
+    });
 
-    await supabase.from("eggs").insert([
-      { chicken_id: id, date: today, count: 1, user_id: user.id },
-    ]);
-
-    loadEggs();
+    loadEggs(session.user.id);
   };
 
-  // 🌾 ADD FEED
-  const addFeed = async (id: string) => {
-    const today = new Date().toISOString().split("T")[0];
+  const addFeed = async (chickenId: string) => {
+    await supabase.from("feed").insert({
+      date: new Date(),
+      amount: 10,
+      chicken_id: chickenId,
+      user_id: session.user.id,
+    });
 
-    await supabase.from("feed").insert([
-      { chicken_id: id, date: today, amount: 10, user_id: user.id },
-    ]);
-
-    loadFeed();
+    loadFeed(session.user.id);
   };
 
-  // 📊 CALCULATIONS
-  const today = new Date().toISOString().split("T")[0];
+  // ================= CALCULATIONS =================
+  const totalEggs = eggs.reduce((sum, e) => sum + (e.count || 0), 0);
+  const totalFeed = feed.reduce((sum, f) => sum + (f.amount || 0), 0);
+  const revenue = eggs.reduce((sum, e) => sum + (e.price || 0), 0);
+  const profit = revenue - totalFeed;
 
-  const eggsToday = eggs
-    .filter((e) => e.date === today)
-    .reduce((sum, e) => sum + e.count, 0);
-
-  const feedToday = feed
-    .filter((f) => f.date === today)
-    .reduce((sum, f) => sum + f.amount, 0);
-
-  const revenue = eggsToday * 0.5;
-  const profit = revenue - feedToday;
-
-  // ⏳ LOADING
-  if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
-
-  // 🔐 LOGIN SCREEN
-  if (!user) {
+  // ================= LOGIN SCREEN =================
+  if (!session) {
     return (
       <div style={styles.center}>
         <div style={styles.card}>
           <h2>🐔 Coop Keeper</h2>
 
           <input
+            style={styles.input}
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={styles.input}
           />
 
           <input
-            type="password"
+            style={styles.input}
             placeholder="Password"
+            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={styles.input}
           />
 
           <button style={styles.button} onClick={login}>
@@ -222,21 +197,18 @@ export default function App() {
     );
   }
 
-  // 🚫 BLOCKED
-  if (!hasAccess) {
+  // ================= SUBSCRIPTION BLOCK =================
+  if (isPaid === false) {
     return (
-      <div style={styles.center}>
-        <div style={styles.card}>
-          <h2>🚫 Subscription Required</h2>
-          <button style={styles.button} onClick={logout}>
-            Logout
-          </button>
-        </div>
+      <div style={styles.container}>
+        <h2>🚫 Subscription Required</h2>
+        <p>Your account is not active.</p>
+        <button onClick={logout}>Logout</button>
       </div>
     );
   }
 
-  // ✅ MAIN APP
+  // ================= MAIN APP =================
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -248,39 +220,48 @@ export default function App() {
 
       {/* DASHBOARD */}
       <div style={styles.grid}>
-        <div style={styles.card}>🥚 Eggs<br />{eggsToday}</div>
-        <div style={styles.card}>🌾 Feed<br />{feedToday}</div>
+        <div style={styles.card}>🥚 Eggs: {totalEggs}</div>
+        <div style={styles.card}>🌾 Feed: {totalFeed}</div>
         <div style={styles.card}>💰 R{revenue.toFixed(2)}</div>
         <div style={styles.card}>
-          📈{" "}
-          <span style={{ color: profit >= 0 ? "green" : "red" }}>
+          📉{" "}
+          <span style={{ color: profit < 0 ? "red" : "green" }}>
             {profit.toFixed(2)}
           </span>
         </div>
       </div>
 
-      {/* ADD */}
+      {/* ADD CHICKEN */}
       <div style={styles.card}>
         <input
+          style={styles.input}
           placeholder="Chicken name"
           value={newChicken}
           onChange={(e) => setNewChicken(e.target.value)}
-          style={styles.input}
         />
+
         <button style={styles.button} onClick={addChicken}>
           Add Chicken
         </button>
       </div>
 
-      {/* LIST */}
+      {/* CHICKENS LIST */}
       {chickens.map((c) => (
         <div key={c.id} style={styles.card}>
           <strong>{c.name}</strong>
+
           <div>
-            <button style={styles.smallBtn} onClick={() => addEgg(c.id)}>
+            <button
+              style={styles.smallBtn}
+              onClick={() => addEgg(c.id)}
+            >
               🥚
             </button>
-            <button style={styles.smallBtn} onClick={() => addFeed(c.id)}>
+
+            <button
+              style={styles.smallBtn}
+              onClick={() => addFeed(c.id)}
+            >
               🌾
             </button>
           </div>
@@ -290,78 +271,86 @@ export default function App() {
   );
 }
 
-// 🎨 STYLES
+// ================= FARM STYLE =================
 const styles: any = {
   container: {
     maxWidth: 500,
     margin: "auto",
     padding: 15,
-    background: "#f5f1e6",
+    background: "#f4ecd8",
     minHeight: "100vh",
   },
+
   center: {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     height: "100vh",
-    background: "#f5f1e6",
+    background: "#f4ecd8",
   },
+
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    color: "#3b2f1c",
   },
+
   grid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 10,
     margin: "15px 0",
   },
+
   card: {
-    background: "#ffffff",
+    background: "#fff",
     padding: 15,
-    borderRadius: 14,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    borderRadius: 12,
+    boxShadow: "0 3px 8px rgba(0,0,0,0.1)",
     marginBottom: 10,
   },
+
   input: {
     width: "100%",
-    padding: 12,
+    padding: 10,
     marginBottom: 10,
-    borderRadius: 10,
-    border: "1px solid #ddd",
+    borderRadius: 8,
+    border: "1px solid #ccc",
   },
+
   button: {
     width: "100%",
-    padding: 12,
-    background: "#2f855a",
+    padding: 10,
+    background: "#2f6f3e",
     color: "#fff",
     border: "none",
-    borderRadius: 10,
-    fontWeight: "bold",
+    borderRadius: 8,
   },
+
   buttonAlt: {
     width: "100%",
-    padding: 12,
-    marginTop: 8,
-    background: "#e2e8f0",
+    padding: 10,
+    marginTop: 5,
+    background: "#ddd",
     border: "none",
-    borderRadius: 10,
+    borderRadius: 8,
   },
+
   logout: {
-    background: "#c53030",
-    color: "white",
+    background: "#8b2e2e",
+    color: "#fff",
     border: "none",
     padding: "6px 10px",
     borderRadius: 6,
   },
+
   smallBtn: {
     marginTop: 10,
     marginRight: 5,
     padding: "6px 10px",
-    borderRadius: 8,
+    borderRadius: 6,
     border: "none",
-    background: "#edf2f7",
+    background: "#eee",
   },
 };
