@@ -4,7 +4,6 @@ import { supabase } from "./supabaseClient";
 type Chicken = {
   id: string;
   name: string;
-  history: any[];
   user_id: string;
 };
 
@@ -42,7 +41,6 @@ export default function App() {
       async (event, session) => {
         const newUser = session?.user ?? null;
 
-        // Ignore refresh spam + same user
         if (
           event === "TOKEN_REFRESHED" ||
           userIdRef.current === newUser?.id
@@ -68,7 +66,7 @@ export default function App() {
     };
   }, []);
 
-  // 🔒 ACCESS CHECK (STRICT)
+  // 🔒 ACCESS CHECK
   const checkAccess = async (userId: string) => {
     const { data, error } = await supabase
       .from("profiles")
@@ -86,13 +84,11 @@ export default function App() {
     setHasAccess(true);
   };
 
-  // 🛑 LOAD DATA ONCE
+  // 🛑 LOAD CHICKENS ONCE
   useEffect(() => {
     if (!user || hasAccess !== true || hasLoaded.current) return;
 
     hasLoaded.current = true;
-
-    console.log("🔥 LOAD CHICKENS ONCE");
 
     loadChickens();
   }, [user, hasAccess]);
@@ -141,20 +137,67 @@ export default function App() {
   const addChicken = async () => {
     if (!newChicken || !user) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("chickens")
       .insert([
         {
           name: newChicken,
-          history: [],
           user_id: user.id,
         },
       ])
       .select();
 
+    if (error) {
+      console.error(error);
+      alert("Error adding chicken");
+      return;
+    }
+
     if (data) {
       setChickens((prev) => [...prev, data[0]]);
       setNewChicken("");
+    }
+  };
+
+  // 🥚 ADD EGG
+  const addEgg = async (chickenId: string) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    const { error } = await supabase.from("eggs").insert([
+      {
+        chicken_id: chickenId,
+        date: today,
+        count: 1,
+        user_id: user.id,
+      },
+    ]);
+
+    if (error) {
+      console.error(error);
+      alert("Error adding egg");
+    } else {
+      alert("Egg added 🥚");
+    }
+  };
+
+  // 🌾 ADD FEED
+  const addFeed = async (chickenId: string) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    const { error } = await supabase.from("feed").insert([
+      {
+        chicken_id: chickenId,
+        date: today,
+        amount: 10,
+        user_id: user.id,
+      },
+    ]);
+
+    if (error) {
+      console.error(error);
+      alert("Error adding feed");
+    } else {
+      alert("Feed added 🌾");
     }
   };
 
@@ -190,20 +233,20 @@ export default function App() {
     );
   }
 
-  // 🚫 HARD ACCESS LOCK
+  // 🚫 BLOCK
   if (user && hasAccess !== true) {
     return (
       <div style={{ padding: 20 }}>
         <h2>🚫 Subscription Required</h2>
         <p>Your account is not active.</p>
-        <p>Please contact support.</p>
+        <p>Contact Robbie to activate your account.</p>
 
         <button onClick={logout}>Logout</button>
       </div>
     );
   }
 
-  // ✅ MAIN APP
+  // ✅ APP
   return (
     <div style={{ padding: 20 }}>
       <h1>🐔 Coop Keeper ({user.email})</h1>
@@ -224,6 +267,15 @@ export default function App() {
       {chickens.map((c) => (
         <div key={c.id}>
           <strong>{c.name}</strong>
+
+          <br />
+
+          <button onClick={() => addEgg(c.id)}>🥚 Add Egg</button>
+          <button onClick={() => addFeed(c.id)} style={{ marginLeft: 10 }}>
+            🌾 Add Feed
+          </button>
+
+          <hr />
         </div>
       ))}
     </div>
