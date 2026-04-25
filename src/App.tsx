@@ -78,7 +78,7 @@ export default function App() {
 
     console.log("ACCESS CHECK:", data, error);
 
-    if (!data || data.is_active !== true) {
+    if (!data || data.is_paid !== true) {
       setHasAccess(false);
       return;
     }
