@@ -72,7 +72,7 @@ export default function App() {
   const checkAccess = async (userId: string) => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("is_active")
+      .select("is_paid")
       .eq("id", userId)
       .single();
 
