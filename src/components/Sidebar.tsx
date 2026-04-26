@@ -1,18 +1,16 @@
 export default function Sidebar() {
   return (
-    <div className="w-64 bg-white shadow-md p-4">
-      <h2 className="text-xl font-bold mb-6">🐔 Coop Keeper</h2>
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-6">🐔 Coop Keeper</h1>
 
-      <nav className="flex flex-col gap-2">
-        <button className="text-left p-2 hover:bg-gray-100 rounded">Dashboard</button>
-        <button className="text-left p-2 hover:bg-gray-100 rounded">Feeding & Water</button>
-        <button className="text-left p-2 hover:bg-gray-100 rounded">Chicken Registry</button>
-        <button className="text-left p-2 hover:bg-gray-100 rounded">Egg Tracker</button>
-        <button className="text-left p-2 hover:bg-gray-100 rounded">Breeding</button>
-        <button className="text-left p-2 hover:bg-gray-100 rounded">Farm Planner</button>
-        <button className="text-left p-2 hover:bg-gray-100 rounded">Wish List</button>
-        <button className="text-left p-2 hover:bg-gray-100 rounded">Expenses</button>
-        <button className="text-left p-2 hover:bg-gray-100 rounded">Profit</button>
+      <nav className="flex flex-col gap-3">
+        <a className="hover:bg-gray-100 p-2 rounded">Dashboard</a>
+        <a className="hover:bg-gray-100 p-2 rounded">Feeding & Water</a>
+        <a className="hover:bg-gray-100 p-2 rounded">Chicken Registry</a>
+        <a className="hover:bg-gray-100 p-2 rounded">Egg Tracker</a>
+        <a className="hover:bg-gray-100 p-2 rounded">Breeding</a>
+        <a className="hover:bg-gray-100 p-2 rounded">Expenses</a>
+        <a className="hover:bg-gray-100 p-2 rounded">Profit</a>
       </nav>
     </div>
   );
