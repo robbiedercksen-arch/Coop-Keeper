@@ -26,7 +26,7 @@ export default function Sidebar() {
             key={item}
             className={`relative px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer ${
               index === 0
-                ? "bg-white text-farm-brown font-semibold shadow-md"
+                ? "bg-white text-farm-brown font-semibold shadow-md border-l-4 border-farm-yellow"
                 : "text-white/90 hover:bg-white/10 hover:pl-5"
             }`}
           >
