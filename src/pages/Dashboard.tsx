@@ -1,24 +1,20 @@
 import React from "react";
 
-export default function Dashboard({ chickens, addChicken }) {
+export default function Dashboard({ chickens }) {
   const today = new Date().toISOString().split("T")[0];
 
-  // ✅ TOTAL CHICKENS
   const totalChickens = chickens.length;
 
-  // ✅ EGGS TODAY
   const eggsToday = chickens.reduce((total, chicken) => {
     const eggs = chicken.eggs || [];
     const todayEggs = eggs.filter((egg) => egg.startsWith(today)).length;
     return total + todayEggs;
   }, 0);
 
-  // ✅ TOTAL EGGS (FIXED)
   const totalEggs = chickens.reduce((total, chicken) => {
     return total + (chicken.eggs?.length || 0);
   }, 0);
 
-  // ✅ TOP LAYER (FIXED)
   let topChicken = null;
   let maxEggs = 0;
 
@@ -61,12 +57,10 @@ export default function Dashboard({ chickens, addChicken }) {
         </div>
       </div>
 
-      <button
-        onClick={addChicken}
-        className="bg-green-600 text-white px-4 py-2 rounded"
-      >
-        + Add Chicken
-      </button>
+      {/* ✅ FIX: navigate instead of breaking */}
+      <p className="text-gray-500">
+        Use "Chicken Registry" to add chickens.
+      </p>
     </div>
   );
 }
