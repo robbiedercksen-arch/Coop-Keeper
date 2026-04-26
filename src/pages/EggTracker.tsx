@@ -1,56 +1,44 @@
 export default function EggTracker({
   chickens,
   eggs,
-  addEgg,
   setSelectedChicken,
   setPage,
-}) {
-  const getEggCount = (chickenId) => {
-    return eggs.filter((egg) => egg.chickenId === chickenId).length;
-  };
-
-  if (chickens.length === 0) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-farm-brown mb-4">
-          Egg Tracker
-        </h1>
-        <p>No chickens yet.</p>
-      </div>
-    );
-  }
-
+}: any) {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-farm-brown mb-4">
+    <div>
+      <h2 className="text-2xl font-bold mb-4 text-farm-brown">
         Egg Tracker
-      </h1>
+      </h2>
 
-      {chickens.map((chicken) => (
-        <div
-          key={chicken.id}
-          className="bg-white p-4 rounded-lg shadow mb-3 flex justify-between items-center"
-        >
-          {/* CLICKABLE CHICKEN */}
+      {chickens.length === 0 && <p>No chickens yet.</p>}
+
+      {chickens.map((chicken: any) => {
+        const count = eggs.filter(
+          (e: any) => e.chickenId === chicken.id
+        ).length;
+
+        return (
           <div
-            onClick={() => {
-              setSelectedChicken(chicken);
-              setPage("egg-history");
-            }}
-            className="cursor-pointer"
+            key={chicken.id}
+            className="bg-white p-4 rounded-xl shadow mb-3 flex justify-between items-center"
           >
-            <h2 className="font-semibold">{chicken.name}</h2>
-            <p>Eggs: {getEggCount(chicken.id)}</p>
-          </div>
+            <div>
+              <h3 className="font-bold">{chicken.name}</h3>
+              <p className="text-sm text-gray-500">Eggs: {count}</p>
+            </div>
 
-          <button
-            onClick={() => addEgg(chicken.id)}
-            className="bg-farm-yellow text-white px-4 py-2 rounded"
-          >
-            + Add Egg
-          </button>
-        </div>
-      ))}
+            <button
+              onClick={() => {
+                setSelectedChicken(chicken); // 🔥 FIX
+                setPage("egg-history");
+              }}
+              className="bg-farm-yellow text-white px-4 py-2 rounded-lg"
+            >
+              + Add Egg
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }
