@@ -1,4 +1,9 @@
-export default function Sidebar() {
+type SidebarProps = {
+  activePage: string;
+  setActivePage: (page: string) => void;
+};
+
+export default function Sidebar({ activePage, setActivePage }: SidebarProps) {
   const menuItems = [
     "Dashboard",
     "Feeding & Water",
@@ -21,11 +26,12 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex flex-col gap-2 text-sm">
 
-        {menuItems.map((item, index) => (
+        {menuItems.map((item) => (
           <div
             key={item}
+            onClick={() => setActivePage(item)}
             className={`relative px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer ${
-              index === 0
+              activePage === item
                 ? "bg-white text-farm-brown font-semibold shadow-md border-l-4 border-farm-yellow"
                 : "text-white/90 hover:bg-white/10 hover:pl-5"
             }`}
