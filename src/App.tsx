@@ -7,23 +7,27 @@ import EggTracker from "./pages/EggTracker";
 export default function App() {
   const [page, setPage] = useState("dashboard");
 
-  // ✅ LOAD FROM LOCAL STORAGE ON START
+  // ✅ LOAD FROM LOCAL STORAGE
   const [chickens, setChickens] = useState(() => {
     const saved = localStorage.getItem("chickens");
     return saved ? JSON.parse(saved) : [];
   });
 
-  // ✅ SAVE TO LOCAL STORAGE EVERY CHANGE
+  // ✅ SAVE TO LOCAL STORAGE
   useEffect(() => {
     localStorage.setItem("chickens", JSON.stringify(chickens));
   }, [chickens]);
 
-  // ✅ ADD CHICKEN
+  // ✅ ADD CHICKEN (SAFE)
   const addChicken = (chicken) => {
+    if (!chicken || !chicken.name) return; // prevent crashes
+
     const newChicken = {
       id: Date.now(),
-      eggs: [],
-      ...chicken,
+      name: chicken.name,
+      breed: chicken.breed || "",
+      age: chicken.age || "",
+      eggs: [], // VERY IMPORTANT
     };
 
     setChickens((prev) => [...prev, newChicken]);
@@ -36,22 +40,28 @@ export default function App() {
 
   return (
     <div className="flex">
+      {/* SIDEBAR */}
       <Sidebar currentPage={page} setPage={setPage} />
 
+      {/* MAIN CONTENT */}
       <div className="flex-1">
         {page === "dashboard" && (
-          <Dashboard chickens={chickens} addChicken={addChicken} />
+          <Dashboard chickens={chickens} />
         )}
 
         {page === "registry" && (
           <ChickenRegistry
             chickens={chickens}
+            addChicken={addChicken}
             deleteChicken={deleteChicken}
           />
         )}
 
         {page === "eggs" && (
-          <EggTracker chickens={chickens} setChickens={setChickens} />
+          <EggTracker
+            chickens={chickens}
+            setChickens={setChickens}
+          />
         )}
       </div>
     </div>
