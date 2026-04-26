@@ -13,25 +13,27 @@ export default function Sidebar() {
     <div className="h-full p-6 flex flex-col">
       
       {/* Logo / Title */}
-      <div className="mb-10 flex items-center gap-2">
+      <div className="mb-10 flex items-center gap-3">
         <span className="text-2xl">🐔</span>
-        <h1 className="text-2xl font-bold">Coop Keeper</h1>
+        <h1 className="text-2xl font-bold tracking-wide">Coop Keeper</h1>
       </div>
 
       {/* Navigation */}
       <nav className="flex flex-col gap-2 text-sm">
+
         {menuItems.map((item, index) => (
           <div
             key={item}
-            className={`p-3 rounded-xl transition cursor-pointer ${
+            className={`relative px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer ${
               index === 0
-                ? "bg-white text-farm-brown font-semibold shadow"
-                : "hover:bg-white/10 text-white/90"
+                ? "bg-white text-farm-brown font-semibold shadow-md"
+                : "text-white/90 hover:bg-white/10 hover:pl-5"
             }`}
           >
             {item}
           </div>
         ))}
+
       </nav>
 
       {/* Bottom section */}
