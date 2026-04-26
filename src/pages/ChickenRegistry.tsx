@@ -20,7 +20,6 @@ export default function ChickenProfile({ chicken, goBack }) {
         <p><strong>Breed:</strong> {chicken.breed}</p>
         <p><strong>Age:</strong> {chicken.age}</p>
 
-        {/* Future fields */}
         <p className="text-gray-500 mt-4">
           Egg history, health notes, breeding info coming soon...
         </p>
