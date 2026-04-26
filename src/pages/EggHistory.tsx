@@ -1,55 +1,34 @@
 export default function EggHistory({
   selectedChicken,
   eggs,
-  setPage,
-  deleteEgg,
-}) {
+  addEgg,
+}: any) {
   if (!selectedChicken) {
-    return (
-      <div className="p-6">
-        <p>No chicken selected.</p>
-      </div>
-    );
+    return <p>No chicken selected.</p>;
   }
 
   const chickenEggs = eggs.filter(
-    (e) => e.chickenId === selectedChicken.id
+    (e: any) => e.chickenId === selectedChicken.id
   );
 
   return (
-    <div className="p-6">
+    <div>
+      <h2 className="text-2xl font-bold mb-4 text-farm-brown">
+        {selectedChicken.name} Egg History
+      </h2>
+
       <button
-        onClick={() => setPage("eggs")}
-        className="mb-4 bg-gray-300 px-3 py-1 rounded"
+        onClick={() => addEgg(selectedChicken.id)}
+        className="bg-green-500 text-white px-4 py-2 rounded-lg mb-4"
       >
-        ← Back
+        + Add Egg
       </button>
 
-      <h1 className="text-2xl font-bold text-farm-brown mb-4">
-        {selectedChicken.name} - Egg History
-      </h1>
-
-      {chickenEggs.length === 0 ? (
-        <p>No eggs recorded.</p>
-      ) : (
-        chickenEggs.map((egg) => (
-          <div
-            key={egg.id}
-            className="bg-white p-3 rounded shadow mb-2 flex justify-between"
-          >
-            <span>
-              {new Date(egg.date).toLocaleString()}
-            </span>
-
-            <button
-              onClick={() => deleteEgg(egg.id)}
-              className="bg-red-500 text-white px-2 py-1 rounded"
-            >
-              Delete
-            </button>
-          </div>
-        ))
-      )}
+      {chickenEggs.map((egg: any) => (
+        <div key={egg.id} className="bg-white p-3 mb-2 rounded shadow">
+          {new Date(egg.date).toLocaleString()}
+        </div>
+      ))}
     </div>
   );
 }
