@@ -3,9 +3,12 @@ import React, { useState } from "react";
 export default function ChickenProfile({ chicken, goBack, updateChicken }) {
   const [eggCount, setEggCount] = useState("");
 
-  if (!chicken) return null;
+  // ✅ SAFETY GUARD (prevents blank screen)
+  if (!chicken) {
+    return <div className="p-6">No chicken selected</div>;
+  }
 
-  // ✅ Add egg entry
+  // ✅ ADD EGGS
   const addEggs = () => {
     if (!eggCount) return;
 
@@ -14,7 +17,7 @@ export default function ChickenProfile({ chicken, goBack, updateChicken }) {
     const updated = {
       ...chicken,
       eggs: [
-        ...chicken.eggs,
+        ...(chicken.eggs || []),
         {
           date: today,
           count: Number(eggCount),
@@ -39,13 +42,13 @@ export default function ChickenProfile({ chicken, goBack, updateChicken }) {
         {chicken.name}
       </h1>
 
-      {/* INFO CARD */}
+      {/* INFO */}
       <div className="bg-white p-4 rounded-xl shadow border-l-4 border-farm-green mb-6">
         <p><strong>Breed:</strong> {chicken.breed}</p>
         <p><strong>Age:</strong> {chicken.age}</p>
       </div>
 
-      {/* EGG TRACKER */}
+      {/* LOG EGGS */}
       <div className="bg-white p-4 rounded-xl shadow mb-6">
         <h2 className="text-xl font-bold mb-3">🥚 Log Eggs</h2>
 
@@ -71,15 +74,12 @@ export default function ChickenProfile({ chicken, goBack, updateChicken }) {
       <div className="bg-white p-4 rounded-xl shadow">
         <h2 className="text-xl font-bold mb-3">📊 Egg History</h2>
 
-        {chicken.eggs.length === 0 ? (
+        {(chicken.eggs || []).length === 0 ? (
           <p className="text-gray-500">No eggs logged yet</p>
         ) : (
           <ul className="space-y-2">
-            {chicken.eggs.map((entry, i) => (
-              <li
-                key={i}
-                className="flex justify-between border-b pb-1"
-              >
+            {(chicken.eggs || []).map((entry, i) => (
+              <li key={i} className="flex justify-between border-b pb-1">
                 <span>{entry.date}</span>
                 <span className="font-semibold">
                   {entry.count} eggs
