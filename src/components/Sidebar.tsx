@@ -1,10 +1,10 @@
 export default function Sidebar() {
   return (
-    <div className="h-full p-4">
+    <div className="h-full p-6 flex flex-col">
       
-      <h1 className="text-xl font-bold mb-8">🐔 Coop Keeper</h1>
+      <h1 className="text-2xl font-bold mb-10">🐔 Coop Keeper</h1>
 
-      <nav className="flex flex-col gap-2 text-sm">
+      <nav className="flex flex-col gap-3 text-sm">
         {[
           "Dashboard",
           "Feeding & Water",
@@ -16,12 +16,17 @@ export default function Sidebar() {
         ].map((item) => (
           <div
             key={item}
-            className="p-2 rounded-lg hover:bg-white/20 cursor-pointer"
+            className="p-3 rounded-xl hover:bg-white/20 transition cursor-pointer"
           >
             {item}
           </div>
         ))}
       </nav>
+
+      {/* Bottom spacing */}
+      <div className="mt-auto text-xs text-white/60">
+        Coop Keeper v1
+      </div>
 
     </div>
   );
