@@ -6,13 +6,15 @@ function App() {
     <div className="flex min-h-screen bg-gray-100">
       
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-md">
+      <div className="w-64 bg-white border-r">
         <Sidebar />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6">
-        <Dashboard />
+      <div className="flex-1 p-8">
+        <div className="max-w-6xl mx-auto">
+          <Dashboard />
+        </div>
       </div>
 
     </div>
