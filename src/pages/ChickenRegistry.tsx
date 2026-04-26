@@ -1,22 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 
-type Chicken = {
-  id: string;
-  name: string;
-  breed: string;
-  age: string;
-};
-
-export default function ChickenRegistry() {
-  const [chickens, setChickens] = useState<Chicken[]>([]);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("chickens");
-    if (stored) {
-      setChickens(JSON.parse(stored));
-    }
-  }, []);
-
+export default function ChickenRegistry({ chickens }) {
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold text-farm-brown mb-6">
