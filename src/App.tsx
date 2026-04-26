@@ -1,55 +1,144 @@
-export default function EggHistory({
-  selectedChicken,
-  eggs,
-  setPage,
-  deleteEgg,
-}) {
-  if (!selectedChicken) {
-    return (
-      <div className="p-6">
-        <p>No chicken selected.</p>
-      </div>
-    );
-  }
+import { useState, useEffect } from "react";
+import Dashboard from "./pages/Dashboard";
+import ChickenRegistry from "./pages/ChickenRegistry";
+import EggTracker from "./pages/EggTracker";
+import EggHistory from "./pages/EggHistory";
 
-  const chickenEggs = eggs.filter(
-    (e) => e.chickenId === selectedChicken.id
-  );
+export default function App() {
+  const [page, setPage] = useState("dashboard");
+  const [chickens, setChickens] = useState<any[]>([]);
+  const [eggs, setEggs] = useState<any[]>([]);
+  const [selectedChicken, setSelectedChicken] = useState<any>(null);
+
+  // 🔥 LOAD DATA
+  useEffect(() => {
+    const savedChickens = localStorage.getItem("chickens");
+    const savedEggs = localStorage.getItem("eggs");
+
+    if (savedChickens) setChickens(JSON.parse(savedChickens));
+    if (savedEggs) setEggs(JSON.parse(savedEggs));
+  }, []);
+
+  // 🔥 SAVE DATA
+  useEffect(() => {
+    localStorage.setItem("chickens", JSON.stringify(chickens));
+  }, [chickens]);
+
+  useEffect(() => {
+    localStorage.setItem("eggs", JSON.stringify(eggs));
+  }, [eggs]);
+
+  // 🔥 ADD CHICKEN
+  const addChicken = (chicken: any) => {
+    setChickens([...chickens, { ...chicken, id: Date.now() }]);
+  };
+
+  // 🔥 DELETE CHICKEN
+  const deleteChicken = (id: number) => {
+    setChickens(chickens.filter((c) => c.id !== id));
+    setEggs(eggs.filter((e) => e.chickenId !== id));
+  };
+
+  // 🔥 ADD EGG
+  const addEgg = (chickenId: number) => {
+    setEggs([
+      ...eggs,
+      {
+        id: Date.now(),
+        chickenId,
+        date: new Date().toISOString(),
+      },
+    ]);
+  };
+
+  // 🔥 DASHBOARD DATA
+  const eggsToday = eggs.filter(
+    (e) => new Date(e.date).toDateString() === new Date().toDateString()
+  ).length;
+
+  const totalEggs = eggs.length;
+
+  const topLayer = (() => {
+    const counts: any = {};
+    eggs.forEach((e) => {
+      counts[e.chickenId] = (counts[e.chickenId] || 0) + 1;
+    });
+
+    let topId = null;
+    let max = 0;
+
+    for (let id in counts) {
+      if (counts[id] > max) {
+        max = counts[id];
+        topId = id;
+      }
+    }
+
+    const chicken = chickens.find((c) => c.id == topId);
+    return chicken ? `${chicken.name} (${max})` : "None";
+  })();
 
   return (
-    <div className="p-6">
-      <button
-        onClick={() => setPage("eggs")}
-        className="mb-4 bg-gray-300 px-3 py-1 rounded"
-      >
-        ← Back
-      </button>
+    <div className="flex">
+      {/* SIDEBAR */}
+      <div className="w-64 min-h-screen bg-farm-brown text-white p-4">
+        <h1 className="text-xl font-bold mb-6">🐔 Coop Keeper</h1>
 
-      <h1 className="text-2xl font-bold text-farm-brown mb-4">
-        {selectedChicken.name} - Egg History
-      </h1>
-
-      {chickenEggs.length === 0 ? (
-        <p>No eggs recorded.</p>
-      ) : (
-        chickenEggs.map((egg) => (
-          <div
-            key={egg.id}
-            className="bg-white p-3 rounded shadow mb-2 flex justify-between"
+        {[
+          ["Dashboard", "dashboard"],
+          ["Chicken Registry", "registry"],
+          ["Egg Tracker", "eggs"],
+        ].map(([label, key]) => (
+          <button
+            key={key}
+            onClick={() => setPage(key)}
+            className={`block w-full text-left px-4 py-2 mb-2 rounded-lg ${
+              page === key
+                ? "bg-white text-farm-brown font-semibold border-l-4 border-farm-yellow"
+                : "hover:bg-white/20"
+            }`}
           >
-            <span>
-              {new Date(egg.date).toLocaleString()}
-            </span>
+            {label}
+          </button>
+        ))}
+      </div>
 
-            <button
-              onClick={() => deleteEgg(egg.id)}
-              className="bg-red-500 text-white px-2 py-1 rounded"
-            >
-              Delete
-            </button>
-          </div>
-        ))
-      )}
+      {/* CONTENT */}
+      <div className="flex-1 p-6 bg-gray-100 min-h-screen">
+        {page === "dashboard" && (
+          <Dashboard
+            chickens={chickens}
+            eggsToday={eggsToday}
+            totalEggs={totalEggs}
+            topLayer={topLayer}
+          />
+        )}
+
+        {page === "registry" && (
+          <ChickenRegistry
+            chickens={chickens}
+            addChicken={addChicken}
+            deleteChicken={deleteChicken}
+          />
+        )}
+
+        {page === "eggs" && (
+          <EggTracker
+            chickens={chickens}
+            eggs={eggs}
+            setSelectedChicken={setSelectedChicken}
+            setPage={setPage}
+          />
+        )}
+
+        {page === "egg-history" && (
+          <EggHistory
+            selectedChicken={selectedChicken}
+            eggs={eggs}
+            addEgg={addEgg}
+          />
+        )}
+      </div>
     </div>
   );
 }
