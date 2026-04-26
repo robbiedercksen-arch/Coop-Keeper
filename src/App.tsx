@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import ChickenRegistry from "./pages/ChickenRegistry";
+import ChickenProfile from "./pages/ChickenProfile";
 
 export default function App() {
   const [activePage, setActivePage] = useState("dashboard");
   const [chickens, setChickens] = useState([]);
+  const [selectedChicken, setSelectedChicken] = useState(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("chickens");
@@ -30,6 +32,11 @@ export default function App() {
     );
   };
 
+  const openProfile = (chicken) => {
+    setSelectedChicken(chicken);
+    setActivePage("profile");
+  };
+
   const renderPage = () => {
     switch (activePage) {
       case "registry":
@@ -38,8 +45,18 @@ export default function App() {
             chickens={chickens}
             deleteChicken={deleteChicken}
             updateChicken={updateChicken}
+            openProfile={openProfile}
           />
         );
+
+      case "profile":
+        return (
+          <ChickenProfile
+            chicken={selectedChicken}
+            goBack={() => setActivePage("registry")}
+          />
+        );
+
       default:
         return <Dashboard addChicken={addChicken} />;
     }
