@@ -4,8 +4,10 @@ export default function ChickenRegistry({
   chickens,
   addChicken,
   deleteChicken,
+  updateChicken,
 }) {
   const [showModal, setShowModal] = useState(false);
+  const [editingChicken, setEditingChicken] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -13,13 +15,34 @@ export default function ChickenRegistry({
     age: "",
   });
 
+  const openAddModal = () => {
+    setEditingChicken(null);
+    setForm({ name: "", breed: "", age: "" });
+    setShowModal(true);
+  };
+
+  const openEditModal = (chicken) => {
+    setEditingChicken(chicken);
+    setForm({
+      name: chicken.name,
+      breed: chicken.breed,
+      age: chicken.age,
+    });
+    setShowModal(true);
+  };
+
   const handleSave = () => {
     if (!form.name) return;
 
-    addChicken(form);
+    if (editingChicken) {
+      updateChicken(editingChicken.id, form);
+    } else {
+      addChicken(form);
+    }
 
-    setForm({ name: "", breed: "", age: "" });
     setShowModal(false);
+    setEditingChicken(null);
+    setForm({ name: "", breed: "", age: "" });
   };
 
   return (
@@ -30,7 +53,7 @@ export default function ChickenRegistry({
 
       {/* ADD BUTTON */}
       <button
-        onClick={() => setShowModal(true)}
+        onClick={openAddModal}
         className="mb-4 px-4 py-2 bg-farm-green text-white rounded-lg shadow"
       >
         + Add Chicken
@@ -43,7 +66,7 @@ export default function ChickenRegistry({
         chickens.map((chicken) => (
           <div
             key={chicken.id}
-            className="bg-white p-4 rounded-lg shadow mb-3 flex justify-between"
+            className="bg-white p-4 rounded-lg shadow mb-3 flex justify-between items-center"
           >
             <div>
               <h2 className="font-semibold">{chicken.name}</h2>
@@ -51,12 +74,23 @@ export default function ChickenRegistry({
               <p>Age: {chicken.age}</p>
             </div>
 
-            <button
-              onClick={() => deleteChicken(chicken.id)}
-              className="bg-red-500 text-white px-3 py-1 rounded"
-            >
-              Delete
-            </button>
+            <div className="flex gap-2">
+              {/* EDIT BUTTON */}
+              <button
+                onClick={() => openEditModal(chicken)}
+                className="bg-yellow-500 text-white px-3 py-1 rounded"
+              >
+                Edit
+              </button>
+
+              {/* DELETE BUTTON */}
+              <button
+                onClick={() => deleteChicken(chicken.id)}
+                className="bg-red-500 text-white px-3 py-1 rounded"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))
       )}
@@ -65,7 +99,9 @@ export default function ChickenRegistry({
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl w-[300px]">
-            <h2 className="text-lg font-bold mb-3">Add Chicken</h2>
+            <h2 className="text-lg font-bold mb-3">
+              {editingChicken ? "Edit Chicken" : "Add Chicken"}
+            </h2>
 
             <input
               placeholder="Name"
