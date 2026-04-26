@@ -3,10 +3,10 @@ import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
-    <div className="flex min-h-screen bg-[#f5f3ef]">
+    <div className="flex min-h-screen bg-gradient-to-br from-[#f5f3ef] to-[#eae6df]">
       
       {/* Sidebar */}
-      <div className="w-64 bg-farm-brown text-white shadow-lg">
+      <div className="w-64 bg-farm-brown text-white shadow-xl">
         <Sidebar />
       </div>
 
