@@ -9,30 +9,39 @@ export default function App() {
   const [chickens, setChickens] = useState([]);
   const [selectedChicken, setSelectedChicken] = useState(null);
 
-  // ✅ Load chickens from localStorage
+  // ✅ SAFE LOAD (fixes blank screen issue)
   useEffect(() => {
     const stored = localStorage.getItem("chickens");
+
     if (stored) {
-      setChickens(JSON.parse(stored));
+      const parsed = JSON.parse(stored);
+
+      // Ensure eggs always exists
+      const fixed = parsed.map((c) => ({
+        ...c,
+        eggs: c.eggs || [],
+      }));
+
+      setChickens(fixed);
     }
   }, []);
 
-  // ✅ Save chickens to localStorage
+  // ✅ SAVE
   useEffect(() => {
     localStorage.setItem("chickens", JSON.stringify(chickens));
   }, [chickens]);
 
-  // ✅ Add new chicken
+  // ✅ ADD
   const addChicken = (chicken) => {
     setChickens((prev) => [...prev, chicken]);
   };
 
-  // ✅ Delete chicken
+  // ✅ DELETE
   const deleteChicken = (id) => {
     setChickens((prev) => prev.filter((c) => c.id !== id));
   };
 
-  // ✅ Update chicken (used for eggs, edits later)
+  // ✅ UPDATE
   const updateChicken = (updatedChicken) => {
     setChickens((prev) =>
       prev.map((c) =>
@@ -41,19 +50,19 @@ export default function App() {
     );
   };
 
-  // ✅ Open chicken profile
+  // ✅ OPEN PROFILE
   const openProfile = (chicken) => {
     setSelectedChicken(chicken);
     setActivePage("profile");
   };
 
-  // ✅ Go back from profile
+  // ✅ BACK
   const goBack = () => {
     setSelectedChicken(null);
     setActivePage("registry");
   };
 
-  // ✅ Page router
+  // ✅ ROUTER
   const renderPage = () => {
     switch (activePage) {
       case "registry":
@@ -71,7 +80,7 @@ export default function App() {
           <ChickenProfile
             chicken={selectedChicken}
             goBack={goBack}
-            updateChicken={updateChicken} // ✅ important for egg tracking
+            updateChicken={updateChicken}
           />
         );
 
@@ -87,13 +96,11 @@ export default function App() {
 
   return (
     <div className="flex">
-      {/* Sidebar */}
       <Sidebar
         activePage={activePage}
         setActivePage={setActivePage}
       />
 
-      {/* Main Content */}
       <div className="flex-1 bg-[#f5f1ea] min-h-screen">
         {renderPage()}
       </div>
