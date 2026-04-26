@@ -17,7 +17,11 @@ export default function App() {
 
   return (
     <div className="flex">
-      <Sidebar setActivePage={setActivePage} />
+      <Sidebar
+        activePage={activePage}
+        setActivePage={setActivePage}
+      />
+
       <div className="flex-1 bg-[#f5f1ea] min-h-screen">
         {renderPage()}
       </div>
