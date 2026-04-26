@@ -1,6 +1,6 @@
 export default function Sidebar() {
   return (
-    <div className="h-full p-4 bg-white">
+    <div className="h-full p-4">
       
       <h1 className="text-xl font-bold mb-8">🐔 Coop Keeper</h1>
 
@@ -16,7 +16,7 @@ export default function Sidebar() {
         ].map((item) => (
           <div
             key={item}
-            className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer"
+            className="p-2 rounded-lg hover:bg-white/20 cursor-pointer"
           >
             {item}
           </div>
