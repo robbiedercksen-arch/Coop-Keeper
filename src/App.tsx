@@ -3,10 +3,10 @@ import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-farm-light">
       
       {/* Sidebar */}
-      <div className="w-64 bg-white border-r">
+      <div className="w-64 bg-farm-brown text-white">
         <Sidebar />
       </div>
 
