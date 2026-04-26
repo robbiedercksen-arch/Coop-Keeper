@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Sidebar from "./components/Sidebar";
 
 import Dashboard from "./pages/Dashboard";
 import ChickenRegistry from "./pages/ChickenRegistry";
