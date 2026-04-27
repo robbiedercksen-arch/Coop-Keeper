@@ -1,5 +1,18 @@
 import { useState } from "react";
 
+const breeds = [
+  "Orpington",
+  "Wyandotte",
+  "Leghorn",
+  "Rhode Island Red",
+  "Plymouth Rock",
+  "Sussex",
+  "Australorp",
+  "Brahma",
+  "Silkie",
+  "Cochin",
+];
+
 export default function ChickenRegistry({ chickens, setChickens, navigate }: any) {
   const [form, setForm] = useState({
     name: "",
@@ -12,7 +25,7 @@ export default function ChickenRegistry({ chickens, setChickens, navigate }: any
   });
 
   const handleChange = (key: string, value: any) => {
-    setForm({ ...form, [key]: value });
+    setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleImage = (e: any) => {
@@ -21,16 +34,14 @@ export default function ChickenRegistry({ chickens, setChickens, navigate }: any
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setForm((prev) => ({ ...prev, image: reader.result }));
+      setForm((prev) => ({ ...prev, image: reader.result as string }));
     };
     reader.readAsDataURL(file);
   };
 
   const addChicken = () => {
-    console.log("CLICKED ADD", form);
-
     if (!form.name || !form.image) {
-      alert("Name + Image required");
+      alert("Name and Photo are required!");
       return;
     }
 
@@ -43,6 +54,7 @@ export default function ChickenRegistry({ chickens, setChickens, navigate }: any
 
     setChickens([...chickens, newChicken]);
 
+    // reset form
     setForm({
       name: "",
       breed: "",
@@ -55,37 +67,109 @@ export default function ChickenRegistry({ chickens, setChickens, navigate }: any
   };
 
   return (
-    <div>
-      <h2>Chicken Registry</h2>
+    <div style={{ padding: 20 }}>
+      <h2>🐔 Chicken Registry</h2>
 
-      <input placeholder="Name" value={form.name} onChange={(e) => handleChange("name", e.target.value)} />
-      <input placeholder="Breed" value={form.breed} onChange={(e) => handleChange("breed", e.target.value)} />
+      {/* FORM */}
+      <div
+        style={{
+          display: "grid",
+          gap: 10,
+          maxWidth: 500,
+          marginBottom: 30,
+        }}
+      >
+        <input
+          placeholder="Name"
+          value={form.name}
+          onChange={(e) => handleChange("name", e.target.value)}
+        />
 
-      <select onChange={(e) => handleChange("sex", e.target.value)}>
-        <option>Hen</option>
-        <option>Rooster</option>
-        <option>Unknown</option>
-      </select>
+        <select value={form.breed} onChange={(e) => handleChange("breed", e.target.value)}>
+          <option value="">Select Breed</option>
+          {breeds.map((b) => (
+            <option key={b}>{b}</option>
+          ))}
+        </select>
 
-      <input type="file" onChange={handleImage} />
+        <select value={form.sex} onChange={(e) => handleChange("sex", e.target.value)}>
+          <option>Hen</option>
+          <option>Rooster</option>
+          <option>Unknown</option>
+        </select>
 
-      <button onClick={addChicken}>Add Chicken</button>
+        <select value={form.ageGroup} onChange={(e) => handleChange("ageGroup", e.target.value)}>
+          <option>Chick (0-6 Weeks)</option>
+          <option>Grower (6-20 Weeks)</option>
+          <option>Point of Lay</option>
+          <option>Adult</option>
+        </select>
 
-      <hr />
+        <select value={form.status} onChange={(e) => handleChange("status", e.target.value)}>
+          <option>Active</option>
+          <option>Sold</option>
+          <option>Culled</option>
+        </select>
 
+        <input
+          type="date"
+          value={form.hatchDate}
+          onChange={(e) => handleChange("hatchDate", e.target.value)}
+        />
+
+        <input type="file" accept="image/*" onChange={handleImage} />
+
+        <button
+          onClick={addChicken}
+          style={{
+            background: "#16a34a",
+            color: "#fff",
+            padding: 10,
+            borderRadius: 6,
+            cursor: "pointer",
+          }}
+        >
+          Add Chicken
+        </button>
+      </div>
+
+      {/* CHICKEN CARDS */}
       {chickens.map((c: any) => (
         <div
           key={c.id}
           onClick={() => navigate("profile", c)}
           style={{
-            padding: 10,
-            border: "1px solid #ccc",
-            marginBottom: 10,
+            display: "flex",
+            alignItems: "center",
+            gap: 15,
+            padding: 15,
+            marginBottom: 12,
+            borderRadius: 12,
+            background: "#fff",
             cursor: "pointer",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
           }}
         >
-          <img src={c.image} width={50} />
-          <strong>{c.name}</strong> ({c.idTag})
+          <img
+            src={c.image}
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 10,
+              objectFit: "cover",
+            }}
+          />
+
+          <div style={{ flex: 1 }}>
+            <strong>{c.name}</strong>
+            <div>{c.idTag}</div>
+          </div>
+
+          <div style={{ fontSize: 20 }}>
+            {c.sex === "Hen" ? "♀️" : c.sex === "Rooster" ? "♂️" : "❓"}
+          </div>
+
+          <div>{c.status}</div>
         </div>
       ))}
     </div>
