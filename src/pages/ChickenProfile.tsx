@@ -12,6 +12,7 @@ export default function ChickenProfile({
   const notes = selectedChicken?.notes || [];
 
   const [editingLogId, setEditingLogId] = useState<number | null>(null);
+  const [viewLog, setViewLog] = useState<any | null>(null);
 
   const [healthForm, setHealthForm] = useState({
     date: "",
@@ -213,6 +214,7 @@ export default function ChickenProfile({
       <div style={card}>
         <h3>🩺 Health Logs</h3>
 
+        {/* FORM */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <input
             type="date"
@@ -272,6 +274,7 @@ export default function ChickenProfile({
 
         <hr />
 
+        {/* LIST */}
         {healthLogs.map((log: any) => (
           <div
             key={log.id}
@@ -286,9 +289,16 @@ export default function ChickenProfile({
               {log.date} — {log.status}
             </span>
 
-            <div>
+            <div style={{ display: "flex", gap: 5 }}>
               <button
-                style={{ ...btn, background: "#3b82f6", color: "#fff", marginRight: 5 }}
+                style={{ ...btn, background: "#6366f1", color: "#fff" }}
+                onClick={() => setViewLog(log)}
+              >
+                View
+              </button>
+
+              <button
+                style={{ ...btn, background: "#3b82f6", color: "#fff" }}
                 onClick={() => editHealthLog(log)}
               >
                 Edit
@@ -304,6 +314,25 @@ export default function ChickenProfile({
           </div>
         ))}
       </div>
+
+      {/* ================= VIEW MODAL ================= */}
+      {viewLog && (
+        <div style={card}>
+          <h3>📋 Health Record Details</h3>
+          <p><b>Date:</b> {viewLog.date}</p>
+          <p><b>Status:</b> {viewLog.status}</p>
+          <p><b>Symptoms:</b> {viewLog.symptoms || "-"}</p>
+          <p><b>Treatment:</b> {viewLog.treatment || "-"}</p>
+          <p><b>Notes:</b> {viewLog.notes || "-"}</p>
+
+          <button
+            style={{ ...btn, background: "#6b7280", color: "#fff" }}
+            onClick={() => setViewLog(null)}
+          >
+            Close
+          </button>
+        </div>
+      )}
 
       {/* ================= NOTES ================= */}
       <div style={card}>
