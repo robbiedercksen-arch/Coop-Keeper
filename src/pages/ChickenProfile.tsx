@@ -1,43 +1,55 @@
 import { useState } from "react";
 
-export default function ChickenProfile({
-  selectedChicken,
-  chickens,
-  setChickens,
-  navigate,
-}: any) {
-  const [editing, setEditing] = useState(false);
+export default function ChickenProfile({ selectedChicken, setChickens, navigate }: any) {
+  const [form, setForm] = useState({
+    date: "",
+    status: "Healthy",
+    symptoms: "",
+    treatment: "",
+    notes: "",
+  });
 
-  const [form, setForm] = useState({ ...selectedChicken });
+  if (!selectedChicken) {
+    return <div style={{ padding: 20 }}>No chicken selected.</div>;
+  }
 
-  if (!selectedChicken) return <p>No chicken selected</p>;
-
-  const handleChange = (key: string, value: any) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleImage = (e: any) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setForm((prev) => ({ ...prev, image: reader.result }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const saveEdit = () => {
-    const updated = chickens.map((c: any) =>
-      c.id === selectedChicken.id ? form : c
+  const updateChicken = (updatedChicken: any) => {
+    setChickens((prev: any[]) =>
+      prev.map((c) => (c.id === selectedChicken.id ? updatedChicken : c))
     );
+  };
 
-    setChickens(updated);
-    setEditing(false);
+  const addHealthLog = () => {
+    if (!form.date) {
+      alert("Please select a date");
+      return;
+    }
+
+    const newLog = {
+      id: Date.now(),
+      ...form,
+    };
+
+    const updatedChicken = {
+      ...selectedChicken,
+      healthLogs: [...(selectedChicken.healthLogs || []), newLog],
+    };
+
+    updateChicken(updatedChicken);
+
+    setForm({
+      date: "",
+      status: "Healthy",
+      symptoms: "",
+      treatment: "",
+      notes: "",
+    });
   };
 
   const deleteChicken = () => {
-    setChickens(chickens.filter((c: any) => c.id !== selectedChicken.id));
+    setChickens((prev: any[]) =>
+      prev.filter((c) => c.id !== selectedChicken.id)
+    );
     navigate("registry");
   };
 
@@ -45,109 +57,115 @@ export default function ChickenProfile({
     <div style={{ padding: 20 }}>
       <button onClick={() => navigate("registry")}>← Back</button>
 
-      <h2>🐔 {editing ? "Edit Chicken" : selectedChicken.name}</h2>
+      <h2 style={{ marginTop: 10 }}>{selectedChicken.name}</h2>
 
-      {/* IMAGE */}
-      <img
-        src={editing ? form.image : selectedChicken.image}
-        style={{ width: 200, borderRadius: 10, marginBottom: 20 }}
-      />
+      <div
+        style={{
+          background: "#fff",
+          padding: 20,
+          borderRadius: 12,
+          marginBottom: 30,
+        }}
+      >
+        <img
+          src={selectedChicken.image}
+          style={{ width: 120, borderRadius: 10 }}
+        />
 
-      {editing ? (
-        <>
-          {/* EDIT FORM */}
-          <div style={{ display: "grid", gap: 10, maxWidth: 400 }}>
-            <input
-              value={form.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-            />
+        <p><b>ID Tag:</b> {selectedChicken.idTag}</p>
+        <p><b>Breed:</b> {selectedChicken.breed}</p>
+        <p><b>Sex:</b> {selectedChicken.sex}</p>
+        <p><b>Age:</b> {selectedChicken.ageGroup}</p>
+        <p><b>Status:</b> {selectedChicken.status}</p>
 
-            <input
-              value={form.breed}
-              onChange={(e) => handleChange("breed", e.target.value)}
-            />
+        <button
+          onClick={deleteChicken}
+          style={{
+            background: "red",
+            color: "#fff",
+            padding: 10,
+            borderRadius: 6,
+            marginTop: 10,
+          }}
+        >
+          Delete
+        </button>
+      </div>
 
-            <select
-              value={form.sex}
-              onChange={(e) => handleChange("sex", e.target.value)}
-            >
-              <option>Hen</option>
-              <option>Rooster</option>
-              <option>Unknown</option>
-            </select>
+      {/* HEALTH LOG FORM */}
+      <h3>🩺 Add Health Log</h3>
 
-            <select
-              value={form.ageGroup}
-              onChange={(e) => handleChange("ageGroup", e.target.value)}
-            >
-              <option>Chick (0-6 Weeks)</option>
-              <option>Grower (6-20 Weeks)</option>
-              <option>Point of Lay</option>
-              <option>Adult</option>
-            </select>
+      <div style={{ display: "grid", gap: 10, maxWidth: 400 }}>
+        <input
+          type="date"
+          value={form.date}
+          onChange={(e) => setForm({ ...form, date: e.target.value })}
+        />
 
-            <select
-              value={form.status}
-              onChange={(e) => handleChange("status", e.target.value)}
-            >
-              <option>Active</option>
-              <option>Sold</option>
-              <option>Culled</option>
-            </select>
+        <select
+          value={form.status}
+          onChange={(e) => setForm({ ...form, status: e.target.value })}
+        >
+          <option>Healthy</option>
+          <option>Sick</option>
+          <option>Recovering</option>
+        </select>
 
-            <input
-              type="date"
-              value={form.hatchDate || ""}
-              onChange={(e) => handleChange("hatchDate", e.target.value)}
-            />
+        <input
+          placeholder="Symptoms (optional)"
+          value={form.symptoms}
+          onChange={(e) => setForm({ ...form, symptoms: e.target.value })}
+        />
 
-            <input type="file" accept="image/*" onChange={handleImage} />
+        <input
+          placeholder="Treatment (optional)"
+          value={form.treatment}
+          onChange={(e) => setForm({ ...form, treatment: e.target.value })}
+        />
 
-            <button
-              onClick={saveEdit}
-              style={{ background: "green", color: "#fff" }}
-            >
-              Save Changes
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          {/* VIEW MODE */}
-          <p><strong>ID:</strong> {selectedChicken.idTag}</p>
-          <p><strong>Breed:</strong> {selectedChicken.breed}</p>
-          <p><strong>Sex:</strong> {selectedChicken.sex}</p>
-          <p><strong>Age:</strong> {selectedChicken.ageGroup}</p>
-          <p><strong>Status:</strong> {selectedChicken.status}</p>
-          <p><strong>Hatch Date:</strong> {selectedChicken.hatchDate || "N/A"}</p>
+        <textarea
+          placeholder="Health Notes (optional)"
+          value={form.notes}
+          onChange={(e) => setForm({ ...form, notes: e.target.value })}
+        />
 
-          <div style={{ marginTop: 20 }}>
-            <button
-              onClick={() => setEditing(true)}
-              style={{
-                background: "#facc15",
-                padding: "8px 12px",
-                borderRadius: 6,
-                marginRight: 10,
-              }}
-            >
-              Edit
-            </button>
+        <button
+          onClick={addHealthLog}
+          style={{
+            background: "#16a34a",
+            color: "#fff",
+            padding: 10,
+            borderRadius: 6,
+          }}
+        >
+          Save Health Log
+        </button>
+      </div>
 
-            <button
-              onClick={deleteChicken}
-              style={{
-                background: "#ef4444",
-                color: "#fff",
-                padding: "8px 12px",
-                borderRadius: 6,
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        </>
+      {/* HEALTH HISTORY */}
+      <h3 style={{ marginTop: 30 }}>📋 Health History</h3>
+
+      {(selectedChicken.healthLogs || []).length === 0 && (
+        <p>No health records yet.</p>
       )}
+
+      {(selectedChicken.healthLogs || []).map((log: any) => (
+        <div
+          key={log.id}
+          style={{
+            background: "#fff",
+            padding: 15,
+            borderRadius: 10,
+            marginBottom: 10,
+          }}
+        >
+          <b>{log.date}</b> — {log.status}
+
+          {log.symptoms && <p>Symptoms: {log.symptoms}</p>}
+          {log.treatment && <p>Treatment: {log.treatment}</p>}
+          {log.notes && <p>Notes: {log.notes}</p>}
+        </div>
+      ))}
     </div>
   );
 }
