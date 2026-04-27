@@ -1,71 +1,135 @@
 import { useState } from "react";
 
-export default function ChickenRegistry({
-  chickens,
-  addChicken,
-  deleteChicken,
-}: any) {
+export default function ChickenRegistry({ chickens, setChickens }: any) {
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
   const [age, setAge] = useState("");
 
-  return (
-    <div>
-      <h1 className="text-3xl font-bold mb-6 text-farm-brown">
-        🐔 Chicken Registry
-      </h1>
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-      <div className="mb-4">
+  const addChicken = () => {
+    if (!name) return;
+
+    const newChicken = {
+      id: Date.now(),
+      name,
+      breed,
+      age,
+      eggs: [],
+    };
+
+    setChickens([...chickens, newChicken]);
+
+    setName("");
+    setBreed("");
+    setAge("");
+  };
+
+  const deleteChicken = (id: number) => {
+    setChickens(chickens.filter((c: any) => c.id !== id));
+  };
+
+  const startEdit = (chicken: any) => {
+    setEditingId(chicken.id);
+    setName(chicken.name);
+    setBreed(chicken.breed);
+    setAge(chicken.age);
+  };
+
+  const saveEdit = () => {
+    setChickens(
+      chickens.map((c: any) =>
+        c.id === editingId ? { ...c, name, breed, age } : c
+      )
+    );
+
+    setEditingId(null);
+    setName("");
+    setBreed("");
+    setAge("");
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>🐔 Chicken Registry</h2>
+
+      {/* INPUT */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
         <input
           placeholder="Name"
-          className="border p-2 mr-2"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <input
           placeholder="Breed"
-          className="border p-2 mr-2"
           value={breed}
           onChange={(e) => setBreed(e.target.value)}
         />
         <input
           placeholder="Age"
-          className="border p-2 mr-2"
           value={age}
           onChange={(e) => setAge(e.target.value)}
         />
 
-        <button
-          onClick={() => {
-            if (!name) return;
-            addChicken({ name, breed, age });
-            setName("");
-            setBreed("");
-            setAge("");
-          }}
-          className="bg-green-500 text-white px-4 py-2 rounded"
-        >
-          Add
-        </button>
+        {editingId ? (
+          <button onClick={saveEdit} style={{ background: "orange" }}>
+            Save
+          </button>
+        ) : (
+          <button onClick={addChicken} style={{ background: "green", color: "#fff" }}>
+            Add
+          </button>
+        )}
       </div>
 
+      {/* LIST */}
       {chickens.map((c: any) => (
         <div
           key={c.id}
-          className="bg-white p-4 rounded shadow mb-2 flex justify-between"
+          style={{
+            background: "#fff",
+            padding: 15,
+            borderRadius: 10,
+            marginBottom: 10,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
         >
           <div>
-            <h3 className="font-bold">{c.name}</h3>
-            <p>{c.breed}</p>
-            <p>{c.age}</p>
+            <strong>{c.name}</strong>
+            <div>{c.breed}</div>
+            <div>{c.age}</div>
           </div>
 
-          <button
-            onClick={() => deleteChicken(c.id)}
-            className="bg-red-500 text-white px-3 py-1 rounded"
-          >
-            Delete
-          </button>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button
+              onClick={() => startEdit(c)}
+              style={{
+                background: "#facc15",
+                border: "none",
+                padding: "8px 12px",
+                borderRadius: 6,
+                cursor: "pointer",
+              }}
+            >
+              Edit
+            </button>
+
+            <button
+              onClick={() => deleteChicken(c.id)}
+              style={{
+                background: "#ef4444",
+                color: "#fff",
+                border: "none",
+                padding: "8px 12px",
+                borderRadius: 6,
+                cursor: "pointer",
+              }}
+            >
+              Delete
+            </button>
+          </div>
         </div>
       ))}
     </div>
