@@ -1,4 +1,4 @@
-export default function ChickenProfile({ selectedChicken, setChickens, chickens, navigate }: any) {
+export default function ChickenProfile({ selectedChicken, chickens, setChickens, navigate }: any) {
   if (!selectedChicken) return <p>No chicken selected</p>;
 
   const deleteChicken = () => {
@@ -7,32 +7,16 @@ export default function ChickenProfile({ selectedChicken, setChickens, chickens,
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <button onClick={() => navigate("registry")}>← Back</button>
+    <div>
+      <button onClick={() => navigate("registry")}>Back</button>
 
       <h2>{selectedChicken.name}</h2>
+      <img src={selectedChicken.image} width={150} />
 
-      <img
-        src={selectedChicken.image}
-        style={{ width: 200, borderRadius: 10 }}
-      />
+      <p>{selectedChicken.breed}</p>
+      <p>{selectedChicken.sex}</p>
 
-      <p><strong>ID:</strong> {selectedChicken.idTag}</p>
-      <p><strong>Breed:</strong> {selectedChicken.breed}</p>
-      <p><strong>Sex:</strong> {selectedChicken.sex}</p>
-      <p><strong>Age:</strong> {selectedChicken.ageGroup}</p>
-      <p><strong>Status:</strong> {selectedChicken.status}</p>
-      <p><strong>Hatch Date:</strong> {selectedChicken.hatchDate || "N/A"}</p>
-
-      <div style={{ marginTop: 20 }}>
-        <button style={{ background: "orange" }}>Edit (next step)</button>
-        <button
-          onClick={deleteChicken}
-          style={{ background: "red", color: "#fff", marginLeft: 10 }}
-        >
-          Delete
-        </button>
-      </div>
+      <button onClick={deleteChicken}>Delete</button>
     </div>
   );
 }
