@@ -1,141 +1,154 @@
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
-export default function ChickenProfile() {
-  const navigate = useNavigate();
+export default function ChickenProfile({
+  selectedChicken,
+  setChickens,
+  navigate,
+}: any) {
+  // ✅ SAFETY (prevents white screen)
+  if (!selectedChicken) {
+    return <div style={{ padding: 20 }}>Loading...</div>;
+  }
 
-  // 🔹 Base button style (shared)
+  const [form, setForm] = useState({ ...selectedChicken });
+
+  const healthLogs = selectedChicken?.healthLogs || [];
+  const notes = selectedChicken?.notes || [];
+
+  const [viewLog, setViewLog] = useState<any>(null);
+  const [viewNote, setViewNote] = useState<any>(null);
+
+  // BUTTON STYLE
   const btn = {
     padding: "8px 14px",
     borderRadius: 8,
     border: "none",
     cursor: "pointer",
     fontWeight: 600,
-    fontSize: 14,
+    marginRight: 5,
+  };
+
+  const card = {
+    background: "#fff",
+    padding: 20,
+    borderRadius: 14,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    marginBottom: 20,
+  };
+
+  const updateChicken = (updated: any) => {
+    setChickens((prev: any[]) =>
+      prev.map((c) => (c.id === selectedChicken.id ? updated : c))
+    );
+  };
+
+  // DELETE
+  const deleteChicken = () => {
+    setChickens((prev: any[]) =>
+      prev.filter((c) => c.id !== selectedChicken.id)
+    );
+    navigate("registry");
   };
 
   return (
     <div style={{ padding: 20 }}>
-
-      {/* 🔙 Back Button (FIXED & IMPROVED) */}
-      <div style={{ marginBottom: 15 }}>
-        <button
-          onClick={() => navigate("registry")}
-          style={{
-            ...btn,
-            background: "#4f6df5",
-            color: "#fff",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-          }}
-        >
-          ← Back to Registry
-        </button>
-      </div>
-
-      {/* 🐔 Chicken Card */}
-      <div
+      {/* 🔥 PREMIUM BACK BUTTON */}
+      <button
+        onClick={() => navigate("registry")}
         style={{
-          background: "#fff",
-          padding: 20,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "10px 16px",
+          background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+          color: "#fff",
+          border: "none",
           borderRadius: 12,
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-          marginBottom: 20,
-          display: "flex",
-          gap: 20,
-        }}
-      >
-        <img
-          src="https://via.placeholder.com/150"
-          alt="Chicken"
-          style={{ borderRadius: 10, width: 150, height: 150 }}
-        />
-
-        <div>
-          <h2 style={{ margin: 0 }}>Caramel</h2>
-          <p><strong>ID:</strong> 001</p>
-          <p><strong>Status:</strong> Active</p>
-
-          <div style={{ display: "flex", gap: 10 }}>
-            <button
-              style={{
-                ...btn,
-                background: "#4f6df5",
-                color: "#fff",
-              }}
-            >
-              Edit
-            </button>
-
-            <button
-              style={{
-                ...btn,
-                background: "#ef4444",
-                color: "#fff",
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ❤️ Health Logs */}
-      <div
-        style={{
-          background: "#fff",
-          padding: 20,
-          borderRadius: 12,
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+          fontWeight: 600,
+          cursor: "pointer",
           marginBottom: 20,
         }}
       >
-        <h3>Health Logs</h3>
+        ← Back
+      </button>
+
+      {/* PROFILE */}
+      <div style={card}>
+        <h2>{selectedChicken.name}</h2>
+        <p><b>ID:</b> {selectedChicken.idTag}</p>
+        <p><b>Status:</b> {selectedChicken.status}</p>
 
         <button
-          style={{
-            ...btn,
-            background: "#f59e0b",
-            color: "#fff",
-            marginBottom: 10,
-          }}
+          style={{ ...btn, background: "#ef4444", color: "#fff" }}
+          onClick={deleteChicken}
         >
-          Add Health Record
+          Delete Chicken
         </button>
-
-        {/* Example logs */}
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-          <span>2026-04-27 — Sick</span>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button style={{ ...btn, background: "#6366f1", color: "#fff" }}>View</button>
-            <button style={{ ...btn, background: "#4f6df5", color: "#fff" }}>Edit</button>
-            <button style={{ ...btn, background: "#ef4444", color: "#fff" }}>Delete</button>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-          <span>2026-04-27 — Healthy</span>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button style={{ ...btn, background: "#6366f1", color: "#fff" }}>View</button>
-            <button style={{ ...btn, background: "#4f6df5", color: "#fff" }}>Edit</button>
-            <button style={{ ...btn, background: "#ef4444", color: "#fff" }}>Delete</button>
-          </div>
-        </div>
       </div>
 
-      {/* 📝 Notes */}
-      <div
-        style={{
-          background: "#fff",
-          padding: 20,
-          borderRadius: 12,
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-        }}
-      >
-        <h3>Notes & Observations</h3>
-        <p>No notes yet...</p>
+      {/* HEALTH */}
+      <div style={card}>
+        <h3>🩺 Health Logs</h3>
+
+        {healthLogs.map((log: any) => (
+          <div key={log.id} style={{ marginBottom: 10 }}>
+            {log.date} — {log.status}
+
+            <div>
+              <button
+                style={{ ...btn, background: "#6366f1", color: "#fff" }}
+                onClick={() => setViewLog(log)}
+              >
+                View
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {/* NOTES */}
+      <div style={card}>
+        <h3>📝 Notes</h3>
+
+        {notes.map((note: any) => (
+          <div key={note.id} style={{ marginBottom: 10 }}>
+            {note.date} — {note.type}
+
+            <div>
+              <button
+                style={{ ...btn, background: "#6366f1", color: "#fff" }}
+                onClick={() => setViewNote(note)}
+              >
+                View
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* VIEW HEALTH */}
+      {viewLog && (
+        <div style={card}>
+          <h3>Health Details</h3>
+          <p>{viewLog.date}</p>
+          <p>{viewLog.status}</p>
+          <p>{viewLog.notes}</p>
+
+          <button onClick={() => setViewLog(null)}>Close</button>
+        </div>
+      )}
+
+      {/* VIEW NOTE */}
+      {viewNote && (
+        <div style={card}>
+          <h3>Note Details</h3>
+          <p>{viewNote.date}</p>
+          <p>{viewNote.type}</p>
+          <p>{viewNote.description}</p>
+
+          <button onClick={() => setViewNote(null)}>Close</button>
+        </div>
+      )}
     </div>
   );
 }
