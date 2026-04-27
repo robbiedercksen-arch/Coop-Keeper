@@ -1,186 +1,65 @@
-import { useState } from "react";
+{chickens.map((chicken: any) => (
+  <div
+    key={chicken.id}
+    onClick={() => {
+      setSelectedChicken(chicken);
+      navigate("profile");
+    }}
+    style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      background: "#fff",
+      padding: 15,
+      borderRadius: 12,
+      marginTop: 10,
+      cursor: "pointer",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+    }}
+  >
+    {/* LEFT SIDE */}
+    <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
+      <img
+        src={chicken.image}
+        style={{ width: 60, height: 60, borderRadius: 10, objectFit: "cover" }}
+      />
 
-const breeds = [
-  "Orpington",
-  "Wyandotte",
-  "Leghorn",
-  "Rhode Island Red",
-  "Plymouth Rock",
-  "Sussex",
-  "Australorp",
-  "Brahma",
-  "Silkie",
-  "Cochin",
-];
-
-export default function ChickenRegistry({ chickens, setChickens, navigate }: any) {
-  const [form, setForm] = useState({
-    idTag: "",
-    name: "",
-    breed: "",
-    sex: "Unknown",
-    ageGroup: "Adult",
-    status: "Active",
-    hatchDate: "",
-    image: "",
-  });
-
-  const handleChange = (key: string, value: any) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleImage = (e: any) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setForm((prev) => ({ ...prev, image: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const addChicken = () => {
-    // VALIDATION
-    if (!form.idTag || !form.name || !form.image) {
-      alert("ID Tag, Name and Photo are required!");
-      return;
-    }
-
-    // CHECK DUPLICATE ID TAG
-    const exists = chickens.some((c: any) => c.idTag === form.idTag);
-    if (exists) {
-      alert("ID Tag already exists! Use a unique ID.");
-      return;
-    }
-
-    const newChicken = {
-      id: Date.now(),
-      eggs: [],
-      ...form,
-    };
-
-    setChickens([...chickens, newChicken]);
-
-    // RESET FORM
-    setForm({
-      idTag: "",
-      name: "",
-      breed: "",
-      sex: "Unknown",
-      ageGroup: "Adult",
-      status: "Active",
-      hatchDate: "",
-      image: "",
-    });
-  };
-
-  return (
-    <div style={{ padding: 20 }}>
-      <h2>🐔 Chicken Registry</h2>
-
-      {/* FORM */}
-      <div style={{ display: "grid", gap: 10, maxWidth: 500, marginBottom: 30 }}>
-        
-        <input
-          placeholder="ID Tag (Required)"
-          value={form.idTag}
-          onChange={(e) => handleChange("idTag", e.target.value)}
-        />
-
-        <input
-          placeholder="Name"
-          value={form.name}
-          onChange={(e) => handleChange("name", e.target.value)}
-        />
-
-        <select value={form.breed} onChange={(e) => handleChange("breed", e.target.value)}>
-          <option value="">Select Breed</option>
-          {breeds.map((b) => (
-            <option key={b}>{b}</option>
-          ))}
-        </select>
-
-        <select value={form.sex} onChange={(e) => handleChange("sex", e.target.value)}>
-          <option>Hen</option>
-          <option>Rooster</option>
-          <option>Unknown</option>
-        </select>
-
-        <select value={form.ageGroup} onChange={(e) => handleChange("ageGroup", e.target.value)}>
-          <option>Chick (0-6 Weeks)</option>
-          <option>Grower (6-20 Weeks)</option>
-          <option>Point of Lay</option>
-          <option>Adult</option>
-        </select>
-
-        <select value={form.status} onChange={(e) => handleChange("status", e.target.value)}>
-          <option>Active</option>
-          <option>Sold</option>
-          <option>Culled</option>
-        </select>
-
-        <input
-          type="date"
-          value={form.hatchDate}
-          onChange={(e) => handleChange("hatchDate", e.target.value)}
-        />
-
-        <input type="file" accept="image/*" onChange={handleImage} />
-
-        <button
-          onClick={addChicken}
-          style={{
-            background: "#16a34a",
-            color: "#fff",
-            padding: 10,
-            borderRadius: 6,
-            cursor: "pointer",
-          }}
-        >
-          Add Chicken
-        </button>
-      </div>
-
-      {/* CARDS */}
-      {chickens.map((c: any) => (
-        <div
-          key={c.id}
-          onClick={() => navigate("profile", c)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 15,
-            padding: 15,
-            marginBottom: 12,
-            borderRadius: 12,
-            background: "#fff",
-            cursor: "pointer",
-            boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-          }}
-        >
-          <img
-            src={c.image}
-            style={{
-              width: 60,
-              height: 60,
-              borderRadius: 10,
-              objectFit: "cover",
-            }}
-          />
-
-          <div style={{ flex: 1 }}>
-            <strong>{c.name}</strong>
-            <div>{c.idTag}</div>
-          </div>
-
-          <div style={{ fontSize: 20 }}>
-            {c.sex === "Hen" ? "♀️" : c.sex === "Rooster" ? "♂️" : "❓"}
-          </div>
-
-          <div>{c.status}</div>
+      <div>
+        <b>{chicken.name}</b>
+        <div style={{ fontSize: 13, color: "#666" }}>
+          {chicken.idTag}
         </div>
-      ))}
+      </div>
     </div>
-  );
-}
+
+    {/* RIGHT SIDE */}
+    <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
+      
+      {/* SEX ICON */}
+      <span style={{ fontSize: 20 }}>
+        {chicken.sex === "Hen" && "♀️"}
+        {chicken.sex === "Rooster" && "♂️"}
+        {chicken.sex === "Unknown" && "❓"}
+      </span>
+
+      {/* HEALTH ICON (ONLY IF LOGS EXIST) */}
+      {(chicken.healthLogs && chicken.healthLogs.length > 0) && (
+        <span title="Health records available" style={{ fontSize: 18 }}>
+          ⚠️
+        </span>
+      )}
+
+      {/* STATUS */}
+      <span
+        style={{
+          fontSize: 12,
+          background: "#eee",
+          padding: "5px 10px",
+          borderRadius: 6,
+        }}
+      >
+        {chicken.status}
+      </span>
+    </div>
+  </div>
+))}
