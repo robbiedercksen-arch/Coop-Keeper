@@ -14,6 +14,9 @@ export default function ChickenProfile({
   const [editingLogId, setEditingLogId] = useState<number | null>(null);
   const [viewLog, setViewLog] = useState<any | null>(null);
 
+  const [viewNote, setViewNote] = useState<any | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+
   const [healthForm, setHealthForm] = useState({
     date: "",
     status: "Healthy",
@@ -86,7 +89,7 @@ export default function ChickenProfile({
     } else {
       updatedLogs = [
         ...healthLogs,
-        { id: Date.now(), ...healthForm, resolved: false },
+        { id: Date.now(), ...healthForm },
       ];
     }
 
@@ -107,33 +110,37 @@ export default function ChickenProfile({
   };
 
   const editHealthLog = (log: any) => {
-    setHealthForm({
-      date: log.date || "",
-      status: log.status || "Healthy",
-      symptoms: log.symptoms || "",
-      treatment: log.treatment || "",
-      notes: log.notes || "",
-    });
-
+    setHealthForm(log);
     setEditingLogId(log.id);
   };
 
   const deleteHealthLog = (id: number) => {
-    const updated = healthLogs.filter((log: any) => log.id !== id);
-
     updateChicken({
       ...selectedChicken,
-      healthLogs: updated,
+      healthLogs: healthLogs.filter((l: any) => l.id !== id),
     });
   };
 
   // ================= NOTES =================
-  const addNote = () => {
+  const saveNote = () => {
     if (!noteForm.date || !noteForm.description) return;
+
+    let updatedNotes;
+
+    if (editingNoteId) {
+      updatedNotes = notes.map((n: any) =>
+        n.id === editingNoteId ? { ...n, ...noteForm } : n
+      );
+    } else {
+      updatedNotes = [
+        ...notes,
+        { id: Date.now(), ...noteForm },
+      ];
+    }
 
     updateChicken({
       ...selectedChicken,
-      notes: [...notes, { id: Date.now(), ...noteForm }],
+      notes: updatedNotes,
     });
 
     setNoteForm({
@@ -141,248 +148,156 @@ export default function ChickenProfile({
       type: "General",
       description: "",
     });
+
+    setEditingNoteId(null);
+  };
+
+  const editNote = (note: any) => {
+    setNoteForm(note);
+    setEditingNoteId(note.id);
+  };
+
+  const deleteNote = (id: number) => {
+    updateChicken({
+      ...selectedChicken,
+      notes: notes.filter((n: any) => n.id !== id),
+    });
   };
 
   return (
     <div style={{ padding: 20, maxWidth: 900 }}>
       <button onClick={() => navigate("registry")}>← Back</button>
 
-      {/* ================= PROFILE ================= */}
+      {/* PROFILE */}
       <div style={card}>
         <div style={{ display: "flex", gap: 20 }}>
-          <img
-            src={form.image}
-            style={{ width: 150, borderRadius: 12 }}
-          />
+          <img src={form.image} style={{ width: 150, borderRadius: 12 }} />
 
           <div style={{ flex: 1 }}>
-            {!editing ? (
-              <>
-                <h2>{form.name}</h2>
-                <p><b>ID:</b> {form.idTag}</p>
-                <p><b>Status:</b> {form.status}</p>
+            <h2>{form.name}</h2>
+            <p><b>ID:</b> {form.idTag}</p>
+            <p><b>Status:</b> {form.status}</p>
 
-                <button
-                  style={{ ...btn, background: "#3b82f6", color: "#fff" }}
-                  onClick={() => setEditing(true)}
-                >
-                  Edit
-                </button>
+            <button
+              style={{ ...btn, background: "#3b82f6", color: "#fff" }}
+              onClick={() => setEditing(true)}
+            >
+              Edit
+            </button>
 
-                <button
-                  style={{ ...btn, background: "#ef4444", color: "#fff", marginLeft: 10 }}
-                  onClick={deleteChicken}
-                >
-                  Delete
-                </button>
-              </>
-            ) : (
-              <>
-                <input
-                  style={input}
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm({ ...form, name: e.target.value })
-                  }
-                />
-
-                <select
-                  style={{ ...input, marginTop: 10 }}
-                  value={form.status}
-                  onChange={(e) =>
-                    setForm({ ...form, status: e.target.value })
-                  }
-                >
-                  <option>Active</option>
-                  <option>Sold</option>
-                  <option>Culled</option>
-                </select>
-
-                <button
-                  style={{ ...btn, background: "green", color: "#fff", marginTop: 10 }}
-                  onClick={saveChicken}
-                >
-                  Save
-                </button>
-              </>
-            )}
+            <button
+              style={{ ...btn, background: "#ef4444", color: "#fff", marginLeft: 10 }}
+              onClick={deleteChicken}
+            >
+              Delete
+            </button>
           </div>
         </div>
       </div>
 
-      {/* ================= HEALTH ================= */}
+      {/* HEALTH */}
       <div style={card}>
         <h3>🩺 Health Logs</h3>
 
-        {/* FORM */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <input
-            type="date"
-            style={input}
-            value={healthForm.date}
-            onChange={(e) =>
-              setHealthForm({ ...healthForm, date: e.target.value })
-            }
-          />
-
-          <select
-            style={input}
-            value={healthForm.status}
-            onChange={(e) =>
-              setHealthForm({ ...healthForm, status: e.target.value })
-            }
-          >
-            <option>Healthy</option>
-            <option>Sick</option>
-            <option>Recovering</option>
-          </select>
-
-          <input
-            style={input}
-            placeholder="Symptoms"
-            value={healthForm.symptoms}
-            onChange={(e) =>
-              setHealthForm({ ...healthForm, symptoms: e.target.value })
-            }
-          />
-
-          <input
-            style={input}
-            placeholder="Treatment"
-            value={healthForm.treatment}
-            onChange={(e) =>
-              setHealthForm({ ...healthForm, treatment: e.target.value })
-            }
-          />
-        </div>
-
-        <textarea
-          style={{ ...input, marginTop: 10 }}
-          placeholder="Notes"
-          value={healthForm.notes}
-          onChange={(e) =>
-            setHealthForm({ ...healthForm, notes: e.target.value })
-          }
+        <input type="date" style={input}
+          value={healthForm.date}
+          onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })}
         />
 
-        <button
-          style={{ ...btn, background: "#f59e0b", color: "#fff", marginTop: 10 }}
-          onClick={saveHealth}
+        <select style={input}
+          value={healthForm.status}
+          onChange={(e) => setHealthForm({ ...healthForm, status: e.target.value })}
         >
-          {editingLogId ? "Update Health Record" : "Add Health Record"}
+          <option>Healthy</option>
+          <option>Sick</option>
+          <option>Recovering</option>
+        </select>
+
+        <textarea style={input} placeholder="Notes"
+          value={healthForm.notes}
+          onChange={(e) => setHealthForm({ ...healthForm, notes: e.target.value })}
+        />
+
+        <button style={{ ...btn, background: "#f59e0b", color: "#fff" }} onClick={saveHealth}>
+          {editingLogId ? "Update" : "Add"}
         </button>
 
-        <hr />
-
-        {/* LIST */}
         {healthLogs.map((log: any) => (
-          <div
-            key={log.id}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: 10,
-              borderBottom: "1px solid #eee",
-            }}
-          >
-            <span>
-              {log.date} — {log.status}
-            </span>
+          <div key={log.id} style={{ display: "flex", justifyContent: "space-between", padding: 10 }}>
+            {log.date} — {log.status}
 
-            <div style={{ display: "flex", gap: 5 }}>
-              <button
-                style={{ ...btn, background: "#6366f1", color: "#fff" }}
-                onClick={() => setViewLog(log)}
-              >
-                View
-              </button>
-
-              <button
-                style={{ ...btn, background: "#3b82f6", color: "#fff" }}
-                onClick={() => editHealthLog(log)}
-              >
-                Edit
-              </button>
-
-              <button
-                style={{ ...btn, background: "#ef4444", color: "#fff" }}
-                onClick={() => deleteHealthLog(log.id)}
-              >
-                Delete
-              </button>
+            <div>
+              <button style={btn} onClick={() => setViewLog(log)}>View</button>
+              <button style={btn} onClick={() => editHealthLog(log)}>Edit</button>
+              <button style={btn} onClick={() => deleteHealthLog(log.id)}>Delete</button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ================= VIEW MODAL ================= */}
-      {viewLog && (
-        <div style={card}>
-          <h3>📋 Health Record Details</h3>
-          <p><b>Date:</b> {viewLog.date}</p>
-          <p><b>Status:</b> {viewLog.status}</p>
-          <p><b>Symptoms:</b> {viewLog.symptoms || "-"}</p>
-          <p><b>Treatment:</b> {viewLog.treatment || "-"}</p>
-          <p><b>Notes:</b> {viewLog.notes || "-"}</p>
-
-          <button
-            style={{ ...btn, background: "#6b7280", color: "#fff" }}
-            onClick={() => setViewLog(null)}
-          >
-            Close
-          </button>
-        </div>
-      )}
-
-      {/* ================= NOTES ================= */}
+      {/* NOTES */}
       <div style={card}>
         <h3>📝 Notes & Observations</h3>
 
-        <input
-          type="date"
-          style={input}
+        <input type="date" style={input}
           value={noteForm.date}
-          onChange={(e) =>
-            setNoteForm({ ...noteForm, date: e.target.value })
-          }
+          onChange={(e) => setNoteForm({ ...noteForm, date: e.target.value })}
         />
 
-        <select
-          style={{ ...input, marginTop: 10 }}
+        <select style={input}
           value={noteForm.type}
-          onChange={(e) =>
-            setNoteForm({ ...noteForm, type: e.target.value })
-          }
+          onChange={(e) => setNoteForm({ ...noteForm, type: e.target.value })}
         >
           <option>General</option>
           <option>Concern</option>
           <option>Plan</option>
         </select>
 
-        <textarea
-          style={{ ...input, marginTop: 10 }}
-          placeholder="Description"
+        <textarea style={input} placeholder="Description"
           value={noteForm.description}
-          onChange={(e) =>
-            setNoteForm({ ...noteForm, description: e.target.value })
-          }
+          onChange={(e) => setNoteForm({ ...noteForm, description: e.target.value })}
         />
 
-        <button
-          style={{ ...btn, background: "#6366f1", color: "#fff", marginTop: 10 }}
-          onClick={addNote}
-        >
-          Add Note
+        <button style={{ ...btn, background: "#6366f1", color: "#fff" }} onClick={saveNote}>
+          {editingNoteId ? "Update Note" : "Add Note"}
         </button>
 
-        <hr />
-
         {notes.map((note: any) => (
-          <div key={note.id} style={{ padding: 10, borderBottom: "1px solid #eee" }}>
+          <div key={note.id} style={{ display: "flex", justifyContent: "space-between", padding: 10 }}>
             {note.date} — {note.type}
+
+            <div>
+              <button style={btn} onClick={() => setViewNote(note)}>View</button>
+              <button style={btn} onClick={() => editNote(note)}>Edit</button>
+              <button style={btn} onClick={() => deleteNote(note.id)}>Delete</button>
+            </div>
           </div>
         ))}
       </div>
+
+      {/* VIEW NOTE */}
+      {viewNote && (
+        <div style={card}>
+          <h3>📋 Note Details</h3>
+          <p><b>Date:</b> {viewNote.date}</p>
+          <p><b>Type:</b> {viewNote.type}</p>
+          <p><b>Description:</b> {viewNote.description}</p>
+
+          <button style={btn} onClick={() => setViewNote(null)}>Close</button>
+        </div>
+      )}
+
+      {/* VIEW HEALTH */}
+      {viewLog && (
+        <div style={card}>
+          <h3>📋 Health Details</h3>
+          <p><b>Date:</b> {viewLog.date}</p>
+          <p><b>Status:</b> {viewLog.status}</p>
+          <p><b>Notes:</b> {viewLog.notes}</p>
+
+          <button style={btn} onClick={() => setViewLog(null)}>Close</button>
+        </div>
+      )}
     </div>
   );
 }
