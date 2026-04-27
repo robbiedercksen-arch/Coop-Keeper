@@ -1,66 +1,30 @@
-import React from "react";
-
-export default function Dashboard({ chickens }) {
-  const today = new Date().toISOString().split("T")[0];
-
-  const totalChickens = chickens.length;
-
-  const eggsToday = chickens.reduce((total, chicken) => {
-    const eggs = chicken.eggs || [];
-    const todayEggs = eggs.filter((egg) => egg.startsWith(today)).length;
-    return total + todayEggs;
-  }, 0);
-
-  const totalEggs = chickens.reduce((total, chicken) => {
-    return total + (chicken.eggs?.length || 0);
-  }, 0);
-
-  let topChicken = null;
-  let maxEggs = 0;
-
-  chickens.forEach((chicken) => {
-    const count = chicken.eggs?.length || 0;
-
-    if (count > maxEggs) {
-      maxEggs = count;
-      topChicken = chicken.name;
-    }
-  });
-
+export default function Dashboard({
+  chickens,
+  eggsToday,
+  totalEggs,
+  topLayer,
+}: any) {
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold text-farm-brown mb-6">
+    <div>
+      <h2 className="text-2xl font-bold mb-6 text-farm-brown">
         Coop Keeper Dashboard
-      </h1>
+      </h2>
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-xl shadow border-l-4 border-green-500">
-          <p className="text-sm text-gray-500">Total Chickens</p>
-          <h2 className="text-2xl font-bold">{totalChickens}</h2>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow border-l-4 border-yellow-500">
-          <p className="text-sm text-gray-500">Eggs Today</p>
-          <h2 className="text-2xl font-bold">{eggsToday}</h2>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow border-l-4 border-farm-brown">
-          <p className="text-sm text-gray-500">Total Eggs</p>
-          <h2 className="text-2xl font-bold">{totalEggs}</h2>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow border-l-4 border-purple-500">
-          <p className="text-sm text-gray-500">Top Layer</p>
-          <h2 className="text-lg font-bold">
-            {topChicken ? `${topChicken} (${maxEggs})` : "None"}
-          </h2>
-        </div>
+      <div className="grid grid-cols-4 gap-4">
+        <Card title="Total Chickens" value={chickens.length} />
+        <Card title="Eggs Today" value={eggsToday} />
+        <Card title="Total Eggs" value={totalEggs} />
+        <Card title="Top Layer" value={topLayer} />
       </div>
+    </div>
+  );
+}
 
-      {/* ✅ FIX: navigate instead of breaking */}
-      <p className="text-gray-500">
-        Use "Chicken Registry" to add chickens.
-      </p>
+function Card({ title, value }: any) {
+  return (
+    <div className="bg-white p-4 rounded-xl shadow">
+      <p className="text-gray-500">{title}</p>
+      <h3 className="text-2xl font-bold">{value}</h3>
     </div>
   );
 }
