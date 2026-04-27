@@ -8,7 +8,6 @@ export default function App() {
   const [chickens, setChickens] = useState<any[]>([]);
   const [eggs, setEggs] = useState<any[]>([]);
 
-  // LOAD DATA
   useEffect(() => {
     const savedChickens = localStorage.getItem("chickens");
     const savedEggs = localStorage.getItem("eggs");
@@ -17,7 +16,6 @@ export default function App() {
     if (savedEggs) setEggs(JSON.parse(savedEggs));
   }, []);
 
-  // SAVE DATA
   useEffect(() => {
     localStorage.setItem("chickens", JSON.stringify(chickens));
   }, [chickens]);
@@ -26,18 +24,15 @@ export default function App() {
     localStorage.setItem("eggs", JSON.stringify(eggs));
   }, [eggs]);
 
-  // ADD CHICKEN
   const addChicken = (chicken: any) => {
     setChickens([...chickens, { ...chicken, id: Date.now() }]);
   };
 
-  // DELETE CHICKEN
   const deleteChicken = (id: number) => {
     setChickens(chickens.filter((c) => c.id !== id));
     setEggs(eggs.filter((e) => e.chickenId !== id));
   };
 
-  // ADD EGG
   const addEgg = (chickenId: number) => {
     setEggs([
       ...eggs,
@@ -49,7 +44,6 @@ export default function App() {
     ]);
   };
 
-  // DASHBOARD STATS
   const eggsToday = eggs.filter(
     (e) => new Date(e.date).toDateString() === new Date().toDateString()
   ).length;
@@ -78,9 +72,8 @@ export default function App() {
 
   return (
     <div className="flex">
-      {/* SIDEBAR */}
-      <div className="w-64 min-h-screen bg-farm-brown text-white p-5 shadow-lg">
-        <h1 className="text-2xl font-bold mb-8">🐔 Coop Keeper</h1>
+      <div className="w-64 min-h-screen bg-farm-brown text-white p-5">
+        <h1 className="text-2xl font-bold mb-6">🐔 Coop Keeper</h1>
 
         {[
           ["Dashboard", "dashboard"],
@@ -90,18 +83,13 @@ export default function App() {
           <button
             key={key}
             onClick={() => setPage(key)}
-            className={`w-full text-left px-4 py-3 mb-2 rounded-xl ${
-              page === key
-                ? "bg-white text-farm-brown font-semibold"
-                : "hover:bg-white/20"
-            }`}
+            className="block w-full text-left px-4 py-2 mb-2 rounded hover:bg-white/20"
           >
             {label}
           </button>
         ))}
       </div>
 
-      {/* CONTENT */}
       <div className="flex-1 p-6 bg-[#f5f1ea] min-h-screen">
         {page === "dashboard" && (
           <Dashboard
@@ -109,7 +97,7 @@ export default function App() {
             eggsToday={eggsToday}
             totalEggs={totalEggs}
             topLayer={topLayer}
-            eggs={eggs}
+            eggs={eggs} // 🔥 REQUIRED
           />
         )}
 
