@@ -8,7 +8,7 @@ export default function App() {
   const [chickens, setChickens] = useState<any[]>([]);
   const [eggs, setEggs] = useState<any[]>([]);
 
-  // 🔥 LOAD DATA
+  // 🔥 LOAD
   useEffect(() => {
     const savedChickens = localStorage.getItem("chickens");
     const savedEggs = localStorage.getItem("eggs");
@@ -17,7 +17,7 @@ export default function App() {
     if (savedEggs) setEggs(JSON.parse(savedEggs));
   }, []);
 
-  // 🔥 SAVE DATA
+  // 🔥 SAVE
   useEffect(() => {
     localStorage.setItem("chickens", JSON.stringify(chickens));
   }, [chickens]);
@@ -26,18 +26,25 @@ export default function App() {
     localStorage.setItem("eggs", JSON.stringify(eggs));
   }, [eggs]);
 
-  // 🔥 ADD CHICKEN
+  // ADD
   const addChicken = (chicken: any) => {
     setChickens([...chickens, { ...chicken, id: Date.now() }]);
   };
 
-  // 🔥 DELETE CHICKEN
+  // DELETE
   const deleteChicken = (id: number) => {
     setChickens(chickens.filter((c) => c.id !== id));
     setEggs(eggs.filter((e) => e.chickenId !== id));
   };
 
-  // 🔥 ADD EGG (INSTANT)
+  // 🔥 EDIT
+  const updateChicken = (updated: any) => {
+    setChickens(
+      chickens.map((c) => (c.id === updated.id ? updated : c))
+    );
+  };
+
+  // ADD EGG
   const addEgg = (chickenId: number) => {
     setEggs([
       ...eggs,
@@ -49,7 +56,7 @@ export default function App() {
     ]);
   };
 
-  // 🔥 DASHBOARD STATS
+  // STATS
   const eggsToday = eggs.filter(
     (e) => new Date(e.date).toDateString() === new Date().toDateString()
   ).length;
@@ -117,6 +124,7 @@ export default function App() {
             chickens={chickens}
             addChicken={addChicken}
             deleteChicken={deleteChicken}
+            updateChicken={updateChicken} // 🔥 NEW
           />
         )}
 
