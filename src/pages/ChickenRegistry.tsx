@@ -62,7 +62,6 @@ export default function ChickenRegistry({
 
     setChickens([...chickens, newChicken]);
 
-    // Reset form
     setForm({
       idTag: "",
       name: "",
@@ -73,6 +72,31 @@ export default function ChickenRegistry({
       hatchDate: "",
       image: "",
     });
+  };
+
+  // 🔥 HEALTH STATUS FUNCTION
+  const getHealthStatus = (chicken: any) => {
+    if (!chicken.healthLogs || chicken.healthLogs.length === 0) {
+      return { icon: "🟢", label: "Healthy" };
+    }
+
+    if (
+      chicken.healthLogs.some(
+        (l: any) => !l.resolved && l.status === "Sick"
+      )
+    ) {
+      return { icon: "🔴", label: "Sick" };
+    }
+
+    if (
+      chicken.healthLogs.some(
+        (l: any) => !l.resolved && l.status === "Recovering"
+      )
+    ) {
+      return { icon: "🟡", label: "Recovering" };
+    }
+
+    return { icon: "🟢", label: "Healthy" };
   };
 
   return (
@@ -156,84 +180,78 @@ export default function ChickenRegistry({
 
       {/* LIST */}
       <div style={{ marginTop: 30 }}>
-        {chickens.map((chicken: any) => (
-          <div
-            key={chicken.id}
-            onClick={() => {
-              setSelectedChicken(chicken);
-              navigate("profile");
-            }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              background: "#fff",
-              padding: 15,
-              borderRadius: 12,
-              marginTop: 10,
-              cursor: "pointer",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-            }}
-          >
-            {/* LEFT */}
-            <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
-              <img
-                src={chicken.image}
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 10,
-                  objectFit: "cover",
-                }}
-              />
+        {chickens.map((chicken: any) => {
+          const health = getHealthStatus(chicken);
 
-              <div>
-                <b>{chicken.name}</b>
-                <div style={{ fontSize: 13, color: "#666" }}>
-                  {chicken.idTag}
+          return (
+            <div
+              key={chicken.id}
+              onClick={() => {
+                setSelectedChicken(chicken);
+                navigate("profile");
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                background: "#fff",
+                padding: 15,
+                borderRadius: 12,
+                marginTop: 10,
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              }}
+            >
+              {/* LEFT */}
+              <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
+                <img
+                  src={chicken.image}
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 10,
+                    objectFit: "cover",
+                  }}
+                />
+
+                <div>
+                  <b>{chicken.name}</b>
+                  <div style={{ fontSize: 13, color: "#666" }}>
+                    {chicken.idTag}
+                  </div>
                 </div>
               </div>
+
+              {/* RIGHT */}
+              <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                {/* SEX */}
+                <span style={{ fontSize: 20 }}>
+                  {chicken.sex === "Hen" && "♀️"}
+                  {chicken.sex === "Rooster" && "♂️"}
+                  {chicken.sex === "Unknown" && "❓"}
+                </span>
+
+                {/* HEALTH WITH LABEL */}
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 18 }}>{health.icon}</div>
+                  <div style={{ fontSize: 11 }}>{health.label}</div>
+                </div>
+
+                {/* STATUS */}
+                <span
+                  style={{
+                    fontSize: 12,
+                    background: "#eee",
+                    padding: "5px 10px",
+                    borderRadius: 6,
+                  }}
+                >
+                  {chicken.status}
+                </span>
+              </div>
             </div>
-
-            {/* RIGHT */}
-            <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
-              {/* SEX */}
-              <span style={{ fontSize: 20 }}>
-                {chicken.sex === "Hen" && "♀️"}
-                {chicken.sex === "Rooster" && "♂️"}
-                {chicken.sex === "Unknown" && "❓"}
-              </span>
-
-              {/* SMART HEALTH STATUS */}
-              <span style={{ fontSize: 18 }}>
-                {!chicken.healthLogs || chicken.healthLogs.length === 0
-                  ? "🟢"
-                  : chicken.healthLogs.some(
-                      (l: any) => !l.resolved && l.status === "Sick"
-                    )
-                  ? "🔴"
-                  : chicken.healthLogs.some(
-                      (l: any) =>
-                        !l.resolved && l.status === "Recovering"
-                    )
-                  ? "🟡"
-                  : "🟢"}
-              </span>
-
-              {/* STATUS */}
-              <span
-                style={{
-                  fontSize: 12,
-                  background: "#eee",
-                  padding: "5px 10px",
-                  borderRadius: 6,
-                }}
-              >
-                {chicken.status}
-              </span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
