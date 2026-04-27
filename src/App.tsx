@@ -1,19 +1,32 @@
 import { useState, useEffect } from "react";
 import ChickenRegistry from "./pages/ChickenRegistry";
 import ChickenProfile from "./pages/ChickenProfile";
+import Dashboard from "./pages/Dashboard";
 
 export default function App() {
   const [page, setPage] = useState("registry");
   const [chickens, setChickens] = useState<any[]>([]);
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
 
-  // ✅ LOAD FROM STORAGE
+  // LOAD
   useEffect(() => {
     const saved = localStorage.getItem("chickens");
-    if (saved) setChickens(JSON.parse(saved));
+    if (saved) {
+      const parsed = JSON.parse(saved);
+
+      // 🔥 FIX: ensure all chickens have required fields
+      const safeData = parsed.map((c: any) => ({
+        healthLogs: [],
+        notes: [],
+        eggs: [],
+        ...c,
+      }));
+
+      setChickens(safeData);
+    }
   }, []);
 
-  // ✅ SAVE TO STORAGE
+  // SAVE
   useEffect(() => {
     localStorage.setItem("chickens", JSON.stringify(chickens));
   }, [chickens]);
@@ -27,32 +40,34 @@ export default function App() {
       {/* SIDEBAR */}
       <div
         style={{
-          width: 200,
+          width: 220,
           background: "#8b5e3c",
           color: "#fff",
-          minHeight: "100vh",
           padding: 20,
+          minHeight: "100vh",
         }}
       >
         <h3>🐔 Coop Keeper</h3>
 
         <div
-          style={{ cursor: "pointer", marginTop: 20 }}
-          onClick={() => navigate("registry")}
-        >
-          Chicken Registry
-        </div>
-
-        <div
-          style={{ cursor: "pointer", marginTop: 10 }}
+          style={{ marginTop: 20, cursor: "pointer" }}
           onClick={() => navigate("dashboard")}
         >
           Dashboard
         </div>
+
+        <div
+          style={{ marginTop: 10, cursor: "pointer" }}
+          onClick={() => navigate("registry")}
+        >
+          Chicken Registry
+        </div>
       </div>
 
       {/* CONTENT */}
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, padding: 20 }}>
+        {page === "dashboard" && <Dashboard chickens={chickens} />}
+
         {page === "registry" && (
           <ChickenRegistry
             chickens={chickens}
@@ -68,12 +83,6 @@ export default function App() {
             setChickens={setChickens}
             navigate={navigate}
           />
-        )}
-
-        {page === "dashboard" && (
-          <div style={{ padding: 20 }}>
-            <h2>Dashboard</h2>
-          </div>
         )}
       </div>
     </div>
