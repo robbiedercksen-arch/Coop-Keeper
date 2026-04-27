@@ -8,17 +8,28 @@ import {
   CartesianGrid,
 } from "recharts";
 
-export default function Dashboard({
-  chickens,
-  eggsToday,
-  totalEggs,
-  topLayer,
-  eggs,
-}: any) {
+export default function Dashboard(props: any) {
+  const {
+    chickens = [],
+    eggsToday = 0,
+    totalEggs = 0,
+    topLayer = "None",
+    eggs = [],
+  } = props;
+
+  // 🛡️ SAFE GUARD
+  if (!Array.isArray(eggs)) {
+    return <p className="p-6">Loading...</p>;
+  }
+
+  // GROUP EGGS BY DATE
   const grouped: any = {};
 
   eggs.forEach((egg: any) => {
+    if (!egg?.date) return;
+
     const date = new Date(egg.date).toLocaleDateString();
+
     grouped[date] = (grouped[date] || 0) + 1;
   });
 
@@ -28,7 +39,7 @@ export default function Dashboard({
   }));
 
   return (
-    <div>
+    <div className="p-6">
       <h1 className="text-3xl font-bold text-farm-brown mb-6">
         🐔 Dashboard
       </h1>
@@ -43,16 +54,18 @@ export default function Dashboard({
 
       {/* CHART */}
       <div className="bg-white p-6 rounded-2xl shadow">
-        <h2 className="text-xl font-bold mb-4">📊 Egg Production</h2>
+        <h2 className="text-xl font-bold mb-4">
+          📊 Egg Production
+        </h2>
 
         {chartData.length === 0 ? (
-          <p>No data yet</p>
+          <p className="text-gray-500">No data yet</p>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
-              <YAxis />
+              <YAxis allowDecimals={false} />
               <Tooltip />
               <Line
                 type="monotone"
