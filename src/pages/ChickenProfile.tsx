@@ -11,6 +11,8 @@ export default function ChickenProfile({
   const healthLogs = selectedChicken?.healthLogs || [];
   const notes = selectedChicken?.notes || [];
 
+  const [editingLogId, setEditingLogId] = useState<number | null>(null);
+
   const [healthForm, setHealthForm] = useState({
     date: "",
     status: "Healthy",
@@ -49,33 +51,15 @@ export default function ChickenProfile({
     width: "100%",
   };
 
-  const btnPrimary = {
-    padding: "10px 16px",
+  const btn = {
+    padding: "8px 14px",
     borderRadius: 8,
     border: "none",
-    background: "#22c55e",
-    color: "#fff",
-    fontWeight: 600,
     cursor: "pointer",
+    fontWeight: 600,
   };
 
-  const btnSecondary = {
-    ...btnPrimary,
-    background: "#3b82f6",
-  };
-
-  const btnDanger = {
-    ...btnPrimary,
-    background: "#ef4444",
-  };
-
-  const grid2 = {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 10,
-  };
-
-  // ================= ACTIONS =================
+  // ================= CHICKEN =================
   const saveChicken = () => {
     updateChicken({ ...form, healthLogs, notes });
     setEditing(false);
@@ -88,15 +72,26 @@ export default function ChickenProfile({
     navigate("registry");
   };
 
-  const addHealth = () => {
+  // ================= HEALTH =================
+  const saveHealth = () => {
     if (!healthForm.date) return;
+
+    let updatedLogs;
+
+    if (editingLogId) {
+      updatedLogs = healthLogs.map((log: any) =>
+        log.id === editingLogId ? { ...log, ...healthForm } : log
+      );
+    } else {
+      updatedLogs = [
+        ...healthLogs,
+        { id: Date.now(), ...healthForm, resolved: false },
+      ];
+    }
 
     updateChicken({
       ...selectedChicken,
-      healthLogs: [
-        ...healthLogs,
-        { id: Date.now(), ...healthForm, resolved: false },
-      ],
+      healthLogs: updatedLogs,
     });
 
     setHealthForm({
@@ -106,8 +101,32 @@ export default function ChickenProfile({
       treatment: "",
       notes: "",
     });
+
+    setEditingLogId(null);
   };
 
+  const editHealthLog = (log: any) => {
+    setHealthForm({
+      date: log.date || "",
+      status: log.status || "Healthy",
+      symptoms: log.symptoms || "",
+      treatment: log.treatment || "",
+      notes: log.notes || "",
+    });
+
+    setEditingLogId(log.id);
+  };
+
+  const deleteHealthLog = (id: number) => {
+    const updated = healthLogs.filter((log: any) => log.id !== id);
+
+    updateChicken({
+      ...selectedChicken,
+      healthLogs: updated,
+    });
+  };
+
+  // ================= NOTES =================
   const addNote = () => {
     if (!noteForm.date || !noteForm.description) return;
 
@@ -143,14 +162,14 @@ export default function ChickenProfile({
                 <p><b>Status:</b> {form.status}</p>
 
                 <button
-                  style={btnSecondary}
+                  style={{ ...btn, background: "#3b82f6", color: "#fff" }}
                   onClick={() => setEditing(true)}
                 >
                   Edit
                 </button>
 
                 <button
-                  style={{ ...btnDanger, marginLeft: 10 }}
+                  style={{ ...btn, background: "#ef4444", color: "#fff", marginLeft: 10 }}
                   onClick={deleteChicken}
                 >
                   Delete
@@ -179,10 +198,10 @@ export default function ChickenProfile({
                 </select>
 
                 <button
-                  style={{ ...btnPrimary, marginTop: 10 }}
+                  style={{ ...btn, background: "green", color: "#fff", marginTop: 10 }}
                   onClick={saveChicken}
                 >
-                  Save Changes
+                  Save
                 </button>
               </>
             )}
@@ -194,7 +213,7 @@ export default function ChickenProfile({
       <div style={card}>
         <h3>🩺 Health Logs</h3>
 
-        <div style={grid2}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <input
             type="date"
             style={input}
@@ -245,17 +264,43 @@ export default function ChickenProfile({
         />
 
         <button
-          style={{ ...btnPrimary, marginTop: 10 }}
-          onClick={addHealth}
+          style={{ ...btn, background: "#f59e0b", color: "#fff", marginTop: 10 }}
+          onClick={saveHealth}
         >
-          Add Health Record
+          {editingLogId ? "Update Health Record" : "Add Health Record"}
         </button>
 
         <hr />
 
         {healthLogs.map((log: any) => (
-          <div key={log.id} style={listItem}>
-            {log.date} — {log.status}
+          <div
+            key={log.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              padding: 10,
+              borderBottom: "1px solid #eee",
+            }}
+          >
+            <span>
+              {log.date} — {log.status}
+            </span>
+
+            <div>
+              <button
+                style={{ ...btn, background: "#3b82f6", color: "#fff", marginRight: 5 }}
+                onClick={() => editHealthLog(log)}
+              >
+                Edit
+              </button>
+
+              <button
+                style={{ ...btn, background: "#ef4444", color: "#fff" }}
+                onClick={() => deleteHealthLog(log.id)}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -264,28 +309,26 @@ export default function ChickenProfile({
       <div style={card}>
         <h3>📝 Notes & Observations</h3>
 
-        <div style={grid2}>
-          <input
-            type="date"
-            style={input}
-            value={noteForm.date}
-            onChange={(e) =>
-              setNoteForm({ ...noteForm, date: e.target.value })
-            }
-          />
+        <input
+          type="date"
+          style={input}
+          value={noteForm.date}
+          onChange={(e) =>
+            setNoteForm({ ...noteForm, date: e.target.value })
+          }
+        />
 
-          <select
-            style={input}
-            value={noteForm.type}
-            onChange={(e) =>
-              setNoteForm({ ...noteForm, type: e.target.value })
-            }
-          >
-            <option>General</option>
-            <option>Concern</option>
-            <option>Plan</option>
-          </select>
-        </div>
+        <select
+          style={{ ...input, marginTop: 10 }}
+          value={noteForm.type}
+          onChange={(e) =>
+            setNoteForm({ ...noteForm, type: e.target.value })
+          }
+        >
+          <option>General</option>
+          <option>Concern</option>
+          <option>Plan</option>
+        </select>
 
         <textarea
           style={{ ...input, marginTop: 10 }}
@@ -297,7 +340,7 @@ export default function ChickenProfile({
         />
 
         <button
-          style={{ ...btnSecondary, marginTop: 10 }}
+          style={{ ...btn, background: "#6366f1", color: "#fff", marginTop: 10 }}
           onClick={addNote}
         >
           Add Note
@@ -306,7 +349,7 @@ export default function ChickenProfile({
         <hr />
 
         {notes.map((note: any) => (
-          <div key={note.id} style={listItem}>
+          <div key={note.id} style={{ padding: 10, borderBottom: "1px solid #eee" }}>
             {note.date} — {note.type}
           </div>
         ))}
@@ -314,9 +357,3 @@ export default function ChickenProfile({
     </div>
   );
 }
-
-// LIST ITEM STYLE
-const listItem = {
-  padding: 10,
-  borderBottom: "1px solid #eee",
-};
