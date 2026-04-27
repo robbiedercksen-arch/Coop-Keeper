@@ -19,6 +19,8 @@ export default function ChickenRegistry({
   setSelectedChicken,
   navigate,
 }: any) {
+  const [showActiveOnly, setShowActiveOnly] = useState(false);
+
   const [form, setForm] = useState({
     idTag: "",
     name: "",
@@ -47,8 +49,7 @@ export default function ChickenRegistry({
       return;
     }
 
-    const exists = chickens.some((c: any) => c.idTag === form.idTag);
-    if (exists) {
+    if (chickens.some((c: any) => c.idTag === form.idTag)) {
       alert("ID Tag must be unique!");
       return;
     }
@@ -74,34 +75,41 @@ export default function ChickenRegistry({
     });
   };
 
-  // 🔥 HEALTH STATUS FUNCTION
+  // 🧠 HEALTH STATUS
   const getHealthStatus = (chicken: any) => {
     if (!chicken.healthLogs || chicken.healthLogs.length === 0) {
       return { icon: "🟢", label: "Healthy" };
     }
 
-    if (
-      chicken.healthLogs.some(
-        (l: any) => !l.resolved && l.status === "Sick"
-      )
-    ) {
+    if (chicken.healthLogs.some((l: any) => !l.resolved && l.status === "Sick")) {
       return { icon: "🔴", label: "Sick" };
     }
 
-    if (
-      chicken.healthLogs.some(
-        (l: any) => !l.resolved && l.status === "Recovering"
-      )
-    ) {
+    if (chicken.healthLogs.some((l: any) => !l.resolved && l.status === "Recovering")) {
       return { icon: "🟡", label: "Recovering" };
     }
 
     return { icon: "🟢", label: "Healthy" };
   };
 
+  // 🔥 FILTER LOGIC
+  const filteredChickens = showActiveOnly
+    ? chickens.filter((c: any) => c.status === "Active")
+    : chickens;
+
   return (
     <div style={{ padding: 20 }}>
       <h2>🐔 Chicken Registry</h2>
+
+      {/* FILTER */}
+      <label style={{ display: "block", marginBottom: 15 }}>
+        <input
+          type="checkbox"
+          checked={showActiveOnly}
+          onChange={(e) => setShowActiveOnly(e.target.checked)}
+        />{" "}
+        Show only Active Chickens
+      </label>
 
       {/* FORM */}
       <div style={{ display: "grid", gap: 10, maxWidth: 400 }}>
@@ -180,7 +188,7 @@ export default function ChickenRegistry({
 
       {/* LIST */}
       <div style={{ marginTop: 30 }}>
-        {chickens.map((chicken: any) => {
+        {filteredChickens.map((chicken: any) => {
           const health = getHealthStatus(chicken);
 
           return (
@@ -223,15 +231,21 @@ export default function ChickenRegistry({
               </div>
 
               {/* RIGHT */}
-              <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                {/* SEX */}
-                <span style={{ fontSize: 20 }}>
-                  {chicken.sex === "Hen" && "♀️"}
-                  {chicken.sex === "Rooster" && "♂️"}
-                  {chicken.sex === "Unknown" && "❓"}
-                </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 25 }}>
+                
+                {/* SEX WITH LABEL */}
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 20 }}>
+                    {chicken.sex === "Hen" && "♀️"}
+                    {chicken.sex === "Rooster" && "♂️"}
+                    {chicken.sex === "Unknown" && "❓"}
+                  </div>
+                  <div style={{ fontSize: 11 }}>
+                    {chicken.sex}
+                  </div>
+                </div>
 
-                {/* HEALTH WITH LABEL */}
+                {/* HEALTH */}
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 18 }}>{health.icon}</div>
                   <div style={{ fontSize: 11 }}>{health.label}</div>
