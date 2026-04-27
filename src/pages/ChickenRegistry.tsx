@@ -15,6 +15,7 @@ const breeds = [
 
 export default function ChickenRegistry({ chickens, setChickens, navigate }: any) {
   const [form, setForm] = useState({
+    idTag: "",
     name: "",
     breed: "",
     sex: "Unknown",
@@ -40,22 +41,30 @@ export default function ChickenRegistry({ chickens, setChickens, navigate }: any
   };
 
   const addChicken = () => {
-    if (!form.name || !form.image) {
-      alert("Name and Photo are required!");
+    // VALIDATION
+    if (!form.idTag || !form.name || !form.image) {
+      alert("ID Tag, Name and Photo are required!");
+      return;
+    }
+
+    // CHECK DUPLICATE ID TAG
+    const exists = chickens.some((c: any) => c.idTag === form.idTag);
+    if (exists) {
+      alert("ID Tag already exists! Use a unique ID.");
       return;
     }
 
     const newChicken = {
       id: Date.now(),
-      idTag: "CHK-" + Date.now(),
       eggs: [],
       ...form,
     };
 
     setChickens([...chickens, newChicken]);
 
-    // reset form
+    // RESET FORM
     setForm({
+      idTag: "",
       name: "",
       breed: "",
       sex: "Unknown",
@@ -71,14 +80,14 @@ export default function ChickenRegistry({ chickens, setChickens, navigate }: any
       <h2>🐔 Chicken Registry</h2>
 
       {/* FORM */}
-      <div
-        style={{
-          display: "grid",
-          gap: 10,
-          maxWidth: 500,
-          marginBottom: 30,
-        }}
-      >
+      <div style={{ display: "grid", gap: 10, maxWidth: 500, marginBottom: 30 }}>
+        
+        <input
+          placeholder="ID Tag (Required)"
+          value={form.idTag}
+          onChange={(e) => handleChange("idTag", e.target.value)}
+        />
+
         <input
           placeholder="Name"
           value={form.name}
@@ -133,7 +142,7 @@ export default function ChickenRegistry({ chickens, setChickens, navigate }: any
         </button>
       </div>
 
-      {/* CHICKEN CARDS */}
+      {/* CARDS */}
       {chickens.map((c: any) => (
         <div
           key={c.id}
