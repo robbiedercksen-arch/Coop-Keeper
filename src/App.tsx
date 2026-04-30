@@ -10,13 +10,33 @@ export default function App() {
 
   const navigate = (p: string) => setPage(p);
 
+  // ================= DASHBOARD STATS =================
+  const getStats = () => {
+    let sick = 0;
+    let recovering = 0;
+
+    chickens.forEach((c) => {
+      const unresolved = c.healthLogs?.filter((l: any) => !l.resolved) || [];
+
+      if (unresolved.some((l: any) => l.status === "Sick")) sick++;
+      else if (unresolved.some((l: any) => l.status === "Recovering"))
+        recovering++;
+    });
+
+    const healthy = chickens.length - sick - recovering;
+
+    return { total: chickens.length, sick, recovering, healthy };
+  };
+
+  const stats = getStats();
+
   return (
     <div style={{ display: "flex" }}>
       
       {/* SIDEBAR */}
       <div
         style={{
-          width: 200,
+          width: 220,
           background: "#8b5e3c",
           color: "#fff",
           padding: 20,
@@ -40,9 +60,37 @@ export default function App() {
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <div style={{ flex: 1, padding: 20 }}>
-        
+
+        {page === "dashboard" && (
+          <div>
+            <h1>Dashboard</h1>
+
+            <div style={{ display: "flex", gap: 20 }}>
+              <div style={card("#3b82f6")}>
+                Total Chickens
+                <h2>{stats.total}</h2>
+              </div>
+
+              <div style={card("#ef4444")}>
+                Sick
+                <h2>{stats.sick}</h2>
+              </div>
+
+              <div style={card("#eab308")}>
+                Recovering
+                <h2>{stats.recovering}</h2>
+              </div>
+
+              <div style={card("#22c55e")}>
+                Healthy
+                <h2>{stats.healthy}</h2>
+              </div>
+            </div>
+          </div>
+        )}
+
         {page === "registry" && (
           <ChickenRegistry
             chickens={chickens}
@@ -60,14 +108,16 @@ export default function App() {
             navigate={navigate}
           />
         )}
-
-        {page === "dashboard" && (
-          <div>
-            <h1>Dashboard</h1>
-            <p>Total Chickens: {chickens.length}</p>
-          </div>
-        )}
       </div>
     </div>
   );
 }
+
+// ================= CARD STYLE =================
+const card = (color: string) => ({
+  background: color,
+  color: "#fff",
+  padding: 20,
+  borderRadius: 14,
+  minWidth: 150,
+});
