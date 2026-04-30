@@ -217,6 +217,7 @@ const NotesSection = () => {
           </div>
         </div>
       </div>
+<NotesSection />
 
  {/* PHOTO ALBUM */}
 <div style={card}>
