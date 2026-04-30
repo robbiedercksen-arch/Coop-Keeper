@@ -344,17 +344,7 @@ export default function ChickenProfile({
           </div>
         ))}
       </div>
-
-      // 🔥 NOTES STATE
-const [showNoteForm, setShowNoteForm] = useState(false);
-const [viewNote, setViewNote] = useState<any>(null);
-const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
-
-const [noteForm, setNoteForm] = useState({
-  date: "",
-  type: "General",
-  description: "",
-});
+      
 
       {/* 🚀 NEXT LEVEL MODAL */}
       {viewLog && (
