@@ -33,7 +33,6 @@ export default function ChickenProfile({
     symptoms: "",
   });
 
-  // ✅ PRIORITY SORT (NEW)
   const getPriority = (log: any) => {
     if (log.resolved) return 99;
     if (log.status === "Sick") return 1;
@@ -170,17 +169,13 @@ export default function ChickenProfile({
             border: "1px solid #e5e7eb",
           }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-
-                {/* ✅ RESTORED COLOR DOT */}
                 <div style={{
                   width: 10,
                   height: 10,
                   borderRadius: "50%",
                   background: getColor(log.status),
                 }} />
-
                 <b>{log.status}</b>
                 <span>— {log.symptoms}</span>
               </div>
@@ -193,7 +188,6 @@ export default function ChickenProfile({
               </button>
             </div>
 
-            {/* ✅ RESTORED CHECKBOX */}
             <div style={{ marginTop: 8 }}>
               <label style={{
                 display: "flex",
@@ -222,7 +216,7 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* MODAL (UNCHANGED FROM YOUR VERSION) */}
+      {/* ✅ FIXED VIEW MODAL WITH EDIT */}
       {viewLog && (
         <div style={{
           position: "fixed",
@@ -235,9 +229,100 @@ export default function ChickenProfile({
           alignItems: "center",
           justifyContent: "center",
         }}>
-          <div style={{ background: "#fff", padding: 20, borderRadius: 12 }}>
-            <h3>{viewLog.status}</h3>
-            <p>{viewLog.symptoms}</p>
+          <div style={{
+            background: "#fff",
+            padding: 20,
+            borderRadius: 12,
+            width: 320,
+            position: "relative",
+          }}>
+
+            <button
+              onClick={() => {
+                setViewLog(null);
+                setEditingId(null);
+              }}
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+                border: "none",
+                background: "#ef4444",
+                color: "#fff",
+                borderRadius: "50%",
+                width: 24,
+                height: 24,
+                cursor: "pointer",
+              }}
+            >
+              ×
+            </button>
+
+            {editingId === viewLog.id ? (
+              <>
+                <input type="date" style={input}
+                  value={healthForm.date}
+                  onChange={(e) =>
+                    setHealthForm({ ...healthForm, date: e.target.value })
+                  }
+                />
+
+                <select style={input}
+                  value={healthForm.status}
+                  onChange={(e) =>
+                    setHealthForm({ ...healthForm, status: e.target.value })
+                  }
+                >
+                  <option>Healthy</option>
+                  <option>Sick</option>
+                  <option>Recovering</option>
+                </select>
+
+                <input style={input}
+                  value={healthForm.symptoms}
+                  onChange={(e) =>
+                    setHealthForm({ ...healthForm, symptoms: e.target.value })
+                  }
+                />
+
+                <button
+                  style={{ ...btn, background: "#22c55e", color: "#fff", width: "100%" }}
+                  onClick={saveHealth}
+                >
+                  Save Log
+                </button>
+              </>
+            ) : (
+              <>
+                <h3>{viewLog.status}</h3>
+                <p>{viewLog.symptoms}</p>
+
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    style={{ ...btn, background: "#f59e0b", color: "#fff", flex: 1 }}
+                    onClick={() => {
+                      setHealthForm(viewLog);
+                      setEditingId(viewLog.id);
+                    }}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    style={{ ...btn, background: "#ef4444", color: "#fff", flex: 1 }}
+                    onClick={() => {
+                      updateChicken({
+                        ...chicken,
+                        healthLogs: healthLogs.filter((l: any) => l.id !== viewLog.id),
+                      });
+                      setViewLog(null);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
