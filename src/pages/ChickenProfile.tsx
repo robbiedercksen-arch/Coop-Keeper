@@ -27,8 +27,8 @@ export default function ChickenProfile({
   // 🆕 IMAGE POPUP STATE
   const [activeImage, setActiveImage] = useState<string | null>(null);
 
+  // 🆕 HEALTH STATE
   const [showHealthForm, setShowHealthForm] = useState(false);
-  const [showNoteForm, setShowNoteForm] = useState(false);
 
   const [healthForm, setHealthForm] = useState({
     date: "",
@@ -38,14 +38,7 @@ export default function ChickenProfile({
     notes: "",
   });
 
-  const [noteForm, setNoteForm] = useState({
-    date: "",
-    type: "General",
-    description: "",
-  });
-
   const healthLogs = chicken.healthLogs || [];
-  const notes = chicken.notes || [];
 
   // ================= UPDATE =================
   const updateChicken = (updated: any) => {
@@ -54,6 +47,31 @@ export default function ChickenProfile({
       prev.map((c) => (c.id === updated.id ? updated : c))
     );
     setSelectedChicken(updated);
+  };
+
+  // ================= ADD HEALTH =================
+  const addHealth = () => {
+    if (!healthForm.date) return alert("Date required");
+
+    const newLog = {
+      id: Date.now(),
+      ...healthForm,
+      resolved: false,
+    };
+
+    updateChicken({
+      ...chicken,
+      healthLogs: [...healthLogs, newLog],
+    });
+
+    setShowHealthForm(false);
+    setHealthForm({
+      date: "",
+      status: "Healthy",
+      symptoms: "",
+      treatment: "",
+      notes: "",
+    });
   };
 
   // ================= STYLES =================
@@ -147,7 +165,7 @@ export default function ChickenProfile({
             <div key={i} style={{ position: "relative" }}>
               <img
                 src={img}
-                onClick={() => setActiveImage(img)} // 🔥 CLICK TO VIEW
+                onClick={() => setActiveImage(img)}
                 style={{
                   width: 100,
                   height: 100,
@@ -185,6 +203,93 @@ export default function ChickenProfile({
         </div>
       </div>
 
+      {/* ================= HEALTH LOGS (RESTORED) ================= */}
+      <div style={card}>
+        <div style={sectionTitle}>🩺 Health Logs</div>
+
+        <button
+          style={success}
+          onClick={() => setShowHealthForm(!showHealthForm)}
+        >
+          + Add Health Log
+        </button>
+
+        {showHealthForm && (
+          <div style={{ marginTop: 10 }}>
+            <input
+              type="date"
+              value={healthForm.date}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, date: e.target.value })
+              }
+            />
+
+            <select
+              value={healthForm.status}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, status: e.target.value })
+              }
+            >
+              <option>Healthy</option>
+              <option>Sick</option>
+              <option>Recovering</option>
+            </select>
+
+            <input
+              placeholder="Symptoms"
+              value={healthForm.symptoms}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, symptoms: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="Treatment"
+              value={healthForm.treatment}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, treatment: e.target.value })
+              }
+            />
+
+            <textarea
+              placeholder="Notes"
+              value={healthForm.notes}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, notes: e.target.value })
+              }
+            />
+
+            <button onClick={addHealth}>Save</button>
+          </div>
+        )}
+
+        {healthLogs.map((log: any) => (
+          <div key={log.id} style={{ marginTop: 10 }}>
+            <b>{log.status}</b> — {log.symptoms}
+
+            <div>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={log.resolved}
+                  onChange={() =>
+                    updateChicken({
+                      ...chicken,
+                      healthLogs: healthLogs.map((l: any) =>
+                        l.id === log.id
+                          ? { ...l, resolved: !l.resolved }
+                          : l
+                      ),
+                    })
+                  }
+                />
+                ✔ Resolved
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* ================= IMAGE POPUP ================= */}
       {activeImage && (
         <div
@@ -202,38 +307,14 @@ export default function ChickenProfile({
             zIndex: 999,
           }}
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ position: "relative" }}
-          >
-            <img
-              src={activeImage}
-              style={{
-                maxWidth: "90vw",
-                maxHeight: "90vh",
-                borderRadius: 12,
-              }}
-            />
-
-            <button
-              onClick={() => setActiveImage(null)}
-              style={{
-                position: "absolute",
-                top: -10,
-                right: -10,
-                background: "#ef4444",
-                color: "#fff",
-                border: "none",
-                borderRadius: "50%",
-                width: 30,
-                height: 30,
-                cursor: "pointer",
-                fontSize: 16,
-              }}
-            >
-              ×
-            </button>
-          </div>
+          <img
+            src={activeImage}
+            style={{
+              maxWidth: "90%",
+              maxHeight: "90%",
+              borderRadius: 12,
+            }}
+          />
         </div>
       )}
     </div>
