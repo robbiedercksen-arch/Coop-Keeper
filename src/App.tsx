@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import ChickenRegistry from "./pages/ChickenRegistry";
@@ -11,10 +9,15 @@ export default function App() {
   const [chickens, setChickens] = useState<any[]>([]);
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
 
-  const navigate = (p: string) => setPage(p);
+  // ✅ Central navigation function
+  const navigate = (p: string) => {
+    setPage(p);
+  };
 
   return (
     <Layout navigate={navigate}>
+      
+      {/* 🔥 SAFETY FALLBACK */}
       {page === "dashboard" && <Dashboard />}
 
       {page === "registry" && (
@@ -26,13 +29,16 @@ export default function App() {
         />
       )}
 
-      {page === "profile" && (
+      {page === "profile" && selectedChicken && (
         <ChickenProfile
           selectedChicken={selectedChicken}
           setChickens={setChickens}
           navigate={navigate}
         />
       )}
+
+      {/* 🚨 CRITICAL FALLBACK (prevents blank screen) */}
+      {!page && <Dashboard />}
     </Layout>
   );
 }
