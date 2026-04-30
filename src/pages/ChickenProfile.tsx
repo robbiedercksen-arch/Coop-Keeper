@@ -388,11 +388,12 @@ const header = {
           style={{ marginLeft: 8 }}
         />
       </label>
-    </div>
-
-    <div style={{ marginTop: 6 }}>
-      <button onClick={() => setViewLog(log)}>View</button>
-      <button onClick={() => editHealthLog(log)}>Edit</button>
-      <button onClick={() => deleteHealthLog(log.id)}>Delete</button>
+<div style={{ marginTop: 6 }}>
+  <button onClick={() => setViewLog(log)}>View</button>
+  <button onClick={() => editHealthLog(log)}>Edit</button>
+  <button onClick={() => deleteHealthLog(log.id)}>Delete</button>
 </div>
+
+</div>   {/* ✅ THIS was missing — closes the log card */}
+
 ))}
