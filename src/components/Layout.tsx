@@ -1,6 +1,6 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout() {
   const navigate = useNavigate();
 
   return (
@@ -33,8 +33,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* 🔹 Page Content */}
-      <div style={{ flex: 1, background: "#f5f6fa", overflow: "auto" }}>
-        {children}
+      <div style={{ flex: 1, background: "#f5f6fa", overflow: "auto", padding: 20 }}>
+        <Outlet /> {/* ✅ THIS IS CRITICAL */}
       </div>
     </div>
   );
