@@ -115,7 +115,7 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* 🔥 PHOTO ALBUM (FULLY RESTORED) */}
+      {/* PHOTO ALBUM */}
       <div style={card}>
         <div style={header}>📸 Photo Album</div>
 
@@ -147,7 +147,8 @@ export default function ChickenProfile({
           />
         </label>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+        {/* 🔥 zIndex LOWER */}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10, zIndex: 1 }}>
           {(chicken.album || []).map((img: any, i: number) => (
             <div key={i} style={{ position: "relative" }}>
               <img
@@ -190,7 +191,8 @@ export default function ChickenProfile({
       </div>
 
       {/* HEALTH LOGS */}
-      <div style={card}>
+      {/* 🔥 zIndex HIGHER */}
+      <div style={{ ...card, position: "relative", zIndex: 2 }}>
         <div style={header}>🩺 Health Logs</div>
 
         <button
@@ -199,6 +201,44 @@ export default function ChickenProfile({
         >
           + Add Health Log
         </button>
+
+        {showHealthForm && (
+          <div style={{ marginTop: 10 }}>
+            <input
+              type="date"
+              value={healthForm.date}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, date: e.target.value })
+              }
+            />
+
+            <select
+              value={healthForm.status}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, status: e.target.value })
+              }
+            >
+              <option>Healthy</option>
+              <option>Sick</option>
+              <option>Recovering</option>
+            </select>
+
+            <input
+              placeholder="Symptoms"
+              value={healthForm.symptoms}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, symptoms: e.target.value })
+              }
+            />
+
+            <button
+              onClick={addHealth}
+              style={{ ...btn, background: "#22c55e", color: "#fff" }}
+            >
+              Save Log
+            </button>
+          </div>
+        )}
 
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{ marginTop: 12 }}>
