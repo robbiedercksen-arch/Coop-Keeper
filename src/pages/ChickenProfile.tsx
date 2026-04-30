@@ -112,11 +112,14 @@ export default function ChickenProfile({
 };
 
   const btn = {
-    padding: "8px 14px",
-    borderRadius: 8,
-    border: "none",
-    cursor: "pointer",
-  };
+  padding: "8px 16px",
+  borderRadius: 10,
+  border: "none",
+  cursor: "pointer",
+  fontWeight: 600,
+  fontSize: 14,
+  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+};
 
   const input = {
     display: "block",
