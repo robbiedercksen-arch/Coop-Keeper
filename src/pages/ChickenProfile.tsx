@@ -166,7 +166,7 @@ const header = {
 
       {/* PROFILE */}
       <div style={card}>
-        <div style={{ display: "flex", gap: 20 }}>
+      <div style={{ display: "flex", gap: 20 }}>
 
           {chicken.image && (
             <img
