@@ -81,6 +81,13 @@ export default function ChickenRegistry({
     return "🟢 Healthy";
   };
 
+  // ================= SEX LABEL =================
+  const getSexLabel = (sex: string) => {
+    if (sex === "Hen") return "🐔 Hen";
+    if (sex === "Rooster") return "🐓 Rooster";
+    return "❓ Unknown";
+  };
+
   // ================= STYLES =================
   const card = {
     background: "#fff",
@@ -107,7 +114,7 @@ export default function ChickenRegistry({
   return (
     <div style={{ padding: 20 }}>
 
-      {/* ================= PREMIUM HEADER ================= */}
+      {/* ================= HEADER ================= */}
       <div
         style={{
           background: "#fff",
@@ -135,14 +142,7 @@ export default function ChickenRegistry({
             ...btn,
             background: "#22c55e",
             color: "#fff",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
           }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.transform = "translateY(-1px)")
-          }
-          onMouseOut={(e) =>
-            (e.currentTarget.style.transform = "translateY(0)")
-          }
         >
           {showForm ? "Cancel" : "+ Add Chicken"}
         </button>
@@ -243,7 +243,7 @@ export default function ChickenRegistry({
         </div>
       )}
 
-      {/* ================= CHICKEN LIST ================= */}
+      {/* ================= LIST ================= */}
       <div style={{ display: "grid", gap: 12 }}>
         {chickens.map((c: any) => (
           <div
@@ -258,14 +258,7 @@ export default function ChickenRegistry({
               alignItems: "center",
               gap: 15,
               cursor: "pointer",
-              transition: "0.2s",
             }}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.transform = "translateY(-2px)")
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.transform = "translateY(0)")
-            }
           >
             <img
               src={c.image}
@@ -279,7 +272,14 @@ export default function ChickenRegistry({
 
             <div>
               <b>{c.name}</b>
-              <div style={{ fontSize: 12 }}>{c.idTag}</div>
+
+              <div style={{ fontSize: 12, color: "#555" }}>
+                <b>ID Tag:</b> {c.idTag}
+              </div>
+
+              <div style={{ fontSize: 12, color: "#777" }}>
+                {getSexLabel(c.sex)}
+              </div>
             </div>
 
             <div style={{ marginLeft: "auto", fontWeight: 500 }}>
