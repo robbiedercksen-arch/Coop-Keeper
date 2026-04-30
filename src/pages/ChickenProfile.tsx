@@ -389,7 +389,7 @@ const header = {
         />
       </label>
 </label>
-</div>   {/* ✅ CLOSE checkbox container FIRST */}
+</div>
 
 <div style={{ marginTop: 6 }}>
   <button onClick={() => setViewLog(log)}>View</button>
