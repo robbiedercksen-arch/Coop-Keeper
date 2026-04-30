@@ -238,31 +238,36 @@ export default function ChickenProfile({
                 }}
               />
               <b>{log.status}</b>
-              <span>— {log.symptoms}</span>
-            </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+    <div
+      style={{
+        width: 10,
+        height: 10,
+        borderRadius: "50%",
+        background: getColor(log.status),
+      }}
+    />
+    <b>{log.status}</b>
+    <span>— {log.symptoms}</span>
+  </div>
 
-            <div style={{ marginTop: 8 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                Health risk resolved
-                <input
-                  type="checkbox"
-                  checked={log.resolved || false}
-                  onChange={() =>
-                    updateChicken({
-                      ...chicken,
-                      healthLogs: healthLogs.map((l: any) =>
-                        l.id === log.id
-                          ? { ...l, resolved: !l.resolved }
-                          : l
-                      ),
-                    })
-                  }
-                />
-              </label>
-            </div>
-          </div>
-        ))}
-      </div>
+  {/* ✅ SMALL VIEW BUTTON */}
+  <button
+    style={{
+      padding: "4px 8px",
+      fontSize: 12,
+      borderRadius: 6,
+      border: "none",
+      background: "#3b82f6",
+      color: "#fff",
+      cursor: "pointer",
+    }}
+    onClick={() => setViewLog(log)}
+  >
+    View
+  </button>
+</div>
 
     </div>
   );
