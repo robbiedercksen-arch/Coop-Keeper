@@ -338,7 +338,11 @@ const NotesSection = () => {
   </div>
 
   {/* CONTENT */}
-  <div style={{ display: "flex", gap: 20, marginTop: 15 }}>
+  <div style={{
+  display: "flex",
+  gap: 20,
+  flexWrap: "wrap"
+}}
 
     {chicken.image && (
   <img
