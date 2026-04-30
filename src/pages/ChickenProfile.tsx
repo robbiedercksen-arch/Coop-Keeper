@@ -144,7 +144,23 @@ const saveChickenInfo = () => {
     borderRadius: 6,
     border: "1px solid #e5e7eb",
   };
-  
+  const [editingChicken, setEditingChicken] = useState(false);
+
+const [editForm, setEditForm] = useState({
+  name: chicken.name || "",
+  idTag: chicken.idTag || "",
+  breed: chicken.breed || "",
+  sex: chicken.sex || "Hen",
+  ageGroup: chicken.ageGroup || "",
+});
+
+const saveChickenInfo = () => {
+  updateChicken({
+    ...chicken,
+    ...editForm,
+  });
+  setEditingChicken(false);
+};
 // 📝 NOTES SECTION (PASTE RIGHT HERE)
 const NotesSection = () => {
   const [showForm, setShowForm] = useState(false);
