@@ -195,6 +195,7 @@ const NotesSection = () => {
           setShowForm(!showForm);
           setEditingNoteId(null);
         }}
+        onMouseOver={(e:any)=>e.currentTarget.style.transform="scale(1.05)"}
         
       >
         + Add Note
