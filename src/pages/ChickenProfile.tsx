@@ -219,7 +219,7 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* 🔥 PREMIUM GLASS MODAL */}
+      {/* 🚀 NEXT LEVEL MODAL */}
       {viewLog && (
         <div style={{
           position: "fixed",
@@ -227,21 +227,20 @@ export default function ChickenProfile({
           left: 0,
           width: "100%",
           height: "100%",
-          background: "rgba(0,0,0,0.4)",
-          backdropFilter: "blur(6px)",
-          WebkitBackdropFilter: "blur(6px)",
+          background: "rgba(0,0,0,0.45)",
+          backdropFilter: "blur(8px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           zIndex: 1000,
         }}>
           <div style={{
-            background: "rgba(255,255,255,0.92)",
-            padding: 24,
-            borderRadius: 20,
-            width: 340,
+            background: "linear-gradient(180deg,#ffffff,#f9fafb)",
+            padding: 26,
+            borderRadius: 22,
+            width: 350,
             position: "relative",
-            boxShadow: "0 25px 60px rgba(0,0,0,0.3)",
+            boxShadow: "0 30px 80px rgba(0,0,0,0.35)",
           }}>
 
             <button
@@ -251,15 +250,16 @@ export default function ChickenProfile({
               }}
               style={{
                 position: "absolute",
-                top: 12,
-                right: 12,
+                top: 14,
+                right: 14,
                 border: "none",
                 background: "#ef4444",
                 color: "#fff",
                 borderRadius: "50%",
-                width: 26,
-                height: 26,
+                width: 28,
+                height: 28,
                 cursor: "pointer",
+                boxShadow: "0 6px 14px rgba(239,68,68,0.4)"
               }}
             >
               ×
@@ -267,7 +267,7 @@ export default function ChickenProfile({
 
             {editingId === viewLog.id ? (
               <>
-                <h3 style={{ marginBottom: 12 }}>Edit Health Log</h3>
+                <h3 style={{ marginBottom: 10 }}>Edit Health Log</h3>
 
                 <input type="date" style={input}
                   value={healthForm.date}
@@ -288,62 +288,63 @@ export default function ChickenProfile({
                   onChange={(e)=>setHealthForm({...healthForm,symptoms:e.target.value})}
                 />
 
-                <button style={{...btn,background:"#22c55e",color:"#fff",width:"100%"}} onClick={saveHealth}>
-                  Save Log
+                <button
+                  style={{...btn,background:"#22c55e",color:"#fff",width:"100%",fontWeight:700}}
+                  onClick={saveHealth}
+                >
+                  ✔ Save Log
                 </button>
               </>
             ) : (
               <>
                 <div style={{
-                  padding: "4px 10px",
-                  borderRadius: 10,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  marginBottom: 10,
+                  padding:"5px 12px",
+                  borderRadius:12,
+                  fontSize:12,
+                  fontWeight:700,
+                  marginBottom:12,
                   background:
-                    viewLog.status === "Healthy" ? "#dcfce7" :
-                    viewLog.status === "Sick" ? "#fee2e2" :
-                    "#fef3c7",
+                    viewLog.status==="Healthy"?"#dcfce7":
+                    viewLog.status==="Sick"?"#fee2e2":"#fef3c7",
                   color:
-                    viewLog.status === "Healthy" ? "#166534" :
-                    viewLog.status === "Sick" ? "#991b1b" :
-                    "#92400e",
+                    viewLog.status==="Healthy"?"#166534":
+                    viewLog.status==="Sick"?"#991b1b":"#92400e"
                 }}>
                   {viewLog.status}
                 </div>
 
                 <div style={{
-                  padding: 12,
-                  borderRadius: 12,
-                  background: "#f9fafb",
-                  border: "1px solid #e5e7eb",
-                  marginBottom: 16
+                  background:"#fff",
+                  borderRadius:14,
+                  padding:14,
+                  border:"1px solid #e5e7eb",
+                  marginBottom:18
                 }}>
                   {viewLog.symptoms || "No symptoms recorded"}
                 </div>
 
-                <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ display:"flex", gap:12 }}>
                   <button
-                    style={{ ...btn, background: "#f59e0b", color: "#fff", flex: 1 }}
-                    onClick={() => {
+                    style={{...btn,background:"#f59e0b",color:"#fff",flex:1,fontWeight:700}}
+                    onClick={()=>{
                       setHealthForm(viewLog);
                       setEditingId(viewLog.id);
                     }}
                   >
-                    Edit
+                    ✏ Edit
                   </button>
 
                   <button
-                    style={{ ...btn, background: "#ef4444", color: "#fff", flex: 1 }}
-                    onClick={() => {
+                    style={{...btn,background:"#ef4444",color:"#fff",flex:1,fontWeight:700}}
+                    onClick={()=>{
                       updateChicken({
                         ...chicken,
-                        healthLogs: healthLogs.filter((l: any) => l.id !== viewLog.id),
+                        healthLogs: healthLogs.filter((l:any)=>l.id!==viewLog.id),
                       });
                       setViewLog(null);
                     }}
                   >
-                    Delete
+                    🗑 Delete
                   </button>
                 </div>
               </>
