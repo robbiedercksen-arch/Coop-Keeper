@@ -65,7 +65,7 @@ export default function ChickenRegistry({
       image: "",
     });
 
-    setShowForm(false); // 🔥 hide form after save
+    setShowForm(false);
   };
 
   // ================= HEALTH STATUS =================
@@ -87,7 +87,6 @@ export default function ChickenRegistry({
     padding: 20,
     borderRadius: 14,
     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-    marginBottom: 20,
   };
 
   const input = {
@@ -107,17 +106,43 @@ export default function ChickenRegistry({
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>🐔 Chicken Registry</h1>
 
-      {/* ================= ADD BUTTON ================= */}
-      <div style={{ marginBottom: 15 }}>
+      {/* ================= PREMIUM HEADER ================= */}
+      <div
+        style={{
+          background: "#fff",
+          padding: "20px 24px",
+          borderRadius: 16,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+          marginBottom: 20,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div>
+          <h1 style={{ margin: 0, fontSize: 22 }}>
+            🐔 Chicken Registry
+          </h1>
+          <div style={{ fontSize: 13, color: "#666", marginTop: 4 }}>
+            Manage and track all your chickens
+          </div>
+        </div>
+
         <button
           onClick={() => setShowForm(!showForm)}
           style={{
             ...btn,
             background: "#22c55e",
             color: "#fff",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
           }}
+          onMouseOver={(e) =>
+            (e.currentTarget.style.transform = "translateY(-1px)")
+          }
+          onMouseOut={(e) =>
+            (e.currentTarget.style.transform = "translateY(0)")
+          }
         >
           {showForm ? "Cancel" : "+ Add Chicken"}
         </button>
@@ -125,7 +150,7 @@ export default function ChickenRegistry({
 
       {/* ================= FORM ================= */}
       {showForm && (
-        <div style={card}>
+        <div style={{ ...card, marginBottom: 20 }}>
           <h3>Add New Chicken</h3>
 
           <div
@@ -218,7 +243,7 @@ export default function ChickenRegistry({
         </div>
       )}
 
-      {/* ================= CHICKEN CARDS ================= */}
+      {/* ================= CHICKEN LIST ================= */}
       <div style={{ display: "grid", gap: 12 }}>
         {chickens.map((c: any) => (
           <div
@@ -233,7 +258,14 @@ export default function ChickenRegistry({
               alignItems: "center",
               gap: 15,
               cursor: "pointer",
+              transition: "0.2s",
             }}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.transform = "translateY(-2px)")
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.transform = "translateY(0)")
+            }
           >
             <img
               src={c.image}
@@ -250,7 +282,7 @@ export default function ChickenRegistry({
               <div style={{ fontSize: 12 }}>{c.idTag}</div>
             </div>
 
-            <div style={{ marginLeft: "auto" }}>
+            <div style={{ marginLeft: "auto", fontWeight: 500 }}>
               {getHealthStatus(c)}
             </div>
           </div>
