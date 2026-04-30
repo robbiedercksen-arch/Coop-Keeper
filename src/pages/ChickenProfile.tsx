@@ -103,23 +103,23 @@ export default function ChickenProfile({
   };
 
   const card = {
-    background: "#ffffff",
-    padding: 20,
-    borderRadius: 18,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-    marginBottom: 20,
-    border: "1px solid #f1f5f9",
-  };
+  background: "#ffffff",
+  padding: 20,
+  borderRadius: 18,
+  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+  marginBottom: 20,
+  border: "1px solid #f1f5f9",
+};
 
   const btn = {
-    padding: "8px 16px",
-    borderRadius: 10,
-    border: "none",
-    cursor: "pointer",
-    fontWeight: 600,
-    fontSize: 14,
-    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-  };
+  padding: "8px 16px",
+  borderRadius: 10,
+  border: "none",
+  cursor: "pointer",
+  fontWeight: 600,
+  fontSize: 14,
+  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+};
 
   const input = {
     display: "block",
@@ -128,16 +128,16 @@ export default function ChickenProfile({
     padding: 6,
   };
 
-  const header = {
-    fontSize: 18,
-    fontWeight: 700,
-    marginBottom: 14,
-    paddingBottom: 10,
-    borderBottom: "2px solid #f1f5f9",
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-  };
+const header = {
+  fontSize: 18,
+  fontWeight: 700,
+  marginBottom: 14,
+  paddingBottom: 10,
+  borderBottom: "2px solid #f1f5f9",
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+};
 
   const getColor = (status: string) => {
     if (status === "Healthy") return "#22c55e";
@@ -148,6 +148,7 @@ export default function ChickenProfile({
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
 
+      {/* BACK */}
       <button
         onClick={() => navigate("registry")}
         style={{ ...btn, background: "#3b82f6", color: "#fff", marginBottom: 20 }}
@@ -155,6 +156,7 @@ export default function ChickenProfile({
         ← Back
       </button>
 
+      {/* EDIT BUTTON */}
       <button
         style={{ ...btn, background: "#6366f1", color: "#fff", marginBottom: 10 }}
         onClick={() => setIsEditingChicken(true)}
@@ -162,8 +164,9 @@ export default function ChickenProfile({
         Edit Chicken Profile
       </button>
 
+      {/* PROFILE */}
       <div style={card}>
-        <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+     <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
 
           {chicken.image && (
             <img
@@ -176,11 +179,11 @@ export default function ChickenProfile({
             {!isEditingChicken ? (
               <>
                 <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700 }}>
-                  {chicken.name}
-                </h1>
+  {chicken.name}
+</h1>
                 <div style={{ marginTop: 4 }}>
-                  <b>ID Tag:</b> {chicken.idTag}
-                </div>
+  <b>ID Tag:</b> {chicken.idTag}
+</div>
                 <div><b>Breed:</b> {chicken.breed}</div>
                 <div><b>Sex:</b> {chicken.sex}</div>
                 <div><b>Age:</b> {chicken.ageGroup}</div>
@@ -216,82 +219,180 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* PHOTO ALBUM */}
-      <div style={card}>
-        <div style={header}>📸 Photo Album</div>
+      {/* ⚠️ KEEP YOUR EXISTING PHOTO ALBUM + HEALTH LOGS BELOW THIS */}
+      {/* DO NOT REMOVE YOUR EXISTING CODE BELOW */}
 
-        <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
-          + Add Photos
-          <input type="file" multiple style={{ display: "none" }} />
-        </label>
-      </div>
+{/* PHOTO ALBUM */}
+<div style={card}>
+  <div style={header}>📸 Photo Album</div>
 
-      {/* HEALTH LOGS */}
-      <div style={card}>
-        <div style={header}>🩺 Health Logs</div>
+  <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
+    + Add Photos
+    <input
+      type="file"
+      multiple
+      style={{ display: "none" }}
+      onChange={(e: any) => {
+        const files = Array.from(e.target.files);
 
+        Promise.all(
+          files.map(
+            (file: any) =>
+              new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+              })
+          )
+        ).then((images: any) => {
+          updateChicken({
+            ...chicken,
+            album: [...(chicken.album || []), ...images],
+          });
+        });
+      }}
+    />
+  </label>
+
+  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+    {(chicken.album || []).map((img: any, i: number) => (
+      <div key={i} style={{ position: "relative" }}>
+        <img
+          src={img}
+          onClick={() => setActiveImage(img)}
+          style={{
+  width: 100,
+  height: 100,
+  borderRadius: 10,
+  objectFit: "cover",
+  cursor: "pointer",
+  boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+}}
+        />
         <button
-          style={{ ...btn, background: "#22c55e", color: "#fff" }}
-          onClick={() => setShowHealthForm(prev => !prev)}
+          onClick={() =>
+            updateChicken({
+              ...chicken,
+              album: chicken.album.filter((_: any, index: number) => index !== i),
+            })
+          }
+          style={{
+            position: "absolute",
+            top: -6,
+            right: -6,
+            background: "red",
+            color: "#fff",
+            borderRadius: "50%",
+            width: 20,
+            height: 20,
+          }}
         >
-          + Add Health Log
+          ×
         </button>
-
-        {healthLogs.map((log: any) => (
-          <div
-            key={log.id}
-            style={{
-              marginTop: 12,
-              padding: 10,
-              borderRadius: 10,
-              background: "#f9fafb",
-            }}
-          >
-
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <div
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: "50%",
-                  background: getColor(log.status),
-                }}
-              />
-              <b>{log.status}</b> — {log.symptoms}
-            </div>
-
-            <div style={{ marginTop: 6 }}>
-              <label>
-                Health risk resolved
-                <input
-                  type="checkbox"
-                  checked={log.resolved || false}
-                  onChange={() =>
-                    updateChicken({
-                      ...chicken,
-                      healthLogs: healthLogs.map((l: any) =>
-                        l.id === log.id
-                          ? { ...l, resolved: !l.resolved }
-                          : l
-                      ),
-                    })
-                  }
-                  style={{ marginLeft: 8 }}
-                />
-              </label>
-            </div>
-
-            <div style={{ marginTop: 6 }}>
-              <button onClick={() => setViewLog(log)}>View</button>
-              <button onClick={() => editHealthLog(log)}>Edit</button>
-              <button onClick={() => deleteHealthLog(log.id)}>Delete</button>
-            </div>
-
-          </div>
-        ))}
-
       </div>
+    ))}
+  </div>
+</div>
 
+
+{/* HEALTH LOGS */}
+<div style={card}>
+  <div style={header}>🩺 Health Logs</div>
+
+  <button
+    style={{ ...btn, background: "#22c55e", color: "#fff" }}
+    onClick={() => setShowHealthForm(prev => !prev)}
+  >
+    + Add Health Log
+  </button>
+
+  {showHealthForm && (
+    <>
+      <input
+        type="date"
+        style={input}
+        value={healthForm.date}
+        onChange={(e) =>
+          setHealthForm({ ...healthForm, date: e.target.value })
+        }
+      />
+
+      <select
+        style={input}
+        value={healthForm.status}
+        onChange={(e) =>
+          setHealthForm({ ...healthForm, status: e.target.value })
+        }
+      >
+        <option>Healthy</option>
+        <option>Sick</option>
+        <option>Recovering</option>
+      </select>
+
+      <textarea
+        style={input}
+        placeholder="Symptoms"
+        value={healthForm.symptoms}
+        onChange={(e) =>
+          setHealthForm({ ...healthForm, symptoms: e.target.value })
+        }
+      />
+
+      <button
+        style={{ ...btn, background: "#f59e0b", color: "#fff" }}
+        onClick={saveHealth}
+      >
+        Save Log
+      </button>
+    </>
+  )}
+
+{healthLogs.map((log: any) => (
+  <div
+    key={log.id}
+    style={{
+      marginTop: 12,
+      padding: 10,
+      borderRadius: 10,
+      background: "#f9fafb",
+    }}
+  >
+    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <div
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: "50%",
+          background: getColor(log.status),
+        }}
+      />
+      <b>{log.status}</b> — {log.symptoms}
     </div>
-  );
-}
+
+    <div style={{ marginTop: 6 }}>
+      <label>
+        Health risk resolved
+        <input
+          type="checkbox"
+          checked={log.resolved || false}
+          onChange={() =>
+            updateChicken({
+              ...chicken,
+              healthLogs: healthLogs.map((l: any) =>
+                l.id === log.id
+                  ? { ...l, resolved: !l.resolved }
+                  : l
+              ),
+            })
+          }
+          style={{ marginLeft: 8 }}
+        />
+      </label>
+</label>
+</div>
+
+<div style={{ marginTop: 6 }}>
+  <button onClick={() => setViewLog(log)}>View</button>
+  <button onClick={() => editHealthLog(log)}>Edit</button>
+  <button onClick={() => deleteHealthLog(log.id)}>Delete</button>
+</div>
