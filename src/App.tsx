@@ -5,7 +5,6 @@ import Dashboard from "./pages/Dashboard";
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
-  const [collapsed, setCollapsed] = useState(false);
 
   const [chickens, setChickens] = useState<any[]>(() => {
     const saved = localStorage.getItem("chickens");
@@ -29,127 +28,111 @@ export default function App() {
     setPage(pageName);
   };
 
+  // 🔥 Detect mobile
+  const isMobile = window.innerWidth < 768;
+
   return (
-    <div style={{ display: "flex", background: "#f3f4f6" }}>
+    <div style={{
+      display: isMobile ? "block" : "flex",
+      minHeight: "100vh",
+      background: "#f3f4f6"
+    }}>
 
-      {/* 🔥 SIDEBAR */}
-      <div style={{
-        width: collapsed ? 70 : 230,
-        background: "#111827",
-        color: "#fff",
-        minHeight: "100vh",
-        padding: 15,
-        transition: "all 0.25s ease"
-      }}>
-        
-        {/* LOGO */}
+      {/* 🔥 MOBILE TOP NAV */}
+      {isMobile && (
         <div style={{
+          position: "sticky",
+          top: 0,
+          background: "#111827",
+          color: "#fff",
+          padding: 12,
           display: "flex",
-          justifyContent: collapsed ? "center" : "space-between",
-          alignItems: "center",
-          marginBottom: 20
+          justifyContent: "space-around",
+          zIndex: 1000
         }}>
-          {!collapsed && <h2>🐔 Coop</h2>}
+          <button onClick={() => navigate("dashboard")} style={mobileBtn}>
+            🏠
+          </button>
 
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            style={collapseBtn}
-          >
-            {collapsed ? "➡" : "⬅"}
+          <button onClick={() => navigate("registry")} style={mobileBtn}>
+            🐔
           </button>
         </div>
+      )}
 
-        {/* MENU */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-
-          <button
-            onClick={() => navigate("dashboard")}
-            style={menuBtn(page === "dashboard", collapsed)}
-          >
-            🏠 {!collapsed && "Dashboard"}
-          </button>
-
-          <button
-            onClick={() => navigate("registry")}
-            style={menuBtn(page === "registry", collapsed)}
-          >
-            🐔 {!collapsed && "Registry"}
-          </button>
-
-        </div>
-      </div>
-
-      {/* 🔥 MAIN AREA */}
-      <div style={{ flex: 1 }}>
-
-        {/* HEADER */}
+      {/* 🔥 SIDEBAR (DESKTOP ONLY) */}
+      {!isMobile && (
         <div style={{
-          background: "#fff",
-          padding: "14px 20px",
-          borderBottom: "1px solid #e5e7eb",
-          fontWeight: 600,
+          width: 220,
+          background: "#111827",
+          color: "#fff",
+          padding: 20
         }}>
-          {page === "dashboard" && "Dashboard"}
-          {page === "registry" && "Chicken Registry"}
-          {page === "profile" && "Chicken Profile"}
+          <h2 style={{ marginBottom: 20 }}>🐔 Coop Manager</h2>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button onClick={() => navigate("dashboard")} style={menuBtn}>
+              Dashboard
+            </button>
+
+            <button onClick={() => navigate("registry")} style={menuBtn}>
+              Chicken Registry
+            </button>
+          </div>
         </div>
+      )}
 
-        {/* CONTENT */}
-        <div style={{ padding: 20 }}>
+      {/* 🔥 MAIN CONTENT */}
+      <div style={{
+        flex: 1,
+        padding: isMobile ? 12 : 20
+      }}>
 
-          {page === "dashboard" && (
-            <Dashboard chickens={chickens} />
-          )}
+        {page === "dashboard" && (
+          <Dashboard chickens={chickens} />
+        )}
 
-          {page === "registry" && (
-            <ChickenRegistry
-              chickens={chickens}
-              setChickens={setChickens}
-              setSelectedChicken={(chicken: any) => {
-                setSelectedChicken(chicken);
-                setPage("profile");
-              }}
-            />
-          )}
+        {page === "registry" && (
+          <ChickenRegistry
+            chickens={chickens}
+            setChickens={setChickens}
+            setSelectedChicken={(chicken: any) => {
+              setSelectedChicken(chicken);
+              setPage("profile");
+            }}
+          />
+        )}
 
-          {page === "profile" && (
-            <ChickenProfile
-              selectedChicken={selectedChicken}
-              setChickens={setChickens}
-              setSelectedChicken={setSelectedChicken}
-              navigate={navigate}
-            />
-          )}
+        {page === "profile" && (
+          <ChickenProfile
+            selectedChicken={selectedChicken}
+            setChickens={setChickens}
+            setSelectedChicken={setSelectedChicken}
+            navigate={navigate}
+          />
+        )}
 
-        </div>
       </div>
     </div>
   );
 }
 
-// 🔥 BUTTON STYLES
-
-const menuBtn = (active: boolean, collapsed: boolean) => ({
-  background: active ? "#2563eb" : "#1f2937",
-  color: "#fff",
-  border: "none",
-  padding: collapsed ? "10px" : "10px 12px",
-  borderRadius: 10,
-  cursor: "pointer",
-  textAlign: "left" as const,
-  fontWeight: active ? 700 : 500,
-  transition: "all 0.2s ease",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: collapsed ? "center" : "flex-start",
-  gap: 8,
-});
-
-const collapseBtn = {
+// 🔥 DESKTOP BUTTON
+const menuBtn = {
   background: "#1f2937",
   color: "#fff",
   border: "none",
-  borderRadius: 8,
-  padding: "4px 8px",
+  padding: "12px 14px",
+  borderRadius: 10,
+  cursor: "pointer",
+  textAlign: "left" as const,
+};
+
+// 🔥 MOBILE BUTTON
+const mobileBtn = {
+  background: "transparent",
+  color: "#fff",
+  border: "none",
+  fontSize: 22,
   cursor: "pointer",
 };
