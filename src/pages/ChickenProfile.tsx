@@ -242,39 +242,74 @@ export default function ChickenProfile({
           </>
         )}
 
-        {healthLogs.map((log: any) => (
-          <div key={log.id} style={{ marginTop: 10 }}>
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <div style={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                background: getColor(log.status),
-              }} />
-              {log.status} — {log.symptoms}
-            </div>
-
-            <label>
-              Resolved
-              <input
-                type="checkbox"
-                checked={log.resolved || false}
-                onChange={() =>
-                  updateChicken({
-                    ...chicken,
-                    healthLogs: healthLogs.map((l: any) =>
-                      l.id === log.id ? { ...l, resolved: !l.resolved } : l
-                    ),
-                  })
-                }
-              />
-            </label>
-
-            <button onClick={() => deleteHealthLog(log.id)}>Delete</button>
-          </div>
-        ))}
-      </div>
-
+      {healthLogs.map((log: any) => (
+  <div
+    key={log.id}
+    style={{
+      marginTop: 12,
+      padding: 12,
+      borderRadius: 12,
+      background: "#f9fafb",
+      border: "1px solid #e5e7eb",
+    }}
+  >
+    {/* STATUS */}
+    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <div
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: "50%",
+          background: getColor(log.status),
+        }}
+      />
+      <b>{log.status}</b>
+      <span style={{ marginLeft: 6 }}>— {log.symptoms}</span>
     </div>
-  );
-}
+
+    {/* RESOLVED */}
+    <div style={{ marginTop: 8 }}>
+      <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span>Resolved</span>
+        <input
+          type="checkbox"
+          checked={log.resolved || false}
+          onChange={() =>
+            updateChicken({
+              ...chicken,
+              healthLogs: healthLogs.map((l: any) =>
+                l.id === log.id
+                  ? { ...l, resolved: !l.resolved }
+                  : l
+              ),
+            })
+          }
+        />
+      </label>
+    </div>
+
+    {/* ACTIONS */}
+    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+      <button
+        style={{ ...btn, background: "#3b82f6", color: "#fff" }}
+        onClick={() => setViewLog(log)}
+      >
+        View
+      </button>
+
+      <button
+        style={{ ...btn, background: "#f59e0b", color: "#fff" }}
+        onClick={() => editHealthLog(log)}
+      >
+        Edit
+      </button>
+
+      <button
+        style={{ ...btn, background: "#ef4444", color: "#fff" }}
+        onClick={() => deleteHealthLog(log.id)}
+      >
+        Delete
+      </button>
+    </div>
+  </div>
+))}
