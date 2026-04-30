@@ -219,7 +219,7 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* 🔥 NEW PREMIUM VIEW MODAL */}
+      {/* 🔥 PREMIUM GLASS MODAL */}
       {viewLog && (
         <div style={{
           position: "fixed",
@@ -227,18 +227,21 @@ export default function ChickenProfile({
           left: 0,
           width: "100%",
           height: "100%",
-          background: "rgba(0,0,0,0.5)",
+          background: "rgba(0,0,0,0.4)",
+          backdropFilter: "blur(6px)",
+          WebkitBackdropFilter: "blur(6px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          zIndex: 1000,
         }}>
           <div style={{
-            background: "#fff",
+            background: "rgba(255,255,255,0.92)",
             padding: 24,
-            borderRadius: 18,
+            borderRadius: 20,
             width: 340,
             position: "relative",
-            boxShadow: "0 20px 50px rgba(0,0,0,0.25)",
+            boxShadow: "0 25px 60px rgba(0,0,0,0.3)",
           }}>
 
             <button
@@ -264,7 +267,7 @@ export default function ChickenProfile({
 
             {editingId === viewLog.id ? (
               <>
-                <h3>Edit Health Log</h3>
+                <h3 style={{ marginBottom: 12 }}>Edit Health Log</h3>
 
                 <input type="date" style={input}
                   value={healthForm.date}
@@ -291,8 +294,33 @@ export default function ChickenProfile({
               </>
             ) : (
               <>
-                <h3>{viewLog.status}</h3>
-                <p>{viewLog.symptoms}</p>
+                <div style={{
+                  padding: "4px 10px",
+                  borderRadius: 10,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  marginBottom: 10,
+                  background:
+                    viewLog.status === "Healthy" ? "#dcfce7" :
+                    viewLog.status === "Sick" ? "#fee2e2" :
+                    "#fef3c7",
+                  color:
+                    viewLog.status === "Healthy" ? "#166534" :
+                    viewLog.status === "Sick" ? "#991b1b" :
+                    "#92400e",
+                }}>
+                  {viewLog.status}
+                </div>
+
+                <div style={{
+                  padding: 12,
+                  borderRadius: 12,
+                  background: "#f9fafb",
+                  border: "1px solid #e5e7eb",
+                  marginBottom: 16
+                }}>
+                  {viewLog.symptoms || "No symptoms recorded"}
+                </div>
 
                 <div style={{ display: "flex", gap: 10 }}>
                   <button
