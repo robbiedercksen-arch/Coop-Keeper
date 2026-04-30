@@ -621,8 +621,9 @@ const NotesSection = () => {
             marginTop: 12,
             padding: 12,
             borderRadius: 12,
-            background: "#f9fafb",
-            border: "1px solid #e5e7eb",
+            background: "rgba(255,255,255,0.7)",
+backdropFilter: "blur(8px)",
+border: "1px solid rgba(255,255,255,0.5)",
           }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               
