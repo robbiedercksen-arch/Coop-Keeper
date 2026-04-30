@@ -3,6 +3,7 @@ import { useState } from "react";
 export default function ChickenProfile({
   selectedChicken,
   setChickens,
+  setSelectedChicken,
   navigate,
 }: any) {
   if (!selectedChicken) {
@@ -28,6 +29,9 @@ export default function ChickenProfile({
     setChickens((prev: any[]) =>
       prev.map((c) => (c.id === selectedChicken.id ? updated : c))
     );
+
+    // 🔥 CRITICAL FIX (instant UI update)
+    setSelectedChicken(updated);
   };
 
   const formatDate = (date: string) => {
@@ -60,7 +64,6 @@ export default function ChickenProfile({
 
     updateChicken(updated);
 
-    // Reset + close form
     setForm({
       date: "",
       status: "Healthy",
@@ -77,6 +80,7 @@ export default function ChickenProfile({
       ...selectedChicken,
       healthLogs: healthLogs.filter((l: any) => l.id !== id),
     };
+
     updateChicken(updated);
   };
 
@@ -158,7 +162,10 @@ export default function ChickenProfile({
             <div style={value}><span style={label}>Status:</span> {selectedChicken.status}</div>
 
             <div style={{ marginTop: 10 }}>
-              <button style={{ ...btn, background: "#3b82f6", color: "#fff" }}>Edit</button>
+              <button style={{ ...btn, background: "#3b82f6", color: "#fff" }}>
+                Edit
+              </button>
+
               <button
                 style={{ ...btn, background: "#ef4444", color: "#fff", marginLeft: 10 }}
                 onClick={deleteChicken}
@@ -172,7 +179,7 @@ export default function ChickenProfile({
 
       {/* ================= HEALTH LOGS ================= */}
       <div style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
           <h3>🩺 Health Logs</h3>
 
           <button
@@ -183,19 +190,14 @@ export default function ChickenProfile({
           </button>
         </div>
 
-        {/* 🔥 FORM (TOGGLED) */}
+        {/* FORM */}
         {showForm && (
           <div style={{ marginTop: 15, display: "grid", gap: 10 }}>
-            <input
-              type="date"
-              style={input}
-              value={form.date}
+            <input type="date" style={input} value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
             />
 
-            <select
-              style={input}
-              value={form.status}
+            <select style={input} value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
             >
               <option>Healthy</option>
@@ -203,78 +205,56 @@ export default function ChickenProfile({
               <option>Recovering</option>
             </select>
 
-            <input
-              placeholder="Symptoms"
-              style={input}
-              value={form.symptoms}
+            <input placeholder="Symptoms" style={input} value={form.symptoms}
               onChange={(e) => setForm({ ...form, symptoms: e.target.value })}
             />
 
-            <input
-              placeholder="Treatment"
-              style={input}
-              value={form.treatment}
+            <input placeholder="Treatment" style={input} value={form.treatment}
               onChange={(e) => setForm({ ...form, treatment: e.target.value })}
             />
 
-            <textarea
-              placeholder="Notes (optional)"
-              style={input}
-              value={form.notes}
+            <textarea placeholder="Notes" style={input} value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
             />
 
-            <button
-              onClick={addLog}
-              style={{ ...btn, background: "#16a34a", color: "#fff" }}
-            >
+            <button onClick={addLog} style={{ ...btn, background: "#16a34a", color: "#fff" }}>
               Save Log
             </button>
           </div>
         )}
 
-        {/* 🔥 LOG LIST ALWAYS VISIBLE */}
-        {healthLogs.length === 0 && <p style={{ marginTop: 10 }}>No logs yet</p>}
+        {/* LIST */}
+        {healthLogs.length === 0 && <p>No logs yet</p>}
 
         {healthLogs.map((log: any) => (
-          <div
-            key={log.id}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "10px 0",
-              borderBottom: "1px solid #eee",
-            }}
-          >
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <div
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background: getColor(log.status),
-                }}
-              />
+          <div key={log.id} style={{
+            display: "flex",
+            justifyContent: "space-between",
+            padding: "10px 0",
+            borderBottom: "1px solid #eee",
+          }}>
+            <div style={{ display: "flex", gap: 10 }}>
+              <div style={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                background: getColor(log.status),
+              }} />
 
               <div>
                 <b>{log.status}</b>
-                <div style={{ fontSize: 12, color: "#666" }}>
-                  {log.symptoms || "No symptoms"}
-                </div>
+                <div style={{ fontSize: 12 }}>{log.symptoms}</div>
               </div>
             </div>
 
             <div style={{ display: "flex", gap: 6 }}>
-              <button
-                style={{ ...btn, background: "#3b82f6", color: "#fff" }}
+              <button style={{ ...btn, background: "#3b82f6", color: "#fff" }}
                 onClick={() => setViewLog(log)}
               >
                 View
               </button>
 
-              <button
-                style={{ ...btn, background: "#ef4444", color: "#fff" }}
+              <button style={{ ...btn, background: "#ef4444", color: "#fff" }}
                 onClick={() => deleteLog(log.id)}
               >
                 Delete
@@ -284,22 +264,13 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* ================= VIEW ================= */}
+      {/* VIEW */}
       {viewLog && (
         <div style={card}>
-          <h3>📋 Health Details</h3>
-          <p><b>Date:</b> {formatDate(viewLog.date)}</p>
-          <p><b>Status:</b> {viewLog.status}</p>
-          <p><b>Symptoms:</b> {viewLog.symptoms}</p>
-          <p><b>Treatment:</b> {viewLog.treatment}</p>
-          <p><b>Notes:</b> {viewLog.notes || "-"}</p>
+          <h3>Health Details</h3>
+          <p>{viewLog.symptoms}</p>
 
-          <button
-            style={{ ...btn, background: "#6b7280", color: "#fff" }}
-            onClick={() => setViewLog(null)}
-          >
-            Close
-          </button>
+          <button onClick={() => setViewLog(null)}>Close</button>
         </div>
       )}
     </div>
