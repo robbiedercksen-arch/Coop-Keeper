@@ -176,7 +176,18 @@ const NotesSection = () => {
         </>
       )}
 
-    
+      {notes.map((note: any) => (
+  <div key={note.id}
+    style={{
+      marginTop: 10,
+      padding: 12,
+      borderRadius: 12,
+      background: "#f9fafb",
+      border: "1px solid #e5e7eb",
+    }}
+  >
+    <div style={{ display: "flex", justifyContent: "space-between" }}>
+      
       <div
         style={{ cursor: "pointer" }}
         onClick={() => setViewNote(note)}
@@ -204,18 +215,7 @@ const NotesSection = () => {
             borderRadius: 6,
             padding: "4px 6px",
             fontSize: 12,
-            cursor: "po  {notes.map((note: any) => (
-  <div key={note.id}
-    style={{
-      marginTop: 10,
-      padding: 12,
-      borderRadius: 12,
-      background: "#f9fafb",
-      border: "1px solid #e5e7eb",
-    }}
-  >
-    <div style={{ display: "flex", justifyContent: "space-between" }}>
-      inter",
+            cursor: "pointer",
           }}
         >
           ✏
