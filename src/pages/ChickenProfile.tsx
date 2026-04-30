@@ -178,7 +178,9 @@ const header = {
           <div>
             {!isEditingChicken ? (
               <>
-                <h1>{chicken.name}</h1>
+                <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700 }}>
+  {chicken.name}
+</h1>
                 <div><b>ID Tag:</b> {chicken.idTag}</div>
                 <div><b>Breed:</b> {chicken.breed}</div>
                 <div><b>Sex:</b> {chicken.sex}</div>
