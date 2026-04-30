@@ -124,7 +124,7 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ✅ FIXED PHOTO ALBUM */}
+      {/* PHOTO ALBUM */}
       <div style={card}>
         <div style={{ fontWeight: 700, marginBottom: 10 }}>📸 Photo Album</div>
 
@@ -156,7 +156,6 @@ export default function ChickenProfile({
           />
         </label>
 
-        {/* ✅ SHOW IMAGES */}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
           {(chicken.album || []).map((img: any, i: number) => (
             <div key={i} style={{ position: "relative" }}>
@@ -197,7 +196,6 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ✅ IMAGE VIEW MODAL */}
       {activeImage && (
         <div
           onClick={() => setActiveImage(null)}
@@ -216,8 +214,6 @@ export default function ChickenProfile({
           <img src={activeImage} style={{ maxWidth: "90%", maxHeight: "90%" }} />
         </div>
       )}
-
-      {/* 🔥 EVERYTHING BELOW UNCHANGED (your health + modal stays exactly same) */}
 
       {/* HEALTH LOGS */}
       <div style={card}>
@@ -300,3 +296,35 @@ export default function ChickenProfile({
           </div>
         ))}
       </div>
+
+      {/* VIEW MODAL */}
+      {viewLog && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          background: "rgba(0,0,0,0.6)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <div style={{
+            background: "#fff",
+            padding: 20,
+            borderRadius: 16,
+            width: 320,
+            position: "relative",
+          }}>
+            <button onClick={() => setViewLog(null)}>×</button>
+
+            <h3>{viewLog.status}</h3>
+            <p>{viewLog.symptoms}</p>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
