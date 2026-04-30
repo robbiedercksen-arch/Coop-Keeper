@@ -370,24 +370,23 @@ const header = {
     </div>
 
     <div style={{ marginTop: 6 }}>
-      <label>
-        Health risk resolved
-        <input
-          type="checkbox"
-          checked={log.resolved || false}
-          onChange={() =>
-            updateChicken({
-              ...chicken,
-              healthLogs: healthLogs.map((l: any) =>
-                l.id === log.id
-                  ? { ...l, resolved: !l.resolved }
-                  : l
-              ),
-            })
-          }
-          style={{ marginLeft: 8 }}
-        />
-      </label>
+     <label>
+  Health risk resolved
+  <input
+    type="checkbox"
+    checked={log.resolved || false}
+    onChange={() =>
+      updateChicken({
+        ...chicken,
+        healthLogs: healthLogs.map((l: any) =>
+          l.id === log.id
+            ? { ...l, resolved: !l.resolved }
+            : l
+        ),
+      })
+    }
+    style={{ marginLeft: 8 }}
+  />
 </label>
 </div>
 
