@@ -24,10 +24,8 @@ export default function ChickenProfile({
     setChicken(selectedChicken);
   }, [selectedChicken]);
 
-  // 🆕 IMAGE POPUP STATE
   const [activeImage, setActiveImage] = useState<string | null>(null);
 
-  // 🆕 HEALTH STATE
   const [showHealthForm, setShowHealthForm] = useState(false);
 
   const [healthForm, setHealthForm] = useState({
@@ -89,16 +87,31 @@ export default function ChickenProfile({
     marginBottom: 10,
   };
 
-  const btn = {
+  const primary = {
+    background: "#3b82f6",
+    color: "#fff",
     padding: "8px 14px",
     borderRadius: 8,
     border: "none",
     cursor: "pointer",
-    fontWeight: 600,
   };
 
-  const primary = { ...btn, background: "#3b82f6", color: "#fff" };
-  const success = { ...btn, background: "#22c55e", color: "#fff" };
+  const success = {
+    background: "#22c55e",
+    color: "#fff",
+    padding: "8px 14px",
+    borderRadius: 8,
+    border: "none",
+    cursor: "pointer",
+  };
+
+  const inputStyle = {
+    padding: "10px",
+    borderRadius: 8,
+    border: "1px solid #d1d5db",
+    fontSize: 14,
+    width: "100%",
+  };
 
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
@@ -128,7 +141,7 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ================= PHOTO ALBUM ================= */}
+      {/* PHOTO ALBUM */}
       <div style={card}>
         <div style={sectionTitle}>📸 Photo Album</div>
 
@@ -203,25 +216,33 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ================= HEALTH LOGS (RESTORED) ================= */}
+      {/* HEALTH LOGS */}
       <div style={card}>
         <div style={sectionTitle}>🩺 Health Logs</div>
 
-        <button
-          style={success}
-          onClick={() => setShowHealthForm(!showHealthForm)}
-        >
+        <button style={success} onClick={() => setShowHealthForm(!showHealthForm)}>
           + Add Health Log
         </button>
 
         {showHealthForm && (
-          <div style={{ marginTop: 10 }}>
+          <div
+            style={{
+              marginTop: 15,
+              padding: 15,
+              borderRadius: 12,
+              background: "#f9fafb",
+              border: "1px solid #e5e7eb",
+              display: "grid",
+              gap: 10,
+            }}
+          >
             <input
               type="date"
               value={healthForm.date}
               onChange={(e) =>
                 setHealthForm({ ...healthForm, date: e.target.value })
               }
+              style={inputStyle}
             />
 
             <select
@@ -229,6 +250,7 @@ export default function ChickenProfile({
               onChange={(e) =>
                 setHealthForm({ ...healthForm, status: e.target.value })
               }
+              style={inputStyle}
             >
               <option>Healthy</option>
               <option>Sick</option>
@@ -241,6 +263,7 @@ export default function ChickenProfile({
               onChange={(e) =>
                 setHealthForm({ ...healthForm, symptoms: e.target.value })
               }
+              style={inputStyle}
             />
 
             <input
@@ -249,6 +272,7 @@ export default function ChickenProfile({
               onChange={(e) =>
                 setHealthForm({ ...healthForm, treatment: e.target.value })
               }
+              style={inputStyle}
             />
 
             <textarea
@@ -257,40 +281,38 @@ export default function ChickenProfile({
               onChange={(e) =>
                 setHealthForm({ ...healthForm, notes: e.target.value })
               }
+              style={{ ...inputStyle, minHeight: 70 }}
             />
 
-            <button onClick={addHealth}>Save</button>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={addHealth} style={success}>
+                Save Log
+              </button>
+
+              <button
+                onClick={() => setShowHealthForm(false)}
+                style={{
+                  background: "#e5e7eb",
+                  border: "none",
+                  padding: "10px 16px",
+                  borderRadius: 8,
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         )}
 
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{ marginTop: 10 }}>
             <b>{log.status}</b> — {log.symptoms}
-
-            <div>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={log.resolved}
-                  onChange={() =>
-                    updateChicken({
-                      ...chicken,
-                      healthLogs: healthLogs.map((l: any) =>
-                        l.id === log.id
-                          ? { ...l, resolved: !l.resolved }
-                          : l
-                      ),
-                    })
-                  }
-                />
-                ✔ Resolved
-              </label>
-            </div>
           </div>
         ))}
       </div>
 
-      {/* ================= IMAGE POPUP ================= */}
+      {/* IMAGE POPUP */}
       {activeImage && (
         <div
           onClick={() => setActiveImage(null)}
@@ -304,7 +326,6 @@ export default function ChickenProfile({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 999,
           }}
         >
           <img
