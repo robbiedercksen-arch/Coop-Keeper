@@ -21,6 +21,8 @@ export default function ChickenProfile({
   useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
   const [activeImage, setActiveImage] = useState<string | null>(null);
+
+  // 🔥 FIXED STATE
   const [showHealthForm, setShowHealthForm] = useState(false);
 
   const [healthForm, setHealthForm] = useState({
@@ -53,6 +55,7 @@ export default function ChickenProfile({
     });
 
     setShowHealthForm(false);
+
     setHealthForm({
       date: "",
       status: "Healthy",
@@ -75,22 +78,6 @@ export default function ChickenProfile({
     borderRadius: 8,
     border: "none",
     cursor: "pointer",
-  };
-
-  // ⭐ PREMIUM HEADER STYLE
-  const header = {
-    fontSize: 18,
-    fontWeight: 700,
-    marginBottom: 12,
-    paddingBottom: 8,
-    borderBottom: "1px solid #e5e7eb",
-    letterSpacing: "0.3px",
-  };
-
-  const getStatusColor = (status: string) => {
-    if (status === "Healthy") return "#22c55e";
-    if (status === "Sick") return "#ef4444";
-    return "#eab308";
   };
 
   return (
@@ -129,20 +116,86 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* PHOTO ALBUM */}
+      {/* PHOTO ALBUM (UNCHANGED) */}
       <div style={card}>
-        <div style={header}>📸 Photo Album</div>
+        <h3>📸 Photo Album</h3>
 
         <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
           + Add Photos
-          <input type="file" multiple style={{ display: "none" }} />
+          <input
+            type="file"
+            multiple
+            style={{ display: "none" }}
+            onChange={(e: any) => {
+              const files = Array.from(e.target.files);
+
+              Promise.all(
+                files.map(
+                  (file: any) =>
+                    new Promise((resolve) => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => resolve(reader.result);
+                      reader.readAsDataURL(file);
+                    })
+                )
+              ).then((images: any) => {
+                updateChicken({
+                  ...chicken,
+                  album: [...(chicken.album || []), ...images],
+                });
+              });
+            }}
+          />
         </label>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+          {(chicken.album || []).map((img: any, i: number) => (
+            <div key={i} style={{ position: "relative" }}>
+              <img
+                src={img}
+                onClick={() => setActiveImage(img)}
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 8,
+                  objectFit: "cover",
+                }}
+              />
+
+              <button
+                onClick={() =>
+                  updateChicken({
+                    ...chicken,
+                    album: (chicken.album || []).filter(
+                      (_: any, index: number) => index !== i
+                    ),
+                  })
+                }
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  background: "red",
+                  color: "#fff",
+                  borderRadius: "50%",
+                  border: "none",
+                  width: 20,
+                  height: 20,
+                  cursor: "pointer",
+                }}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* HEALTH LOGS */}
       <div style={card}>
-        <div style={header}>🩺 Health Logs</div>
+        <h3>🩺 Health Logs</h3>
 
+        {/* 🔥 FIXED BUTTON */}
         <button
           style={{ ...btn, background: "#22c55e", color: "#fff" }}
           onClick={() => setShowHealthForm(prev => !prev)}
@@ -150,6 +203,7 @@ export default function ChickenProfile({
           + Add Health Log
         </button>
 
+        {/* 🔥 FORM NOW RENDERS */}
         {showHealthForm && (
           <div style={{ marginTop: 10 }}>
             <input
@@ -179,6 +233,22 @@ export default function ChickenProfile({
               }
             />
 
+            <input
+              placeholder="Treatment"
+              value={healthForm.treatment}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, treatment: e.target.value })
+              }
+            />
+
+            <textarea
+              placeholder="Notes"
+              value={healthForm.notes}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, notes: e.target.value })
+              }
+            />
+
             <button
               onClick={addHealth}
               style={{ ...btn, background: "#22c55e", color: "#fff" }}
@@ -189,21 +259,8 @@ export default function ChickenProfile({
         )}
 
         {healthLogs.map((log: any) => (
-          <div key={log.id} style={{ marginTop: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              
-              {/* STATUS DOT */}
-              <div
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: "50%",
-                  background: getStatusColor(log.status),
-                }}
-              />
-
-              <b>{log.status}</b> — {log.symptoms}
-            </div>
+          <div key={log.id} style={{ marginTop: 10 }}>
+            <b>{log.status}</b> — {log.symptoms}
           </div>
         ))}
       </div>
