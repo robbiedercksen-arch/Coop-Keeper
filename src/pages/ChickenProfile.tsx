@@ -17,7 +17,6 @@ export default function ChickenProfile({
     );
   }
 
-  // 🔥 LOCAL STATE
   const [chicken, setChicken] = useState(selectedChicken);
   useEffect(() => {
     setChicken(selectedChicken);
@@ -25,8 +24,6 @@ export default function ChickenProfile({
 
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [showHealthForm, setShowHealthForm] = useState(false);
-
-  // 🆕 EDIT STATE (only addition)
   const [editingLogId, setEditingLogId] = useState<number | null>(null);
 
   const [healthForm, setHealthForm] = useState({
@@ -39,7 +36,6 @@ export default function ChickenProfile({
 
   const healthLogs = chicken.healthLogs || [];
 
-  // ================= UPDATE =================
   const updateChicken = (updated: any) => {
     setChicken(updated);
     setChickens((prev: any[]) =>
@@ -48,7 +44,6 @@ export default function ChickenProfile({
     setSelectedChicken(updated);
   };
 
-  // ================= ADD / EDIT HEALTH =================
   const addHealth = () => {
     if (!healthForm.date) return alert("Date required");
 
@@ -80,7 +75,6 @@ export default function ChickenProfile({
     });
   };
 
-  // ================= STYLES =================
   const card = {
     background: "#fff",
     padding: 20,
@@ -123,7 +117,6 @@ export default function ChickenProfile({
 
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
-
       {/* BACK */}
       <div style={{ marginBottom: 20 }}>
         <button onClick={() => navigate("registry")} style={primary}>
@@ -242,19 +235,72 @@ export default function ChickenProfile({
             </select>
             <input placeholder="Symptoms" value={healthForm.symptoms} onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })} style={inputStyle} />
 
-            <button onClick={addHealth} style={success}>
-              {editingLogId ? "Update Log" : "Save Log"}
-            </button>
+            {/* BUTTONS */}
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <button onClick={addHealth} style={success}>
+                {editingLogId ? "Update Log" : "Save Log"}
+              </button>
+
+              {editingLogId && (
+                <button
+                  onClick={() => {
+                    setEditingLogId(null);
+                    setShowHealthForm(false);
+                    setHealthForm({
+                      date: "",
+                      status: "Healthy",
+                      symptoms: "",
+                      treatment: "",
+                      notes: "",
+                    });
+                  }}
+                  style={{
+                    background: "#e5e7eb",
+                    border: "none",
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+              )}
+
+              {editingLogId && (
+                <button
+                  onClick={() => {
+                    updateChicken({
+                      ...chicken,
+                      healthLogs: healthLogs.filter(
+                        (l: any) => l.id !== editingLogId
+                      ),
+                    });
+
+                    setEditingLogId(null);
+                    setShowHealthForm(false);
+                  }}
+                  style={{
+                    background: "#ef4444",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           </div>
         )}
 
-        {/* LOG LIST */}
+        {/* LIST */}
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{ marginTop: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <b>{log.status}</b> — {log.symptoms}
 
-              {/* ✏️ SMALL EDIT BUTTON */}
               <button
                 onClick={() => {
                   setEditingLogId(log.id);
