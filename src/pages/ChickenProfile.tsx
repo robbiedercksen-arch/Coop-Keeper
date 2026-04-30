@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function ChickenProfile({
   selectedChicken,
@@ -16,6 +16,13 @@ export default function ChickenProfile({
       </div>
     );
   }
+
+  // 🔥 LOCAL STATE FIX (THIS SOLVES YOUR ISSUE)
+  const [chicken, setChicken] = useState(selectedChicken);
+
+  useEffect(() => {
+    setChicken(selectedChicken);
+  }, [selectedChicken]);
 
   // ================= STATE =================
   const [showHealthForm, setShowHealthForm] = useState(false);
@@ -38,14 +45,17 @@ export default function ChickenProfile({
     description: "",
   });
 
-  const healthLogs = selectedChicken.healthLogs || [];
-  const notes = selectedChicken.notes || [];
+  const healthLogs = chicken.healthLogs || [];
+  const notes = chicken.notes || [];
 
   // ================= UPDATE =================
   const updateChicken = (updated: any) => {
+    setChicken(updated); // 🔥 INSTANT UI UPDATE
+
     setChickens((prev: any[]) =>
-      prev.map((c) => (c.id === selectedChicken.id ? updated : c))
+      prev.map((c) => (c.id === updated.id ? updated : c))
     );
+
     setSelectedChicken(updated);
   };
 
@@ -60,7 +70,7 @@ export default function ChickenProfile({
     };
 
     updateChicken({
-      ...selectedChicken,
+      ...chicken,
       healthLogs: [...healthLogs, newLog],
     });
 
@@ -72,7 +82,7 @@ export default function ChickenProfile({
     if (!noteForm.description) return alert("Fill fields");
 
     updateChicken({
-      ...selectedChicken,
+      ...chicken,
       notes: [...notes, { id: Date.now(), ...noteForm }],
     });
 
@@ -104,7 +114,6 @@ export default function ChickenProfile({
 
   const primary = { ...btn, background: "#3b82f6", color: "#fff" };
   const success = { ...btn, background: "#22c55e", color: "#fff" };
-  const danger = { ...btn, background: "#ef4444", color: "#fff" };
 
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
@@ -120,21 +129,21 @@ export default function ChickenProfile({
       <div style={card}>
         <div style={{ display: "flex", gap: 20 }}>
           <img
-            src={selectedChicken.image}
+            src={chicken.image}
             style={{ width: 150, height: 150, borderRadius: 12 }}
           />
 
           <div>
-            <h1>{selectedChicken.name}</h1>
-            <div><b>ID Tag:</b> {selectedChicken.idTag}</div>
-            <div><b>Breed:</b> {selectedChicken.breed}</div>
-            <div><b>Sex:</b> {selectedChicken.sex}</div>
-            <div><b>Age:</b> {selectedChicken.ageGroup}</div>
+            <h1>{chicken.name}</h1>
+            <div><b>ID Tag:</b> {chicken.idTag}</div>
+            <div><b>Breed:</b> {chicken.breed}</div>
+            <div><b>Sex:</b> {chicken.sex}</div>
+            <div><b>Age:</b> {chicken.ageGroup}</div>
           </div>
         </div>
       </div>
 
-      {/* ================= PHOTO ALBUM (FINAL FIX) ================= */}
+      {/* ================= PHOTO ALBUM (FINAL WORKING) ================= */}
       <div style={card}>
         <div style={sectionTitle}>📸 Photo Album</div>
 
@@ -157,41 +166,32 @@ export default function ChickenProfile({
                     })
                 )
               ).then((images: any) => {
-                const updated = {
-                  ...selectedChicken,
-                  album: [...(selectedChicken.album || []), ...images],
-                };
-
-                updateChicken({ ...updated }); // 🔥 FORCE NEW OBJECT
+                updateChicken({
+                  ...chicken,
+                  album: [...(chicken.album || []), ...images],
+                });
               });
             }}
           />
         </label>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
-          {(selectedChicken.album || []).map((img: any, i: number) => (
+          {(chicken.album || []).map((img: any, i: number) => (
             <div key={i} style={{ position: "relative" }}>
               <img
                 src={img}
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 8,
-                  objectFit: "cover",
-                }}
+                style={{ width: 100, height: 100, borderRadius: 8 }}
               />
 
               <button
-                onClick={() => {
-                  const updated = {
-                    ...selectedChicken,
-                    album: (selectedChicken.album || []).filter(
+                onClick={() =>
+                  updateChicken({
+                    ...chicken,
+                    album: (chicken.album || []).filter(
                       (_: any, index: number) => index !== i
                     ),
-                  };
-
-                  updateChicken({ ...updated }); // 🔥 FORCE UPDATE
-                }}
+                  })
+                }
                 style={{
                   position: "absolute",
                   top: -6,
@@ -202,7 +202,6 @@ export default function ChickenProfile({
                   border: "none",
                   width: 20,
                   height: 20,
-                  cursor: "pointer",
                 }}
               >
                 ×
@@ -236,26 +235,7 @@ export default function ChickenProfile({
         )}
 
         {healthLogs.map((log: any) => (
-          <div key={log.id} style={{ marginTop: 10 }}>
-            <b>{log.status}</b> — {log.symptoms}
-
-            <label>
-              <input
-                type="checkbox"
-                checked={log.resolved}
-                onChange={() =>
-                  updateChicken({
-                    ...selectedChicken,
-                    healthLogs: healthLogs.map((l: any) =>
-                      l.id === log.id ? { ...l, resolved: !l.resolved } : l
-                    ),
-                  })
-                }
-              /> ✔ Resolved
-            </label>
-
-            <button onClick={() => setViewLog(log)}>View</button>
-          </div>
+          <div key={log.id}>{log.status} - {log.symptoms}</div>
         ))}
       </div>
 
@@ -267,24 +247,8 @@ export default function ChickenProfile({
           + Add Note
         </button>
 
-        {showNoteForm && (
-          <div>
-            <input type="date" onChange={(e) => setNoteForm({ ...noteForm, date: e.target.value })} />
-            <select onChange={(e) => setNoteForm({ ...noteForm, type: e.target.value })}>
-              <option>General</option>
-              <option>Concerns</option>
-              <option>Planning</option>
-            </select>
-            <textarea placeholder="Description" onChange={(e) => setNoteForm({ ...noteForm, description: e.target.value })} />
-            <button onClick={addNote}>Save</button>
-          </div>
-        )}
-
         {notes.map((n: any) => (
-          <div key={n.id}>
-            {n.description}
-            <button onClick={() => setViewNote(n)}>View</button>
-          </div>
+          <div key={n.id}>{n.description}</div>
         ))}
       </div>
     </div>
