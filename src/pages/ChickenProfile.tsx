@@ -177,8 +177,7 @@ const NotesSection = () => {
       )}
 
       {notes.map((note: any) => (
-  <div
-    key={note.id}
+  <div key={note.id}
     style={{
       marginTop: 10,
       padding: 12,
