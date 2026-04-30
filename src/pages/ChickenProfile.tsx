@@ -10,8 +10,6 @@ export default function ChickenProfile({
     return <div style={{ padding: 20 }}>Loading...</div>;
   }
 
-  // ================= STATE =================
-  const [viewLog, setViewLog] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
 
   const [form, setForm] = useState({
@@ -24,45 +22,26 @@ export default function ChickenProfile({
 
   const healthLogs = selectedChicken?.healthLogs || [];
 
-  // ================= HELPERS =================
+  // ================= UPDATE =================
   const updateChicken = (updated: any) => {
     setChickens((prev: any[]) =>
       prev.map((c) => (c.id === selectedChicken.id ? updated : c))
     );
-
-    // 🔥 CRITICAL FIX (instant UI update)
     setSelectedChicken(updated);
   };
 
-  const formatDate = (date: string) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleDateString();
-  };
-
-  const getColor = (status: string) => {
-    if (status === "Sick") return "#ef4444";
-    if (status === "Recovering") return "#eab308";
-    return "#22c55e";
-  };
-
-  // ================= ACTIONS =================
+  // ================= ADD =================
   const addLog = () => {
-    if (!form.date) {
-      alert("Date Logged is required");
-      return;
-    }
-
     const newLog = {
       id: Date.now(),
       ...form,
+      resolved: false, // ✅ NEW
     };
 
-    const updated = {
+    updateChicken({
       ...selectedChicken,
       healthLogs: [...healthLogs, newLog],
-    };
-
-    updateChicken(updated);
+    });
 
     setForm({
       date: "",
@@ -75,129 +54,71 @@ export default function ChickenProfile({
     setShowForm(false);
   };
 
+  // ================= TOGGLE RESOLVED =================
+  const toggleResolved = (id: number) => {
+    const updatedLogs = healthLogs.map((log: any) =>
+      log.id === id ? { ...log, resolved: !log.resolved } : log
+    );
+
+    updateChicken({
+      ...selectedChicken,
+      healthLogs: updatedLogs,
+    });
+  };
+
+  // ================= DELETE =================
   const deleteLog = (id: number) => {
-    const updated = {
+    updateChicken({
       ...selectedChicken,
       healthLogs: healthLogs.filter((l: any) => l.id !== id),
-    };
-
-    updateChicken(updated);
+    });
   };
 
-  const deleteChicken = () => {
-    setChickens((prev: any[]) =>
-      prev.filter((c) => c.id !== selectedChicken.id)
-    );
-    navigate("registry");
+  const getColor = (status: string) => {
+    if (status === "Sick") return "#ef4444";
+    if (status === "Recovering") return "#eab308";
+    return "#22c55e";
   };
 
-  // ================= STYLES =================
+  // ================= UI =================
   const card = {
     background: "#fff",
     padding: 20,
     borderRadius: 14,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
     marginBottom: 20,
   };
 
   const btn = {
-    padding: "8px 14px",
-    borderRadius: 8,
+    padding: "6px 10px",
+    borderRadius: 6,
     border: "none",
     cursor: "pointer",
-    fontWeight: 600,
-  };
-
-  const input = {
-    padding: 10,
-    borderRadius: 8,
-    border: "1px solid #ddd",
-    width: "100%",
-  };
-
-  const label = {
-    fontWeight: 600,
-    color: "#555",
-  };
-
-  const value = {
-    marginBottom: 8,
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 1000 }}>
+    <div style={{ padding: 20 }}>
 
-      {/* 🔙 BACK */}
-      <button
-        onClick={() => navigate("registry")}
-        style={{
-          padding: "10px 18px",
-          background: "linear-gradient(135deg, #3b82f6, #6366f1)",
-          color: "#fff",
-          borderRadius: 12,
-          border: "none",
-          marginBottom: 20,
-          cursor: "pointer",
-        }}
-      >
-        ← Back to Registry
-      </button>
+      <button onClick={() => navigate("registry")}>← Back</button>
 
-      {/* ================= PROFILE ================= */}
-      <div style={card}>
-        <div style={{ display: "flex", gap: 20 }}>
-          <img
-            src={selectedChicken.image}
-            style={{ width: 140, height: 140, borderRadius: 12 }}
-          />
-
-          <div>
-            <h2>{selectedChicken.name}</h2>
-
-            <div style={value}><span style={label}>ID Tag:</span> {selectedChicken.idTag}</div>
-            <div style={value}><span style={label}>Breed:</span> {selectedChicken.breed || "-"}</div>
-            <div style={value}><span style={label}>Sex:</span> {selectedChicken.sex}</div>
-            <div style={value}><span style={label}>Age:</span> {selectedChicken.ageGroup}</div>
-            <div style={value}><span style={label}>Added Date:</span> {formatDate(selectedChicken.hatchDate)}</div>
-            <div style={value}><span style={label}>Status:</span> {selectedChicken.status}</div>
-
-            <div style={{ marginTop: 10 }}>
-              <button style={{ ...btn, background: "#3b82f6", color: "#fff" }}>
-                Edit
-              </button>
-
-              <button
-                style={{ ...btn, background: "#ef4444", color: "#fff", marginLeft: 10 }}
-                onClick={deleteChicken}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ================= HEALTH LOGS ================= */}
+      {/* ================= HEALTH ================= */}
       <div style={card}>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <h3>🩺 Health Logs</h3>
+          <h3>Health Logs</h3>
 
-          <button
-            onClick={() => setShowForm(!showForm)}
-            style={{ ...btn, background: "#22c55e", color: "#fff" }}
-          >
-            {showForm ? "Cancel" : "+ Add Health Log"}
+          <button onClick={() => setShowForm(!showForm)}>
+            + Add Log
           </button>
         </div>
 
-        {/* FORM */}
         {showForm && (
-          <div style={{ marginTop: 15, display: "grid", gap: 10 }}>
-            <input type="date" style={input} value={form.date}
+          <div style={{ display: "grid", gap: 10 }}>
+            <input type="date"
+              value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
             />
 
-            <select style={input} value={form.status}
+            <select
+              value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
             >
               <option>Healthy</option>
@@ -205,74 +126,51 @@ export default function ChickenProfile({
               <option>Recovering</option>
             </select>
 
-            <input placeholder="Symptoms" style={input} value={form.symptoms}
+            <input placeholder="Symptoms"
+              value={form.symptoms}
               onChange={(e) => setForm({ ...form, symptoms: e.target.value })}
             />
 
-            <input placeholder="Treatment" style={input} value={form.treatment}
-              onChange={(e) => setForm({ ...form, treatment: e.target.value })}
-            />
-
-            <textarea placeholder="Notes" style={input} value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            />
-
-            <button onClick={addLog} style={{ ...btn, background: "#16a34a", color: "#fff" }}>
-              Save Log
-            </button>
+            <button onClick={addLog}>Save</button>
           </div>
         )}
 
-        {/* LIST */}
-        {healthLogs.length === 0 && <p>No logs yet</p>}
-
+        {/* ================= LOG LIST ================= */}
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{
             display: "flex",
             justifyContent: "space-between",
-            padding: "10px 0",
+            padding: 10,
             borderBottom: "1px solid #eee",
           }}>
             <div style={{ display: "flex", gap: 10 }}>
               <div style={{
-                width: 12,
-                height: 12,
+                width: 10,
+                height: 10,
                 borderRadius: "50%",
-                background: getColor(log.status),
+                background: log.resolved ? "#22c55e" : getColor(log.status),
               }} />
 
               <div>
                 <b>{log.status}</b>
-                <div style={{ fontSize: 12 }}>{log.symptoms}</div>
+                <div>{log.symptoms}</div>
+
+                {/* ✅ RESOLVE CHECKBOX */}
+                <label style={{ fontSize: 12 }}>
+                  <input
+                    type="checkbox"
+                    checked={log.resolved}
+                    onChange={() => toggleResolved(log.id)}
+                  />
+                  {" "}Health Issue Solved
+                </label>
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 6 }}>
-              <button style={{ ...btn, background: "#3b82f6", color: "#fff" }}
-                onClick={() => setViewLog(log)}
-              >
-                View
-              </button>
-
-              <button style={{ ...btn, background: "#ef4444", color: "#fff" }}
-                onClick={() => deleteLog(log.id)}
-              >
-                Delete
-              </button>
-            </div>
+            <button onClick={() => deleteLog(log.id)}>Delete</button>
           </div>
         ))}
       </div>
-
-      {/* VIEW */}
-      {viewLog && (
-        <div style={card}>
-          <h3>Health Details</h3>
-          <p>{viewLog.symptoms}</p>
-
-          <button onClick={() => setViewLog(null)}>Close</button>
-        </div>
-      )}
     </div>
   );
 }
