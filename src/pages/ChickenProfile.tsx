@@ -134,7 +134,7 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ================= PHOTO ALBUM (FIXED) ================= */}
+      {/* ================= PHOTO ALBUM (FINAL FIX) ================= */}
       <div style={card}>
         <div style={sectionTitle}>📸 Photo Album</div>
 
@@ -157,10 +157,12 @@ export default function ChickenProfile({
                     })
                 )
               ).then((images: any) => {
-                updateChicken({
+                const updated = {
                   ...selectedChicken,
                   album: [...(selectedChicken.album || []), ...images],
-                });
+                };
+
+                updateChicken({ ...updated }); // 🔥 FORCE NEW OBJECT
               });
             }}
           />
@@ -181,12 +183,14 @@ export default function ChickenProfile({
 
               <button
                 onClick={() => {
-                  updateChicken({
+                  const updated = {
                     ...selectedChicken,
                     album: (selectedChicken.album || []).filter(
                       (_: any, index: number) => index !== i
                     ),
-                  });
+                  };
+
+                  updateChicken({ ...updated }); // 🔥 FORCE UPDATE
                 }}
                 style={{
                   position: "absolute",
