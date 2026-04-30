@@ -11,7 +11,10 @@ export default function ChickenProfile({
   // ================= STATE =================
   const [showHealthForm, setShowHealthForm] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
+
   const [viewLog, setViewLog] = useState<any>(null);
+  const [viewNote, setViewNote] = useState<any>(null);
+
   const [editingLog, setEditingLog] = useState<any>(null);
   const [editingNote, setEditingNote] = useState<any>(null);
 
@@ -112,7 +115,8 @@ export default function ChickenProfile({
 
   // ================= NOTES =================
   const saveNote = () => {
-    if (!noteForm.date || !noteForm.description) return alert("Fill all fields");
+    if (!noteForm.date || !noteForm.description)
+      return alert("Fill all fields");
 
     if (editingNote) {
       const updated = notes.map((n: any) =>
@@ -135,6 +139,7 @@ export default function ChickenProfile({
     setNoteForm(note);
     setEditingNote(note);
     setShowNoteForm(true);
+    setViewNote(null);
   };
 
   const deleteNote = (id: number) => {
@@ -142,9 +147,10 @@ export default function ChickenProfile({
       ...selectedChicken,
       notes: notes.filter((n: any) => n.id !== id),
     });
+    setViewNote(null);
   };
 
-  // ================= UI STYLES =================
+  // ================= STYLES =================
   const card = {
     background: "#fff",
     padding: 20,
@@ -175,10 +181,12 @@ export default function ChickenProfile({
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
 
-      {/* BACK */}
-      <button onClick={() => navigate("registry")} style={primary}>
-        ← Back
-      </button>
+      {/* 🔙 BACK BUTTON FIXED */}
+      <div style={{ marginBottom: 20 }}>
+        <button onClick={() => navigate("registry")} style={primary}>
+          ← Back to Registry
+        </button>
+      </div>
 
       {/* PROFILE */}
       <div style={card}>
@@ -187,6 +195,7 @@ export default function ChickenProfile({
             src={selectedChicken.image}
             style={{ width: 150, height: 150, borderRadius: 12 }}
           />
+
           <div>
             <h2>{selectedChicken.name}</h2>
             <div><b>ID Tag:</b> {selectedChicken.idTag}</div>
@@ -217,32 +226,58 @@ export default function ChickenProfile({
         </button>
 
         {showHealthForm && (
-          <div>
+          <div style={{ marginTop: 10 }}>
             <input type="date" style={input}
               value={healthForm.date}
               onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })}
             />
+
             <input
               placeholder="Symptoms"
               style={input}
               value={healthForm.symptoms}
               onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })}
             />
+
             <button onClick={saveHealthLog}>Save</button>
           </div>
         )}
 
         {healthLogs.map((log: any) => (
-          <div key={log.id}>
-            {log.status} - {log.symptoms}
+          <div key={log.id} style={{ marginTop: 10 }}>
+            <b>{log.status}</b> - {log.symptoms}
+
+            <div>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={log.resolved}
+                  onChange={() => toggleResolved(log.id)}
+                />{" "}
+                ✔ Resolved
+              </label>
+            </div>
+
             <button onClick={() => setViewLog(log)}>View</button>
           </div>
         ))}
       </div>
 
+      {/* HEALTH VIEW */}
+      {viewLog && (
+        <div style={card}>
+          <h3>Health Details</h3>
+          <p>{viewLog.symptoms}</p>
+
+          <button onClick={() => handleEditLog(viewLog)}>Edit</button>
+          <button onClick={() => deleteLog(viewLog.id)}>Delete</button>
+          <button onClick={() => setViewLog(null)}>Close</button>
+        </div>
+      )}
+
       {/* NOTES */}
       <div style={card}>
-        <h3>📝 Notes & Observations</h3>
+        <h3>📝 Notes</h3>
 
         <button onClick={() => setShowNoteForm(!showNoteForm)} style={primary}>
           + Add Note
@@ -254,11 +289,13 @@ export default function ChickenProfile({
               value={noteForm.date}
               onChange={(e) => setNoteForm({ ...noteForm, date: e.target.value })}
             />
+
             <textarea
               style={input}
               value={noteForm.description}
               onChange={(e) => setNoteForm({ ...noteForm, description: e.target.value })}
             />
+
             <button onClick={saveNote}>Save</button>
           </div>
         )}
@@ -266,11 +303,22 @@ export default function ChickenProfile({
         {notes.map((n: any) => (
           <div key={n.id}>
             {n.description}
-            <button onClick={() => handleEditNote(n)}>Edit</button>
-            <button onClick={() => deleteNote(n.id)}>Delete</button>
+            <button onClick={() => setViewNote(n)}>View</button>
           </div>
         ))}
       </div>
+
+      {/* NOTES VIEW */}
+      {viewNote && (
+        <div style={card}>
+          <h3>Note Details</h3>
+          <p>{viewNote.description}</p>
+
+          <button onClick={() => handleEditNote(viewNote)}>Edit</button>
+          <button onClick={() => deleteNote(viewNote.id)}>Delete</button>
+          <button onClick={() => setViewNote(null)}>Close</button>
+        </div>
+      )}
     </div>
   );
 }
