@@ -46,16 +46,16 @@ export default function App() {
 
           <button
             onClick={() => navigate("dashboard")}
-            style={menuBtn}
+            style={menuBtn(page === "dashboard")}
           >
-            Dashboard
+            🏠 Dashboard
           </button>
 
           <button
             onClick={() => navigate("registry")}
-            style={menuBtn}
+            style={menuBtn(page === "registry")}
           >
-            Chicken Registry
+            🐔 Chicken Registry
           </button>
 
         </div>
@@ -93,13 +93,15 @@ export default function App() {
   );
 }
 
-// 🔥 MENU BUTTON STYLE
-const menuBtn = {
-  background: "#1f2937",
+// 🔥 UPGRADED MENU BUTTON
+const menuBtn = (active: boolean) => ({
+  background: active ? "#2563eb" : "#1f2937",
   color: "#fff",
   border: "none",
   padding: "10px 12px",
-  borderRadius: 8,
+  borderRadius: 10,
   cursor: "pointer",
   textAlign: "left" as const,
-};
+  fontWeight: active ? 700 : 500,
+  transition: "all 0.2s ease",
+});
