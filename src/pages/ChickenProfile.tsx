@@ -25,7 +25,6 @@ export default function ChickenProfile({
   const [showHealthForm, setShowHealthForm] = useState(false);
   const [viewLog, setViewLog] = useState<any>(null);
 
-  // ✅ track editing
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [healthForm, setHealthForm] = useState({
@@ -44,7 +43,6 @@ export default function ChickenProfile({
     setSelectedChicken(updated);
   };
 
-  // ✅ FIXED save (handles edit + new)
   const saveHealth = () => {
     if (!healthForm.date) return;
 
@@ -68,6 +66,7 @@ export default function ChickenProfile({
     setHealthForm({ date: "", status: "Healthy", symptoms: "" });
     setShowHealthForm(false);
     setEditingId(null);
+    setViewLog(null);
   };
 
   const getColor = (status: string) => {
@@ -94,8 +93,10 @@ export default function ChickenProfile({
   const input = {
     display: "block",
     width: "100%",
-    marginBottom: 8,
-    padding: 6,
+    marginBottom: 10,
+    padding: 8,
+    borderRadius: 6,
+    border: "1px solid #e5e7eb",
   };
 
   return (
@@ -123,7 +124,7 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* PHOTO ALBUM (unchanged) */}
+      {/* PHOTO ALBUM */}
       <div style={card}>
         <div style={{ fontWeight: 700, marginBottom: 10 }}>📸 Photo Album</div>
         <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
@@ -146,31 +147,22 @@ export default function ChickenProfile({
           + Add Health Log
         </button>
 
-        {/* ✅ RESTORED FORM */}
         {showHealthForm && (
           <>
-            <input
-              type="date"
-              style={input}
-              value={healthForm.date}
-              onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })}
-            />
-            <select
-              style={input}
-              value={healthForm.status}
-              onChange={(e) => setHealthForm({ ...healthForm, status: e.target.value })}
-            >
+            <input type="date" style={input} value={healthForm.date}
+              onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })} />
+            <select style={input} value={healthForm.status}
+              onChange={(e) => setHealthForm({ ...healthForm, status: e.target.value })}>
               <option>Healthy</option>
               <option>Sick</option>
               <option>Recovering</option>
             </select>
-            <input
-              style={input}
-              placeholder="Symptoms"
+            <input style={input} placeholder="Symptoms"
               value={healthForm.symptoms}
-              onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })}
-            />
-            <button onClick={saveHealth}>Save</button>
+              onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })} />
+            <button style={{ ...btn, background: "#22c55e", color: "#fff" }} onClick={saveHealth}>
+              Save
+            </button>
           </>
         )}
 
@@ -223,7 +215,7 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* VIEW MODAL */}
+      {/* VIEW MODAL (UPGRADED UI + INLINE EDIT) */}
       {viewLog && (
         <div style={{
           position: "fixed",
@@ -236,34 +228,92 @@ export default function ChickenProfile({
           alignItems: "center",
           justifyContent: "center",
         }}>
-          <div style={{ background: "#fff", padding: 20, borderRadius: 12, width: 320 }}>
-            <button onClick={() => setViewLog(null)}>X</button>
-
-            <h3>{viewLog.status}</h3>
-            <p>{viewLog.symptoms}</p>
-
+          <div style={{
+            background: "#fff",
+            padding: 20,
+            borderRadius: 16,
+            width: 320,
+            position: "relative",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
+          }}>
             <button
               onClick={() => {
-                setHealthForm(viewLog);
-                setEditingId(viewLog.id); // ✅ THIS FIXES EDIT
-                setShowHealthForm(true);
                 setViewLog(null);
+                setEditingId(null);
+              }}
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+                background: "#ef4444",
+                color: "#fff",
+                border: "none",
+                borderRadius: "50%",
+                width: 26,
+                height: 26,
+                cursor: "pointer"
               }}
             >
-              Edit
+              ×
             </button>
 
-            <button
-              onClick={() => {
-                updateChicken({
-                  ...chicken,
-                  healthLogs: healthLogs.filter((l: any) => l.id !== viewLog.id),
-                });
-                setViewLog(null);
-              }}
-            >
-              Delete
-            </button>
+            {editingId === viewLog.id ? (
+              <>
+                <input type="date" style={input}
+                  value={healthForm.date}
+                  onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })}
+                />
+                <select style={input}
+                  value={healthForm.status}
+                  onChange={(e) => setHealthForm({ ...healthForm, status: e.target.value })}
+                >
+                  <option>Healthy</option>
+                  <option>Sick</option>
+                  <option>Recovering</option>
+                </select>
+                <input style={input}
+                  value={healthForm.symptoms}
+                  onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })}
+                />
+
+                <button
+                  style={{ ...btn, background: "#22c55e", color: "#fff" }}
+                  onClick={saveHealth}
+                >
+                  Save Changes
+                </button>
+              </>
+            ) : (
+              <>
+                <h3>{viewLog.status}</h3>
+                <p>{viewLog.symptoms}</p>
+
+                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                  <button
+                    style={{ ...btn, background: "#f59e0b", color: "#fff" }}
+                    onClick={() => {
+                      setHealthForm(viewLog);
+                      setEditingId(viewLog.id);
+                    }}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    style={{ ...btn, background: "#ef4444", color: "#fff" }}
+                    onClick={() => {
+                      updateChicken({
+                        ...chicken,
+                        healthLogs: healthLogs.filter((l: any) => l.id !== viewLog.id),
+                      });
+                      setViewLog(null);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
