@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function ChickenProfile({
   selectedChicken,
@@ -6,40 +6,36 @@ export default function ChickenProfile({
   setSelectedChicken,
   navigate,
 }: any) {
-  if (!selectedChicken) return <div style={{ padding: 20 }}>Loading...</div>;
+
+  // 🔥 SAFETY FIX
+  if (!selectedChicken || !selectedChicken.id) {
+    return (
+      <div style={{ padding: 20 }}>
+        <p>Loading chicken...</p>
+        <button onClick={() => navigate("registry")}>
+          ← Back to Registry
+        </button>
+      </div>
+    );
+  }
 
   const [viewLog, setViewLog] = useState<any>(null);
   const [viewNote, setViewNote] = useState<any>(null);
 
-  const [showHealthForm, setShowHealthForm] = useState(false);
-  const [showNoteForm, setShowNoteForm] = useState(false);
-
-  const [healthForm, setHealthForm] = useState({
-    date: "",
-    status: "Healthy",
-    symptoms: "",
-  });
-
-  const [noteForm, setNoteForm] = useState({
-    date: "",
-    type: "General",
-    description: "",
-  });
-
   const healthLogs = selectedChicken.healthLogs || [];
   const notes = selectedChicken.notes || [];
+  const album = selectedChicken.album || [];
 
-  // ================= HELPERS =================
+  // ================= SAFE UPDATE =================
   const updateChicken = (updated: any) => {
     setChickens((prev: any[]) =>
       prev.map((c) => (c.id === selectedChicken.id ? updated : c))
     );
+
     setSelectedChicken(updated);
   };
 
-  const getColor = (s: string) =>
-    s === "Sick" ? "#ef4444" : s === "Recovering" ? "#eab308" : "#22c55e";
-
+  // ================= STYLES =================
   const card = {
     background: "#fff",
     padding: 20,
@@ -74,16 +70,21 @@ export default function ChickenProfile({
       <div style={card}>
         <div style={{ display: "flex", gap: 20 }}>
           <img
-            src={selectedChicken.image}
-            style={{ width: 150, height: 150, borderRadius: 12 }}
+            src={selectedChicken.image || ""}
+            style={{
+              width: 150,
+              height: 150,
+              borderRadius: 12,
+              objectFit: "cover",
+            }}
           />
 
           <div>
-            <h1>{selectedChicken.name}</h1>
-            <div><b>ID Tag:</b> {selectedChicken.idTag}</div>
-            <div><b>Breed:</b> {selectedChicken.breed}</div>
-            <div><b>Sex:</b> {selectedChicken.sex}</div>
-            <div><b>Age:</b> {selectedChicken.ageGroup}</div>
+            <h1>{selectedChicken.name || "Unnamed Chicken"}</h1>
+            <div><b>ID Tag:</b> {selectedChicken.idTag || "-"}</div>
+            <div><b>Breed:</b> {selectedChicken.breed || "-"}</div>
+            <div><b>Sex:</b> {selectedChicken.sex || "-"}</div>
+            <div><b>Age:</b> {selectedChicken.ageGroup || "-"}</div>
           </div>
         </div>
       </div>
@@ -105,7 +106,7 @@ export default function ChickenProfile({
                 reader.onloadend = () => {
                   updateChicken({
                     ...selectedChicken,
-                    album: [...(selectedChicken.album || []), reader.result],
+                    album: [...album, reader.result],
                   });
                 };
                 reader.readAsDataURL(file);
@@ -116,7 +117,7 @@ export default function ChickenProfile({
         </label>
 
         <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-          {(selectedChicken.album || []).map((img: any, i: number) => (
+          {album.map((img: any, i: number) => (
             <div key={i} style={{ position: "relative" }}>
               <img
                 src={img}
@@ -130,14 +131,8 @@ export default function ChickenProfile({
 
               <button
                 onClick={() => {
-                  const updated = selectedChicken.album.filter(
-                    (_: any, index: number) => index !== i
-                  );
-
-                  updateChicken({
-                    ...selectedChicken,
-                    album: updated,
-                  });
+                  const updated = album.filter((_: any, index: number) => index !== i);
+                  updateChicken({ ...selectedChicken, album: updated });
                 }}
                 style={{
                   position: "absolute",
@@ -150,7 +145,6 @@ export default function ChickenProfile({
                   width: 20,
                   height: 20,
                   cursor: "pointer",
-                  fontSize: 12,
                 }}
               >
                 ×
@@ -168,25 +162,20 @@ export default function ChickenProfile({
           <div key={log.id} style={{ marginTop: 10 }}>
             <b>{log.status}</b> — {log.symptoms}
 
-            <div>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={log.resolved}
-                  onChange={() =>
-                    updateChicken({
-                      ...selectedChicken,
-                      healthLogs: healthLogs.map((l: any) =>
-                        l.id === log.id
-                          ? { ...l, resolved: !l.resolved }
-                          : l
-                      ),
-                    })
-                  }
-                />{" "}
-                ✔ Resolved
-              </label>
-            </div>
+            <label>
+              <input
+                type="checkbox"
+                checked={log.resolved}
+                onChange={() =>
+                  updateChicken({
+                    ...selectedChicken,
+                    healthLogs: healthLogs.map((l: any) =>
+                      l.id === log.id ? { ...l, resolved: !l.resolved } : l
+                    ),
+                  })
+                }
+              /> ✔ Resolved
+            </label>
 
             <button onClick={() => setViewLog(log)}>View</button>
           </div>
@@ -205,19 +194,22 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* VIEW NOTE */}
+      {/* NOTE VIEW */}
       {viewNote && (
         <div style={card}>
           <h3>Note Details</h3>
           <p>{viewNote.description}</p>
 
-          <button style={danger} onClick={() => {
-            updateChicken({
-              ...selectedChicken,
-              notes: notes.filter((n: any) => n.id !== viewNote.id),
-            });
-            setViewNote(null);
-          }}>
+          <button
+            style={danger}
+            onClick={() => {
+              updateChicken({
+                ...selectedChicken,
+                notes: notes.filter((n: any) => n.id !== viewNote.id),
+              });
+              setViewNote(null);
+            }}
+          >
             Delete
           </button>
 
