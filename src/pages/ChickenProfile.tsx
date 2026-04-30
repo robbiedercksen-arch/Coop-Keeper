@@ -302,9 +302,13 @@ const NotesSection = () => {
   minHeight: "100vh",
   background: "linear-gradient(135deg, #eef2ff, #f8fafc)"
 }}>
-      >
-        ← Back
-      </button>
+
+  <button
+    onClick={() => navigate("registry")}
+    style={{ ...btn, background: "#3b82f6", color: "#fff", marginBottom: 20 }}
+  >
+    ← Back
+  </button>
 
 {/* PROFILE */}
 <div style={card}>
