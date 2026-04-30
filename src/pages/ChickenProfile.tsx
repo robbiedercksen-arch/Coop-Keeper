@@ -54,15 +54,9 @@ export default function ChickenProfile({
     });
 
     setShowHealthForm(false);
-    setHealthForm({
-      date: "",
-      status: "Healthy",
-      symptoms: "",
-      treatment: "",
-      notes: "",
-    });
   };
 
+  // ================= STYLES =================
   const card = {
     background: "#fff",
     padding: 20,
@@ -78,6 +72,32 @@ export default function ChickenProfile({
     cursor: "pointer",
   };
 
+  const smallBtn = {
+    fontSize: 11,
+    padding: "4px 10px",
+    borderRadius: 6,
+    border: "1px solid #d1d5db",
+    background: "#f9fafb",
+    cursor: "pointer",
+  };
+
+  const header = {
+    fontSize: 18,
+    fontWeight: 700,
+    marginBottom: 12,
+    paddingBottom: 6,
+    borderBottom: "1px solid #e5e7eb",
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  };
+
+  const getColor = (status: string) => {
+    if (status === "Healthy") return "#22c55e";
+    if (status === "Sick") return "#ef4444";
+    return "#eab308";
+  };
+
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
 
@@ -91,16 +111,11 @@ export default function ChickenProfile({
 
       {/* PROFILE */}
       <div style={card}>
-        <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 20 }}>
           {chicken.image && (
             <img
               src={chicken.image}
-              style={{
-                width: 140,
-                height: 140,
-                borderRadius: 12,
-                objectFit: "cover",
-              }}
+              style={{ width: 140, height: 140, borderRadius: 12, objectFit: "cover" }}
             />
           )}
 
@@ -114,9 +129,9 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ================= PHOTO ALBUM (UNCHANGED) ================= */}
+      {/* PHOTO ALBUM */}
       <div style={card}>
-        <h3>📸 Photo Album</h3>
+        <div style={header}>📸 Photo Album</div>
 
         <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
           + Add Photos
@@ -152,21 +167,14 @@ export default function ChickenProfile({
               <img
                 src={img}
                 onClick={() => setActiveImage(img)}
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 8,
-                  objectFit: "cover",
-                }}
+                style={{ width: 100, height: 100, borderRadius: 8, objectFit: "cover" }}
               />
 
               <button
                 onClick={() =>
                   updateChicken({
                     ...chicken,
-                    album: (chicken.album || []).filter(
-                      (_: any, index: number) => index !== i
-                    ),
+                    album: (chicken.album || []).filter((_: any, index: number) => index !== i),
                   })
                 }
                 style={{
@@ -179,7 +187,6 @@ export default function ChickenProfile({
                   border: "none",
                   width: 20,
                   height: 20,
-                  cursor: "pointer",
                 }}
               >
                 ×
@@ -189,9 +196,9 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ================= HEALTH LOGS (ONLY PART UPDATED) ================= */}
+      {/* HEALTH LOGS */}
       <div style={card}>
-        <h3>🩺 Health Logs</h3>
+        <div style={header}>🩺 Health Logs</div>
 
         <button
           style={{ ...btn, background: "#22c55e", color: "#fff" }}
@@ -202,19 +209,13 @@ export default function ChickenProfile({
 
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{ marginTop: 12 }}>
-
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div
                 style={{
                   width: 10,
                   height: 10,
                   borderRadius: "50%",
-                  background:
-                    log.status === "Healthy"
-                      ? "#22c55e"
-                      : log.status === "Sick"
-                      ? "#ef4444"
-                      : "#eab308",
+                  background: getColor(log.status),
                 }}
               />
 
@@ -222,15 +223,7 @@ export default function ChickenProfile({
 
               <button
                 onClick={() => setViewLog(log)}
-                style={{
-                  marginLeft: "auto",
-                  fontSize: 11,
-                  padding: "3px 8px",
-                  borderRadius: 6,
-                  border: "1px solid #d1d5db",
-                  background: "#f9fafb",
-                  cursor: "pointer",
-                }}
+                style={{ marginLeft: "auto", ...smallBtn }}
               >
                 View
               </button>
@@ -246,9 +239,7 @@ export default function ChickenProfile({
                     updateChicken({
                       ...chicken,
                       healthLogs: healthLogs.map((l: any) =>
-                        l.id === log.id
-                          ? { ...l, resolved: !l.resolved }
-                          : l
+                        l.id === log.id ? { ...l, resolved: !l.resolved } : l
                       ),
                     })
                   }
@@ -256,10 +247,57 @@ export default function ChickenProfile({
                 />
               </label>
             </div>
-
           </div>
         ))}
+
       </div>
+
+      {/* VIEW POPUP (FIXED) */}
+      {viewLog && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              padding: 20,
+              borderRadius: 12,
+              width: 320,
+            }}
+          >
+            <h3>{viewLog.status}</h3>
+            <p>{viewLog.symptoms}</p>
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <button style={{ ...btn, background: "#3b82f6", color: "#fff" }}>
+                Edit
+              </button>
+
+              <button onClick={() => setViewLog(null)}>Cancel</button>
+
+              <button
+                style={{ ...btn, background: "#ef4444", color: "#fff" }}
+                onClick={() => {
+                  updateChicken({
+                    ...chicken,
+                    healthLogs: healthLogs.filter((l: any) => l.id !== viewLog.id),
+                  });
+                  setViewLog(null);
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* IMAGE POPUP */}
       {activeImage && (
