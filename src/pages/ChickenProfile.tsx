@@ -17,37 +17,14 @@ export default function ChickenProfile({
     );
   }
 
-  // ================= LOCAL STATE =================
+  // ================= STATE =================
   const [chicken, setChicken] = useState(selectedChicken);
-
-  useEffect(() => {
-    setChicken(selectedChicken);
-  }, [selectedChicken]);
+  useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
   const [activeImage, setActiveImage] = useState<string | null>(null);
 
   const [showHealthForm, setShowHealthForm] = useState(false);
-  const [editingLogId, setEditingLogId] = useState<number | null>(null);
-
-  // 🔥 NEW: PROFILE EDIT STATE
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({
-    name: "",
-    idTag: "",
-    breed: "",
-    sex: "",
-    ageGroup: "",
-  });
-
-  useEffect(() => {
-    setProfileForm({
-      name: chicken.name || "",
-      idTag: chicken.idTag || "",
-      breed: chicken.breed || "",
-      sex: chicken.sex || "",
-      ageGroup: chicken.ageGroup || "",
-    });
-  }, [chicken]);
+  const [viewLog, setViewLog] = useState<any>(null);
 
   const [healthForm, setHealthForm] = useState({
     date: "",
@@ -68,37 +45,18 @@ export default function ChickenProfile({
     setSelectedChicken(updated);
   };
 
-  // ================= SAVE PROFILE =================
-  const saveProfile = () => {
-    updateChicken({
-      ...chicken,
-      ...profileForm,
-    });
-    setEditingProfile(false);
-  };
-
-  // ================= HEALTH =================
+  // ================= ADD HEALTH =================
   const addHealth = () => {
     if (!healthForm.date) return alert("Date required");
 
-    if (editingLogId) {
-      updateChicken({
-        ...chicken,
-        healthLogs: healthLogs.map((l: any) =>
-          l.id === editingLogId ? { ...l, ...healthForm } : l
-        ),
-      });
-    } else {
-      updateChicken({
-        ...chicken,
-        healthLogs: [
-          ...healthLogs,
-          { id: Date.now(), ...healthForm, resolved: false },
-        ],
-      });
-    }
+    updateChicken({
+      ...chicken,
+      healthLogs: [
+        ...healthLogs,
+        { id: Date.now(), ...healthForm, resolved: false },
+      ],
+    });
 
-    setEditingLogId(null);
     setShowHealthForm(false);
     setHealthForm({
       date: "",
@@ -153,58 +111,23 @@ export default function ChickenProfile({
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
 
-      {/* BACK + EDIT */}
-      <div style={{ marginBottom: 20, display: "flex", gap: 10 }}>
+      {/* BACK */}
+      <div style={{ marginBottom: 20 }}>
         <button onClick={() => navigate("registry")} style={primary}>
           ← Back
-        </button>
-
-        <button onClick={() => setEditingProfile(!editingProfile)} style={primary}>
-          ✏️ Edit Profile
         </button>
       </div>
 
       {/* PROFILE */}
       <div style={card}>
-        <div style={{ display: "flex", gap: 20 }}>
-          <img
-            src={chicken.image}
-            style={{ width: 150, height: 150, borderRadius: 12 }}
-          />
-
-          <div style={{ flex: 1 }}>
-            {editingProfile ? (
-              <>
-                <input value={profileForm.name} onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })} style={inputStyle} />
-                <input value={profileForm.idTag} onChange={(e) => setProfileForm({ ...profileForm, idTag: e.target.value })} style={inputStyle} />
-                <input value={profileForm.breed} onChange={(e) => setProfileForm({ ...profileForm, breed: e.target.value })} style={inputStyle} />
-                <input value={profileForm.sex} onChange={(e) => setProfileForm({ ...profileForm, sex: e.target.value })} style={inputStyle} />
-                <input value={profileForm.ageGroup} onChange={(e) => setProfileForm({ ...profileForm, ageGroup: e.target.value })} style={inputStyle} />
-
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={saveProfile} style={success}>Save</button>
-                  <button onClick={() => setEditingProfile(false)} style={{ background: "#e5e7eb", border: "none", padding: "8px 12px", borderRadius: 8 }}>
-                    Cancel
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h1>{chicken.name}</h1>
-                <div><b>ID Tag:</b> {chicken.idTag}</div>
-                <div><b>Breed:</b> {chicken.breed}</div>
-                <div><b>Sex:</b> {chicken.sex}</div>
-                <div><b>Age:</b> {chicken.ageGroup}</div>
-              </>
-            )}
-          </div>
-        </div>
+        <h1>{chicken.name}</h1>
+        <div><b>ID Tag:</b> {chicken.idTag}</div>
+        <div><b>Breed:</b> {chicken.breed}</div>
+        <div><b>Sex:</b> {chicken.sex}</div>
+        <div><b>Age:</b> {chicken.ageGroup}</div>
       </div>
 
-      {/* ================= KEEP REST OF YOUR PAGE ================= */}
-      {/* DO NOT REMOVE BELOW - THIS PRESERVES YOUR EXISTING UI */}
-
-      {/* PHOTO ALBUM */}
+      {/* ================= PHOTO ALBUM ================= */}
       <div style={card}>
         <div style={sectionTitle}>📸 Photo Album</div>
 
@@ -242,24 +165,145 @@ export default function ChickenProfile({
               <img
                 src={img}
                 onClick={() => setActiveImage(img)}
-                style={{ width: 100, height: 100, borderRadius: 8, objectFit: "cover", cursor: "pointer" }}
+                style={{ width: 100, height: 100, borderRadius: 8 }}
               />
+
+              {/* 🔥 DELETE BACK */}
+              <button
+                onClick={() =>
+                  updateChicken({
+                    ...chicken,
+                    album: (chicken.album || []).filter(
+                      (_: any, index: number) => index !== i
+                    ),
+                  })
+                }
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  background: "red",
+                  color: "#fff",
+                  borderRadius: "50%",
+                  border: "none",
+                  width: 20,
+                  height: 20,
+                  cursor: "pointer",
+                }}
+              >
+                ×
+              </button>
             </div>
           ))}
         </div>
       </div>
 
-      {/* HEALTH LOGS (unchanged) */}
+      {/* ================= HEALTH LOGS ================= */}
       <div style={card}>
         <div style={sectionTitle}>🩺 Health Logs</div>
-        <button style={success} onClick={() => setShowHealthForm(!showHealthForm)}>+ Add Health Log</button>
 
+        {/* 🔥 BUTTON FIXED */}
+        <button style={success} onClick={() => setShowHealthForm(!showHealthForm)}>
+          + Add Health Log
+        </button>
+
+        {showHealthForm && (
+          <div style={{ marginTop: 10 }}>
+            <input type="date" onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })} style={inputStyle} />
+            <select onChange={(e) => setHealthForm({ ...healthForm, status: e.target.value })} style={inputStyle}>
+              <option>Healthy</option>
+              <option>Sick</option>
+              <option>Recovering</option>
+            </select>
+            <input placeholder="Symptoms" onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })} style={inputStyle} />
+            <button onClick={addHealth} style={success}>Save</button>
+          </div>
+        )}
+
+        {/* LIST */}
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{ marginTop: 10 }}>
-            {log.status} — {log.symptoms}
+            <b>{log.status}</b> — {log.symptoms}
+
+            {/* ✔ RESOLVED BACK */}
+            <label style={{ marginLeft: 10 }}>
+              <input
+                type="checkbox"
+                checked={log.resolved}
+                onChange={() =>
+                  updateChicken({
+                    ...chicken,
+                    healthLogs: healthLogs.map((l: any) =>
+                      l.id === log.id ? { ...l, resolved: !l.resolved } : l
+                    ),
+                  })
+                }
+              /> ✔
+            </label>
+
+            {/* 🔥 VIEW BUTTON BACK */}
+            <button
+              onClick={() => setViewLog(log)}
+              style={{ marginLeft: 10 }}
+            >
+              View
+            </button>
           </div>
         ))}
       </div>
+
+      {/* ================= VIEW POPUP ================= */}
+      {viewLog && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "rgba(0,0,0,0.7)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ background: "#fff", padding: 20, borderRadius: 10 }}>
+            <h3>{viewLog.status}</h3>
+            <p>{viewLog.symptoms}</p>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => {
+                  setHealthForm(viewLog);
+                  setShowHealthForm(true);
+                  setViewLog(null);
+                }}
+              >
+                Edit
+              </button>
+
+              <button onClick={() => setViewLog(null)}>
+                Cancel
+              </button>
+
+              <button
+                onClick={() => {
+                  updateChicken({
+                    ...chicken,
+                    healthLogs: healthLogs.filter(
+                      (l: any) => l.id !== viewLog.id
+                    ),
+                  });
+                  setViewLog(null);
+                }}
+                style={{ background: "red", color: "#fff" }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* IMAGE POPUP */}
       {activeImage && (
@@ -273,11 +317,11 @@ export default function ChickenProfile({
             height: "100%",
             background: "rgba(0,0,0,0.8)",
             display: "flex",
-            alignItems: "center",
             justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          <img src={activeImage} style={{ maxWidth: "90%", maxHeight: "90%" }} />
+          <img src={activeImage} style={{ maxWidth: "90%" }} />
         </div>
       )}
     </div>
