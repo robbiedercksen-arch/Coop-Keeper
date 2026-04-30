@@ -115,13 +115,16 @@ const saveChickenInfo = () => {
     return "#eab308";
   };
 
-  const card = {
-    background: "#fff",
-    padding: 20,
-    borderRadius: 16,
-    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-    marginBottom: 20,
-  };
+ const card = {
+  background: "rgba(255,255,255,0.65)",
+  backdropFilter: "blur(14px)",
+  WebkitBackdropFilter: "blur(14px)",
+  padding: 20,
+  borderRadius: 18,
+  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+  border: "1px solid rgba(255,255,255,0.4)",
+  marginBottom: 20,
+};
 
   const btn = {
     padding: "8px 14px",
