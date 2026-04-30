@@ -32,7 +32,15 @@ export default function ChickenProfile({
     notes: "",
   });
 
-  
+  const [isEditingChicken, setIsEditingChicken] = useState(false);
+
+const [editForm, setEditForm] = useState({
+  name: chicken.name,
+  idTag: chicken.idTag,
+  breed: chicken.breed,
+  sex: chicken.sex,
+  ageGroup: chicken.ageGroup,
+});
 
   const healthLogs = chicken.healthLogs || [];
 
