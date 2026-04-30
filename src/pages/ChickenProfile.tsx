@@ -137,14 +137,7 @@ const saveChickenInfo = () => {
 };
 
   const input = {
-    display: "block",
-    width: "100%",
-    marginBottom: 10,
-    padding: 8,
-    borderRadius: 6,
-    border: "1px solid #e5e7eb",
-  };
-  const [editingChicken, setEditingChicken] = useState(false);
+    const [editingChicken, setEditingChicken] = useState(false);
 
 const [editForm, setEditForm] = useState({
   name: chicken.name || "",
@@ -161,6 +154,14 @@ const saveChickenInfo = () => {
   });
   setEditingChicken(false);
 };
+    display: "block",
+    width: "100%",
+    marginBottom: 10,
+    padding: 8,
+    borderRadius: 6,
+    border: "1px solid #e5e7eb",
+  };
+  
 // 📝 NOTES SECTION (PASTE RIGHT HERE)
 const NotesSection = () => {
   const [showForm, setShowForm] = useState(false);
