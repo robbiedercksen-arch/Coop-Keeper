@@ -127,14 +127,7 @@ const saveChickenInfo = () => {
 };
 
   const btn = {
-  padding: "10px 16px",
-  borderRadius: 10,
-  border: "none",
-  cursor: "pointer",
-  fontWeight: 600,
-  transition: "all 0.2s ease",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-};
+    padding: "8px 14px",
     borderRadius: 8,
     border: "none",
     cursor: "pointer",
