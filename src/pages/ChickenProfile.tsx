@@ -32,6 +32,8 @@ export default function ChickenProfile({
     notes: "",
   });
 
+  
+
   const healthLogs = chicken.healthLogs || [];
 
   const updateChicken = (updated: any) => {
