@@ -103,12 +103,13 @@ export default function ChickenProfile({
   };
 
   const card = {
-    background: "#fff",
-    padding: 20,
-    borderRadius: 16,
-    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-    marginBottom: 20,
-  };
+  background: "#ffffff",
+  padding: 20,
+  borderRadius: 18,
+  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+  marginBottom: 20,
+  border: "1px solid #f1f5f9",
+};
 
   const btn = {
     padding: "8px 14px",
