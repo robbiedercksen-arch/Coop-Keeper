@@ -397,7 +397,6 @@ const header = {
     </div>
   </div>
 ))}
-
-    
-  );
+);
+}
 }
