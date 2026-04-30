@@ -1,16 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChickenRegistry from "./pages/ChickenRegistry";
 import ChickenProfile from "./pages/ChickenProfile";
 
 export default function App() {
   const [page, setPage] = useState("registry");
 
-  const [chickens, setChickens] = useState<any[]>([]);
+  // ✅ LOAD FROM LOCAL STORAGE
+  const [chickens, setChickens] = useState<any[]>(() => {
+    const saved = localStorage.getItem("chickens");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
 
   const navigate = (p: string) => setPage(p);
 
-  // ================= DASHBOARD STATS =================
+  // ✅ SAVE TO LOCAL STORAGE
+  useEffect(() => {
+    localStorage.setItem("chickens", JSON.stringify(chickens));
+  }, [chickens]);
+
+  // ================= DASHBOARD =================
   const getStats = () => {
     let sick = 0;
     let recovering = 0;
@@ -60,37 +70,24 @@ export default function App() {
         </div>
       </div>
 
-      {/* MAIN */}
+      {/* MAIN CONTENT */}
       <div style={{ flex: 1, padding: 20 }}>
-
+        
+        {/* DASHBOARD */}
         {page === "dashboard" && (
           <div>
             <h1>Dashboard</h1>
 
             <div style={{ display: "flex", gap: 20 }}>
-              <div style={card("#3b82f6")}>
-                Total Chickens
-                <h2>{stats.total}</h2>
-              </div>
-
-              <div style={card("#ef4444")}>
-                Sick
-                <h2>{stats.sick}</h2>
-              </div>
-
-              <div style={card("#eab308")}>
-                Recovering
-                <h2>{stats.recovering}</h2>
-              </div>
-
-              <div style={card("#22c55e")}>
-                Healthy
-                <h2>{stats.healthy}</h2>
-              </div>
+              <StatCard title="Total" value={stats.total} color="#3b82f6" />
+              <StatCard title="Sick" value={stats.sick} color="#ef4444" />
+              <StatCard title="Recovering" value={stats.recovering} color="#eab308" />
+              <StatCard title="Healthy" value={stats.healthy} color="#22c55e" />
             </div>
           </div>
         )}
 
+        {/* REGISTRY */}
         {page === "registry" && (
           <ChickenRegistry
             chickens={chickens}
@@ -100,6 +97,7 @@ export default function App() {
           />
         )}
 
+        {/* PROFILE */}
         {page === "profile" && selectedChicken && (
           <ChickenProfile
             selectedChicken={selectedChicken}
@@ -113,11 +111,20 @@ export default function App() {
   );
 }
 
-// ================= CARD STYLE =================
-const card = (color: string) => ({
-  background: color,
-  color: "#fff",
-  padding: 20,
-  borderRadius: 14,
-  minWidth: 150,
-});
+// ================= COMPONENT =================
+function StatCard({ title, value, color }: any) {
+  return (
+    <div
+      style={{
+        background: color,
+        color: "#fff",
+        padding: 20,
+        borderRadius: 14,
+        minWidth: 150,
+      }}
+    >
+      <div>{title}</div>
+      <h2>{value}</h2>
+    </div>
+  );
+}
