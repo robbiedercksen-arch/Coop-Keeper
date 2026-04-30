@@ -188,7 +188,8 @@ const NotesSection = () => {
       <div style={{ fontWeight: 700, marginBottom: 10 }}>
         📝 Notes & Observations
       </div>
-
+onMouseOver={(e:any)=>e.currentTarget.style.transform="scale(1.05)"}
+onMouseOut={(e:any)=>e.currentTarget.style.transform="scale(1)"}
       <button
         style={{ ...btn, background: "#6366f1", color: "#fff", marginBottom: 10 }}
         onClick={() => {
