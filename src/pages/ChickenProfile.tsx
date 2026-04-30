@@ -33,7 +33,6 @@ export default function ChickenProfile({
   });
 
   const healthLogs = chicken.healthLogs || [];
-  const notes = chicken.notes || [];
 
   const updateChicken = (updated: any) => {
     setChicken(updated);
@@ -64,6 +63,7 @@ export default function ChickenProfile({
     });
   };
 
+  // ================= STYLES =================
   const card = {
     background: "#fff",
     padding: 20,
@@ -79,6 +79,25 @@ export default function ChickenProfile({
     cursor: "pointer",
   };
 
+  // ⭐ PREMIUM HEADER STYLE
+  const sectionHeader = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 14,
+    paddingBottom: 8,
+    borderBottom: "1px solid #e5e7eb",
+  };
+
+  const sectionTitle = {
+    fontSize: 18,
+    fontWeight: 700,
+    letterSpacing: "0.3px",
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  };
+
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
 
@@ -90,7 +109,7 @@ export default function ChickenProfile({
         ← Back
       </button>
 
-      {/* ✅ PROFILE (IMAGE RESTORED SAFELY) */}
+      {/* PROFILE */}
       <div style={card}>
         <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
           {chicken.image && (
@@ -101,7 +120,6 @@ export default function ChickenProfile({
                 height: 140,
                 borderRadius: 12,
                 objectFit: "cover",
-                flexShrink: 0,
               }}
             />
           )}
@@ -116,9 +134,11 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ================= PHOTO ALBUM (UNCHANGED) ================= */}
+      {/* ================= PHOTO ALBUM ================= */}
       <div style={card}>
-        <h3>📸 Photo Album</h3>
+        <div style={sectionHeader}>
+          <div style={sectionTitle}>📸 Photo Album</div>
+        </div>
 
         <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
           + Add Photos
@@ -193,7 +213,9 @@ export default function ChickenProfile({
 
       {/* ================= HEALTH LOGS ================= */}
       <div style={card}>
-        <h3>🩺 Health Logs</h3>
+        <div style={sectionHeader}>
+          <div style={sectionTitle}>🩺 Health Logs</div>
+        </div>
 
         <button
           style={{ ...btn, background: "#22c55e", color: "#fff" }}
@@ -201,15 +223,6 @@ export default function ChickenProfile({
         >
           + Add Health Log
         </button>
-
-        {showHealthForm && (
-          <div style={{ marginTop: 10 }}>
-            <input type="date" onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })} />
-            <input placeholder="Symptoms" onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })} />
-
-            <button onClick={addHealth}>Save</button>
-          </div>
-        )}
 
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{ marginTop: 10 }}>
@@ -241,7 +254,7 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* ================= CLEAN POPUP ================= */}
+      {/* POPUP */}
       {viewLog && (
         <div
           style={{
@@ -251,7 +264,6 @@ export default function ChickenProfile({
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            zIndex: 1000,
           }}
         >
           <div
@@ -260,7 +272,6 @@ export default function ChickenProfile({
               padding: 20,
               borderRadius: 12,
               width: 320,
-              boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
             }}
           >
             <h3>{viewLog.status}</h3>
@@ -271,9 +282,7 @@ export default function ChickenProfile({
                 Edit
               </button>
 
-              <button onClick={() => setViewLog(null)}>
-                Cancel
-              </button>
+              <button onClick={() => setViewLog(null)}>Cancel</button>
 
               <button
                 style={{ ...btn, background: "#ef4444", color: "#fff" }}
