@@ -9,6 +9,7 @@ export default function ChickenProfile({
     return <div style={{ padding: 20 }}>Loading...</div>;
   }
 
+  // ================= STATE =================
   const [viewLog, setViewLog] = useState<any>(null);
 
   const [form, setForm] = useState({
@@ -21,17 +22,28 @@ export default function ChickenProfile({
 
   const healthLogs = selectedChicken?.healthLogs || [];
 
-  // ================= UPDATE CHICKEN =================
+  // ================= HELPERS =================
   const updateChicken = (updated: any) => {
     setChickens((prev: any[]) =>
       prev.map((c) => (c.id === selectedChicken.id ? updated : c))
     );
   };
 
-  // ================= ADD LOG =================
+  const formatDate = (date: string) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleDateString();
+  };
+
+  const getColor = (status: string) => {
+    if (status === "Sick") return "#ef4444";       // red
+    if (status === "Recovering") return "#eab308"; // yellow
+    return "#22c55e";                              // green
+  };
+
+  // ================= ACTIONS =================
   const addLog = () => {
     if (!form.date) {
-      alert("Date is required");
+      alert("Date Logged is required");
       return;
     }
 
@@ -47,6 +59,7 @@ export default function ChickenProfile({
 
     updateChicken(updated);
 
+    // reset form
     setForm({
       date: "",
       status: "Healthy",
@@ -56,14 +69,19 @@ export default function ChickenProfile({
     });
   };
 
-  // ================= DELETE LOG =================
   const deleteLog = (id: number) => {
     const updated = {
       ...selectedChicken,
       healthLogs: healthLogs.filter((l: any) => l.id !== id),
     };
-
     updateChicken(updated);
+  };
+
+  const deleteChicken = () => {
+    setChickens((prev: any[]) =>
+      prev.filter((c) => c.id !== selectedChicken.id)
+    );
+    navigate("registry");
   };
 
   // ================= STYLES =================
@@ -75,13 +93,6 @@ export default function ChickenProfile({
     marginBottom: 20,
   };
 
-  const input = {
-    padding: 10,
-    borderRadius: 8,
-    border: "1px solid #ddd",
-    width: "100%",
-  };
-
   const btn = {
     padding: "8px 14px",
     borderRadius: 8,
@@ -90,32 +101,114 @@ export default function ChickenProfile({
     fontWeight: 600,
   };
 
-  const getColor = (status: string) => {
-    if (status === "Sick") return "#ef4444";
-    if (status === "Recovering") return "#eab308";
-    return "#22c55e";
+  const input = {
+    padding: 10,
+    borderRadius: 8,
+    border: "1px solid #ddd",
+    width: "100%",
+  };
+
+  const label = {
+    fontWeight: 600,
+    color: "#555",
+  };
+
+  const value = {
+    marginBottom: 8,
   };
 
   return (
     <div style={{ padding: 20, maxWidth: 1000 }}>
 
-      {/* 🔙 BACK */}
+      {/* 🔙 BACK BUTTON */}
       <button
         onClick={() => navigate("registry")}
         style={{
           padding: "10px 18px",
           background: "linear-gradient(135deg, #3b82f6, #6366f1)",
           color: "#fff",
-          borderRadius: 12,
           border: "none",
-          marginBottom: 20,
+          borderRadius: 12,
+          fontWeight: 600,
           cursor: "pointer",
+          marginBottom: 20,
+          boxShadow: "0 3px 8px rgba(0,0,0,0.15)",
         }}
       >
-        ← Back
+        ← Back to Registry
       </button>
 
-      {/* ================= HEALTH FORM ================= */}
+      {/* ================= PROFILE ================= */}
+      <div style={card}>
+        <div style={{ display: "flex", gap: 20 }}>
+          {/* IMAGE */}
+          <img
+            src={selectedChicken.image}
+            style={{
+              width: 140,
+              height: 140,
+              borderRadius: 12,
+              objectFit: "cover",
+            }}
+          />
+
+          {/* DETAILS */}
+          <div>
+            <h2 style={{ marginBottom: 10 }}>
+              {selectedChicken.name}
+            </h2>
+
+            <div style={value}>
+              <span style={label}>ID Tag:</span> {selectedChicken.idTag}
+            </div>
+
+            <div style={value}>
+              <span style={label}>Breed:</span>{" "}
+              {selectedChicken.breed || "-"}
+            </div>
+
+            <div style={value}>
+              <span style={label}>Sex:</span> {selectedChicken.sex}
+            </div>
+
+            <div style={value}>
+              <span style={label}>Age:</span> {selectedChicken.ageGroup}
+            </div>
+
+            <div style={value}>
+              <span style={label}>Added Date:</span>{" "}
+              {formatDate(selectedChicken.hatchDate)}
+            </div>
+
+            <div style={value}>
+              <span style={label}>Status:</span> {selectedChicken.status}
+            </div>
+
+            {/* ACTIONS */}
+            <div style={{ marginTop: 15 }}>
+              <button
+                style={{ ...btn, background: "#3b82f6", color: "#fff" }}
+              >
+                Edit
+              </button>
+
+              <button
+                style={{
+                  ...btn,
+                  background: "#ef4444",
+                  color: "#fff",
+                  marginLeft: 10,
+                }}
+                onClick={deleteChicken}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= ADD HEALTH LOG ================= */}
       <div style={card}>
         <h3>➕ Add Health Log</h3>
 
@@ -124,13 +217,17 @@ export default function ChickenProfile({
             type="date"
             style={input}
             value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, date: e.target.value })
+            }
           />
 
           <select
             style={input}
             value={form.status}
-            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, status: e.target.value })
+            }
           >
             <option>Healthy</option>
             <option>Sick</option>
@@ -141,21 +238,27 @@ export default function ChickenProfile({
             placeholder="Symptoms"
             style={input}
             value={form.symptoms}
-            onChange={(e) => setForm({ ...form, symptoms: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, symptoms: e.target.value })
+            }
           />
 
           <input
             placeholder="Treatment"
             style={input}
             value={form.treatment}
-            onChange={(e) => setForm({ ...form, treatment: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, treatment: e.target.value })
+            }
           />
 
           <textarea
             placeholder="Notes (optional)"
             style={input}
             value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, notes: e.target.value })
+            }
           />
 
           <button
@@ -171,7 +274,7 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ================= HEALTH LIST ================= */}
+      {/* ================= HEALTH LOG LIST ================= */}
       <div style={card}>
         <h3>🩺 Health Logs</h3>
 
@@ -189,8 +292,7 @@ export default function ChickenProfile({
             }}
           >
             {/* LEFT SIDE */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               {/* DOT */}
               <div
                 style={{
@@ -229,14 +331,15 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* ================= VIEW ================= */}
+      {/* ================= VIEW LOG ================= */}
       {viewLog && (
         <div style={card}>
           <h3>📋 Health Details</h3>
-          <p><b>Date:</b> {viewLog.date}</p>
+
+          <p><b>Date Logged:</b> {formatDate(viewLog.date)}</p>
           <p><b>Status:</b> {viewLog.status}</p>
-          <p><b>Symptoms:</b> {viewLog.symptoms}</p>
-          <p><b>Treatment:</b> {viewLog.treatment}</p>
+          <p><b>Symptoms:</b> {viewLog.symptoms || "-"}</p>
+          <p><b>Treatment:</b> {viewLog.treatment || "-"}</p>
           <p><b>Notes:</b> {viewLog.notes || "-"}</p>
 
           <button
