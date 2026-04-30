@@ -136,15 +136,63 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* PHOTO ALBUM */}
-      <div style={card}>
-        <div style={{ fontWeight: 700, marginBottom: 10 }}>📸 Photo Album</div>
+ {/* PHOTO ALBUM */}
+<div style={card}>
+  <div style={{ fontWeight: 700, marginBottom: 10 }}>📸 Photo Album</div>
 
-        <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
-          + Add Photos
-          <input type="file" multiple style={{ display: "none" }} />
-        </label>
-      </div>
+  <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
+    + Add Photos
+    <input
+      type="file"
+      multiple
+      style={{ display: "none" }}
+      onChange={(e: any) => {
+        const files = Array.from(e.target.files);
+
+        Promise.all(
+          files.map(
+            (file: any) =>
+              new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+              })
+          )
+        ).then((images: any) => {
+          updateChicken({
+            ...chicken,
+            album: [...(chicken.album || []), ...images],
+          });
+        });
+      }}
+    />
+  </label>
+
+  {/* SHOW IMAGES */}
+  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+    {(chicken.album || []).map((img: any, i: number) => (
+      <img
+        key={i}
+        src={img}
+        onClick={() => setActiveImage(img)}
+        style={{
+          width: 100,
+          height: 100,
+          borderRadius: 10,
+          objectFit: "cover",
+          cursor: "pointer",
+        }}
+      />
+    ))}
+  </div>
+
+  {/* EMPTY STATE */}
+  {(!chicken.album || chicken.album.length === 0) && (
+    <div style={{ marginTop: 10, fontSize: 13, color: "#9ca3af" }}>
+      No photos yet. Add your first photo 📷
+    </div>
+  )}
+</div>
 
       {/* HEALTH LOGS */}
       <div style={card}>
