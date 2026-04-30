@@ -17,6 +17,29 @@ export default function ChickenProfile({
     );
   }
 
+  // ================= STATE =================
+  const [showHealthForm, setShowHealthForm] = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false);
+
+  const [viewLog, setViewLog] = useState<any>(null);
+  const [viewNote, setViewNote] = useState<any>(null);
+
+  const [healthForm, setHealthForm] = useState({
+    date: "",
+    status: "Healthy",
+    symptoms: "",
+    treatment: "",
+    notes: "",
+  });
+
+  const [noteForm, setNoteForm] = useState({
+    date: "",
+    type: "General",
+    description: "",
+  });
+
+  const healthLogs = selectedChicken.healthLogs || [];
+  const notes = selectedChicken.notes || [];
   const album = selectedChicken.album || [];
 
   // ================= UPDATE =================
@@ -27,57 +50,103 @@ export default function ChickenProfile({
     setSelectedChicken(updated);
   };
 
+  // ================= ADD HEALTH =================
+  const addHealth = () => {
+    if (!healthForm.date) return alert("Date required");
+
+    const newLog = {
+      id: Date.now(),
+      ...healthForm,
+      resolved: false,
+    };
+
+    updateChicken({
+      ...selectedChicken,
+      healthLogs: [...healthLogs, newLog],
+    });
+
+    setShowHealthForm(false);
+  };
+
+  // ================= ADD NOTE =================
+  const addNote = () => {
+    if (!noteForm.description) return alert("Fill fields");
+
+    updateChicken({
+      ...selectedChicken,
+      notes: [...notes, { id: Date.now(), ...noteForm }],
+    });
+
+    setShowNoteForm(false);
+  };
+
   // ================= STYLES =================
   const card = {
     background: "#fff",
     padding: 20,
-    borderRadius: 12,
-    border: "1px solid #ddd",
+    borderRadius: 16,
+    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
     marginBottom: 20,
   };
 
+  const sectionTitle = {
+    fontSize: 18,
+    fontWeight: 700,
+    marginBottom: 10,
+  };
+
+  const btn = {
+    padding: "8px 14px",
+    borderRadius: 8,
+    border: "none",
+    cursor: "pointer",
+    fontWeight: 600,
+  };
+
+  const primary = { ...btn, background: "#3b82f6", color: "#fff" };
+  const success = { ...btn, background: "#22c55e", color: "#fff" };
+  const danger = { ...btn, background: "#ef4444", color: "#fff" };
+
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: 20, maxWidth: 1100 }}>
 
       {/* BACK */}
       <div style={{ marginBottom: 20 }}>
-        <button onClick={() => navigate("registry")}>
+        <button onClick={() => navigate("registry")} style={primary}>
           ← Back to Registry
         </button>
       </div>
 
       {/* PROFILE */}
       <div style={card}>
-        <h1>{selectedChicken.name}</h1>
+        <div style={{ display: "flex", gap: 20 }}>
+          <img
+            src={selectedChicken.image}
+            style={{ width: 150, height: 150, borderRadius: 12 }}
+          />
 
-        <div>ID Tag: {selectedChicken.idTag}</div>
-        <div>Breed: {selectedChicken.breed}</div>
-        <div>Sex: {selectedChicken.sex}</div>
-        <div>Age: {selectedChicken.ageGroup}</div>
-
-        <img
-          src={selectedChicken.image}
-          style={{
-            width: 150,
-            marginTop: 10,
-            borderRadius: 8,
-          }}
-        />
+          <div>
+            <h1>{selectedChicken.name}</h1>
+            <div><b>ID Tag:</b> {selectedChicken.idTag}</div>
+            <div><b>Breed:</b> {selectedChicken.breed}</div>
+            <div><b>Sex:</b> {selectedChicken.sex}</div>
+            <div><b>Age:</b> {selectedChicken.ageGroup}</div>
+          </div>
+        </div>
       </div>
 
-      {/* ================= PHOTO ALBUM ================= */}
+      {/* PHOTO ALBUM */}
       <div style={card}>
-        <h3>📸 Photo Album</h3>
+        <div style={sectionTitle}>📸 Photo Album</div>
 
-        <label>
-          <button>+ Add Photos</button>
+        <label style={success}>
+          + Add Photos
           <input
             type="file"
             multiple
             style={{ display: "none" }}
             onChange={(e: any) => {
               const files = Array.from(e.target.files);
-
               files.forEach((file: any) => {
                 const reader = new FileReader();
                 reader.onloadend = () => {
@@ -92,37 +161,30 @@ export default function ChickenProfile({
           />
         </label>
 
-        {/* IMAGES */}
-        <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
           {album.map((img: any, i: number) => (
             <div key={i} style={{ position: "relative" }}>
               <img
                 src={img}
-                style={{
-                  width: 100,
-                  height: 100,
-                  objectFit: "cover",
-                  borderRadius: 8,
-                }}
+                style={{ width: 100, height: 100, borderRadius: 8 }}
               />
-
-              {/* DELETE */}
               <button
-                onClick={() => {
-                  const updated = album.filter((_: any, index: number) => index !== i);
-                  updateChicken({ ...selectedChicken, album: updated });
-                }}
+                onClick={() =>
+                  updateChicken({
+                    ...selectedChicken,
+                    album: album.filter((_: any, index: number) => index !== i),
+                  })
+                }
                 style={{
                   position: "absolute",
                   top: -6,
                   right: -6,
                   background: "red",
                   color: "#fff",
-                  border: "none",
                   borderRadius: "50%",
+                  border: "none",
                   width: 20,
                   height: 20,
-                  cursor: "pointer",
                 }}
               >
                 ×
@@ -130,6 +192,85 @@ export default function ChickenProfile({
             </div>
           ))}
         </div>
+      </div>
+
+      {/* HEALTH LOGS */}
+      <div style={card}>
+        <div style={sectionTitle}>🩺 Health Logs</div>
+
+        <button style={success} onClick={() => setShowHealthForm(!showHealthForm)}>
+          + Add Health Log
+        </button>
+
+        {showHealthForm && (
+          <div style={{ marginTop: 10 }}>
+            <input type="date" onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })} />
+            <select onChange={(e) => setHealthForm({ ...healthForm, status: e.target.value })}>
+              <option>Healthy</option>
+              <option>Sick</option>
+              <option>Recovering</option>
+            </select>
+            <input placeholder="Symptoms" onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })} />
+            <input placeholder="Treatment" onChange={(e) => setHealthForm({ ...healthForm, treatment: e.target.value })} />
+            <textarea placeholder="Notes" onChange={(e) => setHealthForm({ ...healthForm, notes: e.target.value })} />
+            <button onClick={addHealth}>Save</button>
+          </div>
+        )}
+
+        {healthLogs.map((log: any) => (
+          <div key={log.id} style={{ marginTop: 10 }}>
+            <b>{log.status}</b> — {log.symptoms}
+
+            <div>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={log.resolved}
+                  onChange={() =>
+                    updateChicken({
+                      ...selectedChicken,
+                      healthLogs: healthLogs.map((l: any) =>
+                        l.id === log.id ? { ...l, resolved: !l.resolved } : l
+                      ),
+                    })
+                  }
+                />
+                ✔ Resolved
+              </label>
+            </div>
+
+            <button onClick={() => setViewLog(log)}>View</button>
+          </div>
+        ))}
+      </div>
+
+      {/* NOTES */}
+      <div style={card}>
+        <div style={sectionTitle}>📝 Notes & Observations</div>
+
+        <button style={primary} onClick={() => setShowNoteForm(!showNoteForm)}>
+          + Add Note
+        </button>
+
+        {showNoteForm && (
+          <div>
+            <input type="date" onChange={(e) => setNoteForm({ ...noteForm, date: e.target.value })} />
+            <select onChange={(e) => setNoteForm({ ...noteForm, type: e.target.value })}>
+              <option>General</option>
+              <option>Concerns</option>
+              <option>Planning</option>
+            </select>
+            <textarea placeholder="Description" onChange={(e) => setNoteForm({ ...noteForm, description: e.target.value })} />
+            <button onClick={addNote}>Save</button>
+          </div>
+        )}
+
+        {notes.map((n: any) => (
+          <div key={n.id}>
+            {n.description}
+            <button onClick={() => setViewNote(n)}>View</button>
+          </div>
+        ))}
       </div>
     </div>
   );
