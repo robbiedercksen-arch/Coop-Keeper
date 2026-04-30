@@ -294,11 +294,13 @@ const NotesSection = () => {
 };
 
   return (
-    <div style={{ padding: 20, maxWidth: 1100 }}>
-
-      <button
-        onClick={() => navigate("registry")}
-        style={{ ...btn, background: "#3b82f6", color: "#fff", marginBottom: 20 }}
+    <div style={{
+  padding: 20,
+  maxWidth: 1100,
+  margin: "0 auto",
+  minHeight: "100vh",
+  background: "linear-gradient(135deg, #eef2ff, #f8fafc)"
+}}>
       >
         ← Back
       </button>
