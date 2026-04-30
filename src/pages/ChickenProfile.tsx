@@ -181,7 +181,9 @@ const header = {
                 <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700 }}>
   {chicken.name}
 </h1>
-                <div><b>ID Tag:</b> {chicken.idTag}</div>
+                <div style={{ marginTop: 4 }}>
+  <b>ID Tag:</b> {chicken.idTag}
+</div>
                 <div><b>Breed:</b> {chicken.breed}</div>
                 <div><b>Sex:</b> {chicken.sex}</div>
                 <div><b>Age:</b> {chicken.ageGroup}</div>
