@@ -260,7 +260,14 @@ const header = {
         <img
           src={img}
           onClick={() => setActiveImage(img)}
-          style={{ width: 100, height: 100, borderRadius: 8 }}
+          style={{
+  width: 100,
+  height: 100,
+  borderRadius: 10,
+  objectFit: "cover",
+  cursor: "pointer",
+  boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+}}
         />
         <button
           onClick={() =>
