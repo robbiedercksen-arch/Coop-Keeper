@@ -339,26 +339,27 @@ const NotesSection = () => {
 
   {/* CONTENT */}
   <div style={{
-  display: "flex",
-  gap: 20,
-  flexWrap: "wrap"
-}}
+    display: "flex",
+    gap: 20,
+    marginTop: 15,
+    flexWrap: "wrap"
+  }}>
 
     {chicken.image && (
-  <img
-    src={chicken.image}
-    style={{
-      width: 140,
-      height: 140,
-      borderRadius: 16,
-      objectFit: "cover",
-      boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
-      transition: "0.2s"
-    }}
-    onMouseOver={(e:any)=>e.currentTarget.style.transform="scale(1.05)"}
-    onMouseOut={(e:any)=>e.currentTarget.style.transform="scale(1)"}
-  />
-)}
+      <img
+        src={chicken.image}
+        style={{
+          width: 140,
+          height: 140,
+          borderRadius: 16,
+          objectFit: "cover",
+          boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
+          transition: "0.2s"
+        }}
+        onMouseOver={(e:any)=>e.currentTarget.style.transform="scale(1.05)"}
+        onMouseOut={(e:any)=>e.currentTarget.style.transform="scale(1)"}
+      />
+    )}
 
     {editingChicken ? (
       <div style={{ flex: 1 }}>
