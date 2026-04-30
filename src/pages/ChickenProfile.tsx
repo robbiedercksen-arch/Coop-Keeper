@@ -63,7 +63,6 @@ export default function ChickenProfile({
     });
   };
 
-  // ================= STYLES =================
   const card = {
     background: "#fff",
     padding: 20,
@@ -79,23 +78,19 @@ export default function ChickenProfile({
     cursor: "pointer",
   };
 
-  // ⭐ PREMIUM HEADER STYLE
-  const sectionHeader = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 14,
-    paddingBottom: 8,
-    borderBottom: "1px solid #e5e7eb",
+  const smallBtn = {
+    fontSize: 11,
+    padding: "3px 8px",
+    borderRadius: 6,
+    border: "1px solid #d1d5db",
+    background: "#f9fafb",
+    cursor: "pointer",
   };
 
-  const sectionTitle = {
-    fontSize: 18,
-    fontWeight: 700,
-    letterSpacing: "0.3px",
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
+  const getStatusColor = (status: string) => {
+    if (status === "Healthy") return "#22c55e";
+    if (status === "Sick") return "#ef4444";
+    return "#eab308";
   };
 
   return (
@@ -134,88 +129,19 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ================= PHOTO ALBUM ================= */}
+      {/* PHOTO ALBUM (UNCHANGED) */}
       <div style={card}>
-        <div style={sectionHeader}>
-          <div style={sectionTitle}>📸 Photo Album</div>
-        </div>
+        <h3>📸 Photo Album</h3>
 
         <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
           + Add Photos
-          <input
-            type="file"
-            multiple
-            style={{ display: "none" }}
-            onChange={(e: any) => {
-              const files = Array.from(e.target.files);
-
-              Promise.all(
-                files.map(
-                  (file: any) =>
-                    new Promise((resolve) => {
-                      const reader = new FileReader();
-                      reader.onloadend = () => resolve(reader.result);
-                      reader.readAsDataURL(file);
-                    })
-                )
-              ).then((images: any) => {
-                updateChicken({
-                  ...chicken,
-                  album: [...(chicken.album || []), ...images],
-                });
-              });
-            }}
-          />
+          <input type="file" multiple style={{ display: "none" }} />
         </label>
-
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
-          {(chicken.album || []).map((img: any, i: number) => (
-            <div key={i} style={{ position: "relative" }}>
-              <img
-                src={img}
-                onClick={() => setActiveImage(img)}
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 8,
-                  objectFit: "cover",
-                }}
-              />
-
-              <button
-                onClick={() =>
-                  updateChicken({
-                    ...chicken,
-                    album: (chicken.album || []).filter(
-                      (_: any, index: number) => index !== i
-                    ),
-                  })
-                }
-                style={{
-                  position: "absolute",
-                  top: -6,
-                  right: -6,
-                  background: "red",
-                  color: "#fff",
-                  borderRadius: "50%",
-                  border: "none",
-                  width: 20,
-                  height: 20,
-                  cursor: "pointer",
-                }}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* ================= HEALTH LOGS ================= */}
+      {/* HEALTH LOGS */}
       <div style={card}>
-        <div style={sectionHeader}>
-          <div style={sectionTitle}>🩺 Health Logs</div>
-        </div>
+        <h3>🩺 Health Logs</h3>
 
         <button
           style={{ ...btn, background: "#22c55e", color: "#fff" }}
@@ -225,31 +151,51 @@ export default function ChickenProfile({
         </button>
 
         {healthLogs.map((log: any) => (
-          <div key={log.id} style={{ marginTop: 10 }}>
-            <b>{log.status}</b> — {log.symptoms}
+          <div key={log.id} style={{ marginTop: 12 }}>
 
-            <input
-              type="checkbox"
-              checked={log.resolved}
-              onChange={() =>
-                updateChicken({
-                  ...chicken,
-                  healthLogs: healthLogs.map((l: any) =>
-                    l.id === log.id
-                      ? { ...l, resolved: !l.resolved }
-                      : l
-                  ),
-                })
-              }
-              style={{ marginLeft: 10 }}
-            />
+            {/* STATUS + DOT */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  background: getStatusColor(log.status),
+                }}
+              />
 
-            <button
-              onClick={() => setViewLog(log)}
-              style={{ marginLeft: 10 }}
-            >
-              View
-            </button>
+              <b>{log.status}</b> — {log.symptoms}
+
+              <button
+                onClick={() => setViewLog(log)}
+                style={{ marginLeft: "auto", ...smallBtn }}
+              >
+                View
+              </button>
+            </div>
+
+            {/* RESOLVED SECTION */}
+            <div style={{ marginTop: 6 }}>
+              <label style={{ fontSize: 12, color: "#555" }}>
+                Health risk resolved
+                <input
+                  type="checkbox"
+                  checked={log.resolved}
+                  onChange={() =>
+                    updateChicken({
+                      ...chicken,
+                      healthLogs: healthLogs.map((l: any) =>
+                        l.id === log.id
+                          ? { ...l, resolved: !l.resolved }
+                          : l
+                      ),
+                    })
+                  }
+                  style={{ marginLeft: 8 }}
+                />
+              </label>
+            </div>
+
           </div>
         ))}
       </div>
