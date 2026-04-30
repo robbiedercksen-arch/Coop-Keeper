@@ -271,95 +271,21 @@ const NotesSection = () => {
         ← Back
       </button>
 
+      {/* PROFILE */}
       <div style={card}>
-
-  {/* 🔥 HEADER WITH EDIT BUTTON */}
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-    <h2 style={{ margin: 0 }}>🐔 Chicken Profile</h2>
-
-    {!editingChicken && (
-      <button
-        onClick={() => setEditingChicken(true)}
-        style={{ ...btn, background: "#6366f1", color: "#fff" }}
-      >
-        ✏ Edit Info
-      </button>
-    )}
-  </div>
-
-  <div style={{ display: "flex", gap: 20, marginTop: 15 }}>
-    
-    {chicken.image && (
-      <img src={chicken.image} style={{ width: 140, height: 140, borderRadius: 12 }} />
-    )}
-
-    {/* 🔥 EDIT MODE */}
-    {editingChicken ? (
-      <div style={{ flex: 1 }}>
-
-        <input style={input}
-          placeholder="Name"
-          value={editForm.name}
-          onChange={(e)=>setEditForm({...editForm,name:e.target.value})}
-        />
-
-        <input style={input}
-          placeholder="ID Tag"
-          value={editForm.idTag}
-          onChange={(e)=>setEditForm({...editForm,idTag:e.target.value})}
-        />
-
-        <input style={input}
-          placeholder="Breed"
-          value={editForm.breed}
-          onChange={(e)=>setEditForm({...editForm,breed:e.target.value})}
-        />
-
-        <select style={input}
-          value={editForm.sex}
-          onChange={(e)=>setEditForm({...editForm,sex:e.target.value})}
-        >
-          <option>Hen</option>
-          <option>Rooster</option>
-        </select>
-
-        <input style={input}
-          placeholder="Age"
-          value={editForm.ageGroup}
-          onChange={(e)=>setEditForm({...editForm,ageGroup:e.target.value})}
-        />
-
-        {/* 🔥 ACTION BUTTONS */}
-        <div style={{ display: "flex", gap: 10 }}>
-          <button
-            style={{ ...btn, background: "#22c55e", color: "#fff", flex: 1 }}
-            onClick={saveChickenInfo}
-          >
-            ✔ Update Info
-          </button>
-
-          <button
-            style={{ ...btn, background: "#9ca3af", color: "#fff", flex: 1 }}
-            onClick={() => setEditingChicken(false)}
-          >
-            Cancel
-          </button>
+        <div style={{ display: "flex", gap: 20 }}>
+          {chicken.image && (
+            <img src={chicken.image} style={{ width: 140, height: 140, borderRadius: 12 }} />
+          )}
+          <div>
+            <h1>{chicken.name}</h1>
+            <div><b>ID Tag:</b> {chicken.idTag}</div>
+            <div><b>Breed:</b> {chicken.breed}</div>
+            <div><b>Sex:</b> {chicken.sex}</div>
+            <div><b>Age:</b> {chicken.ageGroup}</div>
+          </div>
         </div>
-
       </div>
-    ) : (
-      /* 🔥 VIEW MODE (UNCHANGED LOOK) */
-      <div>
-        <h1>{chicken.name}</h1>
-        <div><b>ID Tag:</b> {chicken.idTag}</div>
-        <div><b>Breed:</b> {chicken.breed}</div>
-        <div><b>Sex:</b> {chicken.sex}</div>
-        <div><b>Age:</b> {chicken.ageGroup}</div>
-      </div>
-    )}
-
-  </div>
-</div>
 <NotesSection />
 
  {/* PHOTO ALBUM */}
