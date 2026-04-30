@@ -394,5 +394,4 @@ const header = {
   <button onClick={() => deleteHealthLog(log.id)}>Delete</button>
 </div>
 </div>
-
 ))}
