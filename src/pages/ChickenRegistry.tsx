@@ -12,9 +12,12 @@ export default function ChickenRegistry({
     idTag: "",
     name: "",
     breed: "",
+    sex: "Hen",
+    ageGroup: "Adult",
     image: "",
   });
 
+  // ================= IMAGE =================
   const handleImage = (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -26,6 +29,7 @@ export default function ChickenRegistry({
     reader.readAsDataURL(file);
   };
 
+  // ================= ADD =================
   const addChicken = () => {
     if (!form.name) return alert("Name required");
 
@@ -41,17 +45,30 @@ export default function ChickenRegistry({
     setShowForm(false);
   };
 
+  // ================= HEALTH STATUS =================
+  const getHealthStatus = (c: any) => {
+    const unresolved = c.healthLogs?.filter((l: any) => !l.resolved) || [];
+
+    if (unresolved.some((l: any) => l.status === "Sick"))
+      return { color: "#ef4444", label: "Sick" };
+
+    if (unresolved.some((l: any) => l.status === "Recovering"))
+      return { color: "#eab308", label: "Recovering" };
+
+    return { color: "#22c55e", label: "Healthy" };
+  };
+
   // ================= STYLES =================
   const container = {
     padding: 20,
-    maxWidth: 1000,
+    maxWidth: 1100,
   };
 
   const header = {
     background: "#fff",
     padding: 20,
     borderRadius: 16,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
@@ -61,11 +78,13 @@ export default function ChickenRegistry({
   const card = {
     background: "#fff",
     padding: 16,
-    borderRadius: 12,
-    border: "1px solid #eee",
+    borderRadius: 14,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    display: "flex",
+    gap: 16,
+    alignItems: "center",
     marginBottom: 12,
     cursor: "pointer",
-    transition: "0.2s",
   };
 
   const button = {
@@ -86,7 +105,7 @@ export default function ChickenRegistry({
         <div>
           <h2 style={{ margin: 0 }}>🐔 Chicken Registry</h2>
           <p style={{ margin: 0, fontSize: 13, color: "#666" }}>
-            Manage your chickens
+            Manage and track your chickens
           </p>
         </div>
 
@@ -125,21 +144,53 @@ export default function ChickenRegistry({
       {/* LIST */}
       {chickens.length === 0 && <p>No chickens yet</p>}
 
-      {chickens.map((c: any) => (
-        <div
-          key={c.id}
-          style={card}
-          onClick={() => {
-            setSelectedChicken({ ...c });
-            navigate("profile");
-          }}
-        >
-          <h3 style={{ margin: 0 }}>{c.name}</h3>
-          <p style={{ margin: 0, fontSize: 13 }}>
-            ID Tag: {c.idTag}
-          </p>
-        </div>
-      ))}
+      {chickens.map((c: any) => {
+        const status = getHealthStatus(c);
+
+        return (
+          <div
+            key={c.id}
+            style={card}
+            onClick={() => {
+              setSelectedChicken({ ...c });
+              navigate("profile");
+            }}
+          >
+            {/* IMAGE */}
+            <img
+              src={c.image || ""}
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 10,
+                objectFit: "cover",
+                background: "#eee",
+              }}
+            />
+
+            {/* INFO */}
+            <div style={{ flex: 1 }}>
+              <h3 style={{ margin: 0 }}>{c.name}</h3>
+
+              <div style={{ fontSize: 13, color: "#555" }}>
+                ID Tag: {c.idTag}
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    background: status.color,
+                  }}
+                />
+                <span style={{ fontSize: 12 }}>{status.label}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
