@@ -368,7 +368,46 @@ const NotesSection = () => {
         >
           + Add Health Log
         </button>
+{showHealthForm && (
+  <>
+    <input
+      type="date"
+      style={input}
+      value={healthForm.date}
+      onChange={(e) =>
+        setHealthForm({ ...healthForm, date: e.target.value })
+      }
+    />
 
+    <select
+      style={input}
+      value={healthForm.status}
+      onChange={(e) =>
+        setHealthForm({ ...healthForm, status: e.target.value })
+      }
+    >
+      <option>Healthy</option>
+      <option>Sick</option>
+      <option>Recovering</option>
+    </select>
+
+    <input
+      style={input}
+      placeholder="Symptoms"
+      value={healthForm.symptoms}
+      onChange={(e) =>
+        setHealthForm({ ...healthForm, symptoms: e.target.value })
+      }
+    />
+
+    <button
+      style={{ ...btn, background: "#22c55e", color: "#fff" }}
+      onClick={saveHealth}
+    >
+      Save
+    </button>
+  </>
+)}
 
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{
