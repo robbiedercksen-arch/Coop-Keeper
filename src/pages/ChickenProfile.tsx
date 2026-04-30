@@ -15,12 +15,6 @@ export default function ChickenProfile({
   const healthLogs = selectedChicken?.healthLogs || [];
   const notes = selectedChicken?.notes || [];
 
-  const updateChicken = (updated: any) => {
-    setChickens((prev: any[]) =>
-      prev.map((c) => (c.id === selectedChicken.id ? updated : c))
-    );
-  };
-
   const deleteChicken = () => {
     setChickens((prev: any[]) =>
       prev.filter((c) => c.id !== selectedChicken.id)
@@ -45,9 +39,25 @@ export default function ChickenProfile({
     fontWeight: 600,
   };
 
+  const label = {
+    fontWeight: 600,
+    color: "#555",
+  };
+
+  const value = {
+    marginBottom: 8,
+  };
+
+  // Format date nicely
+  const formatDate = (date: string) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleDateString();
+  };
+
   return (
     <div style={{ padding: 20, maxWidth: 1000 }}>
-      {/* 🔥 PREMIUM BACK BUTTON */}
+
+      {/* 🔙 BACK BUTTON */}
       <button
         onClick={() => navigate("registry")}
         style={{
@@ -61,23 +71,54 @@ export default function ChickenProfile({
           marginBottom: 20,
         }}
       >
-        ← Back
+        ← Back to Registry
       </button>
 
       {/* ================= PROFILE ================= */}
       <div style={card}>
         <div style={{ display: "flex", gap: 20 }}>
+          
+          {/* IMAGE */}
           <img
             src={selectedChicken.image}
-            style={{ width: 140, borderRadius: 12 }}
+            style={{ width: 140, borderRadius: 12, objectFit: "cover" }}
           />
 
+          {/* DETAILS */}
           <div>
-            <h2>{selectedChicken.name}</h2>
-            <p><b>ID:</b> {selectedChicken.idTag}</p>
-            <p><b>Status:</b> {selectedChicken.status}</p>
+            <h2 style={{ marginBottom: 10 }}>{selectedChicken.name}</h2>
 
-            <div style={{ marginTop: 10 }}>
+            <div style={value}>
+              <span style={label}>ID Tag:</span> {selectedChicken.idTag}
+            </div>
+
+            <div style={value}>
+              <span style={label}>Name:</span> {selectedChicken.name}
+            </div>
+
+            <div style={value}>
+              <span style={label}>Breed:</span> {selectedChicken.breed || "-"}
+            </div>
+
+            <div style={value}>
+              <span style={label}>Sex:</span> {selectedChicken.sex}
+            </div>
+
+            <div style={value}>
+              <span style={label}>Age:</span> {selectedChicken.ageGroup}
+            </div>
+
+            <div style={value}>
+              <span style={label}>Added Date:</span>{" "}
+              {formatDate(selectedChicken.hatchDate)}
+            </div>
+
+            <div style={value}>
+              <span style={label}>Status:</span> {selectedChicken.status}
+            </div>
+
+            {/* ACTION BUTTONS */}
+            <div style={{ marginTop: 15 }}>
               <button
                 style={{ ...btn, background: "#3b82f6", color: "#fff" }}
               >
@@ -112,7 +153,6 @@ export default function ChickenProfile({
             style={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
               padding: "10px 0",
               borderBottom: "1px solid #eee",
             }}
@@ -121,33 +161,19 @@ export default function ChickenProfile({
               <b>{log.date}</b> — {log.status}
             </div>
 
-            <div style={{ display: "flex", gap: 6 }}>
-              <button
-                style={{ ...btn, background: "#6366f1", color: "#fff" }}
-                onClick={() => setViewLog(log)}
-              >
-                View
-              </button>
-
-              <button
-                style={{ ...btn, background: "#3b82f6", color: "#fff" }}
-              >
-                Edit
-              </button>
-
-              <button
-                style={{ ...btn, background: "#ef4444", color: "#fff" }}
-              >
-                Delete
-              </button>
-            </div>
+            <button
+              style={{ ...btn, background: "#6366f1", color: "#fff" }}
+              onClick={() => setViewLog(log)}
+            >
+              View
+            </button>
           </div>
         ))}
       </div>
 
       {/* ================= NOTES ================= */}
       <div style={card}>
-        <h3>📝 Notes & Observations</h3>
+        <h3>📝 Notes</h3>
 
         {notes.length === 0 && <p>No notes added</p>}
 
@@ -157,7 +183,6 @@ export default function ChickenProfile({
             style={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
               padding: "10px 0",
               borderBottom: "1px solid #eee",
             }}
@@ -166,63 +191,30 @@ export default function ChickenProfile({
               <b>{note.date}</b> — {note.type}
             </div>
 
-            <div style={{ display: "flex", gap: 6 }}>
-              <button
-                style={{ ...btn, background: "#6366f1", color: "#fff" }}
-                onClick={() => setViewNote(note)}
-              >
-                View
-              </button>
-
-              <button
-                style={{ ...btn, background: "#3b82f6", color: "#fff" }}
-              >
-                Edit
-              </button>
-
-              <button
-                style={{ ...btn, background: "#ef4444", color: "#fff" }}
-              >
-                Delete
-              </button>
-            </div>
+            <button
+              style={{ ...btn, background: "#6366f1", color: "#fff" }}
+              onClick={() => setViewNote(note)}
+            >
+              View
+            </button>
           </div>
         ))}
       </div>
 
-      {/* ================= VIEW HEALTH ================= */}
+      {/* ================= VIEW MODALS ================= */}
       {viewLog && (
         <div style={card}>
-          <h3>📋 Health Details</h3>
-          <p><b>Date:</b> {viewLog.date}</p>
-          <p><b>Status:</b> {viewLog.status}</p>
-          <p><b>Symptoms:</b> {viewLog.symptoms || "-"}</p>
-          <p><b>Treatment:</b> {viewLog.treatment || "-"}</p>
-          <p><b>Notes:</b> {viewLog.notes || "-"}</p>
-
-          <button
-            style={{ ...btn, background: "#6b7280", color: "#fff" }}
-            onClick={() => setViewLog(null)}
-          >
-            Close
-          </button>
+          <h3>Health Details</h3>
+          <p>{viewLog.notes || "No details"}</p>
+          <button onClick={() => setViewLog(null)}>Close</button>
         </div>
       )}
 
-      {/* ================= VIEW NOTE ================= */}
       {viewNote && (
         <div style={card}>
-          <h3>📋 Note Details</h3>
-          <p><b>Date:</b> {viewNote.date}</p>
-          <p><b>Type:</b> {viewNote.type}</p>
-          <p><b>Description:</b> {viewNote.description}</p>
-
-          <button
-            style={{ ...btn, background: "#6b7280", color: "#fff" }}
-            onClick={() => setViewNote(null)}
-          >
-            Close
-          </button>
+          <h3>Note Details</h3>
+          <p>{viewNote.description}</p>
+          <button onClick={() => setViewNote(null)}>Close</button>
         </div>
       )}
     </div>
