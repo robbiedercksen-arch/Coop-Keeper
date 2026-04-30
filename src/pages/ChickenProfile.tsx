@@ -79,7 +79,36 @@ export default function ChickenProfile({
     setEditingId(null);
     setViewLog(null);
   };
+// 🔥 EDIT CHICKEN STATE
+const [editingChicken, setEditingChicken] = useState(false);
 
+const [editForm, setEditForm] = useState({
+  name: chicken.name || "",
+  idTag: chicken.idTag || "",
+  breed: chicken.breed || "",
+  sex: chicken.sex || "Hen",
+  ageGroup: chicken.ageGroup || "",
+});
+
+// 🔄 Sync form when chicken changes
+useEffect(() => {
+  setEditForm({
+    name: chicken.name,
+    idTag: chicken.idTag,
+    breed: chicken.breed,
+    sex: chicken.sex,
+    ageGroup: chicken.ageGroup,
+  });
+}, [chicken]);
+
+// 💾 Save updated chicken info
+const saveChickenInfo = () => {
+  updateChicken({
+    ...chicken,
+    ...editForm,
+  });
+  setEditingChicken(false);
+};
   const getColor = (status: string) => {
     if (status === "Healthy") return "#22c55e";
     if (status === "Sick") return "#ef4444";
