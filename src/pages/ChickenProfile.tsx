@@ -347,46 +347,56 @@ const header = {
     </>
   )}
 
-  {healthLogs.map((log: any) => (
-   <div
-  key={log.id}
-  style={{
-    marginTop: 12,
-    padding: 10,
-    borderRadius: 10,
-    background: "#f9fafb",
-  }}
->
-        <b>{log.status}</b> — {log.symptoms}
-      </div>
-
-      <div>
-        <label>
-          Health risk resolved
-          <input
-            type="checkbox"
-            checked={log.resolved || false}
-            onChange={() =>
-              updateChicken({
-                ...chicken,
-                healthLogs: healthLogs.map((l: any) =>
-                  l.id === log.id ? { ...l, resolved: !l.resolved } : l
-                ),
-              })
-            }
-            style={{ marginLeft: 8 }}
-          />
-        </label>
-      </div>
-
-      <div>
-        <button onClick={() => setViewLog(log)}>View</button>
-        <button onClick={() => editHealthLog(log)}>Edit</button>
-        <button onClick={() => deleteHealthLog(log.id)}>Delete</button>
-      </div>
+{healthLogs.map((log: any) => (
+  <div
+    key={log.id}
+    style={{
+      marginTop: 12,
+      padding: 10,
+      borderRadius: 10,
+      background: "#f9fafb",
+    }}
+  >
+    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <div
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: "50%",
+          background: getColor(log.status),
+        }}
+      />
+      <b>{log.status}</b> — {log.symptoms}
     </div>
-  ))}
-</div>
+
+    <div style={{ marginTop: 6 }}>
+      <label>
+        Health risk resolved
+        <input
+          type="checkbox"
+          checked={log.resolved || false}
+          onChange={() =>
+            updateChicken({
+              ...chicken,
+              healthLogs: healthLogs.map((l: any) =>
+                l.id === log.id
+                  ? { ...l, resolved: !l.resolved }
+                  : l
+              ),
+            })
+          }
+          style={{ marginLeft: 8 }}
+        />
+      </label>
+    </div>
+
+    <div style={{ marginTop: 6 }}>
+      <button onClick={() => setViewLog(log)}>View</button>
+      <button onClick={() => editHealthLog(log)}>Edit</button>
+      <button onClick={() => deleteHealthLog(log.id)}>Delete</button>
+    </div>
+  </div>
+))}
 
     </div>
   );
