@@ -10,6 +10,7 @@ export default function ChickenProfile({
 
   const [showHealthForm, setShowHealthForm] = useState(false);
   const [viewLog, setViewLog] = useState<any>(null);
+  const [editingLog, setEditingLog] = useState<any>(null);
 
   const [healthForm, setHealthForm] = useState({
     date: "",
@@ -33,21 +34,54 @@ export default function ChickenProfile({
   const getColor = (s: string) =>
     s === "Sick" ? "#ef4444" : s === "Recovering" ? "#eab308" : "#22c55e";
 
-  // ================= HEALTH =================
-  const addHealthLog = () => {
+  // ================= ADD / EDIT =================
+  const saveHealthLog = () => {
     if (!healthForm.date) return alert("Date required");
 
-    const newLog = { id: Date.now(), ...healthForm, resolved: false };
+    if (editingLog) {
+      // 🔥 UPDATE EXISTING
+      const updatedLogs = healthLogs.map((l: any) =>
+        l.id === editingLog.id ? { ...l, ...healthForm } : l
+      );
 
-    updateChicken({
-      ...selectedChicken,
-      healthLogs: [...healthLogs, newLog],
-    });
+      updateChicken({
+        ...selectedChicken,
+        healthLogs: updatedLogs,
+      });
+
+      setEditingLog(null);
+    } else {
+      // ➕ ADD NEW
+      const newLog = {
+        id: Date.now(),
+        ...healthForm,
+        resolved: false,
+      };
+
+      updateChicken({
+        ...selectedChicken,
+        healthLogs: [...healthLogs, newLog],
+      });
+    }
 
     setHealthForm({ date: "", status: "Healthy", symptoms: "" });
     setShowHealthForm(false);
   };
 
+  // ================= EDIT CLICK =================
+  const handleEdit = (log: any) => {
+    setHealthForm({
+      date: log.date,
+      status: log.status,
+      symptoms: log.symptoms,
+    });
+
+    setEditingLog(log);
+    setShowHealthForm(true);
+    setViewLog(null); // close view panel
+  };
+
+  // ================= OTHER ACTIONS =================
   const toggleResolved = (id: number) => {
     updateChicken({
       ...selectedChicken,
@@ -82,23 +116,9 @@ export default function ChickenProfile({
     fontWeight: 600,
   };
 
-  const primary = {
-    ...btn,
-    background: "#3b82f6",
-    color: "#fff",
-  };
-
-  const success = {
-    ...btn,
-    background: "#22c55e",
-    color: "#fff",
-  };
-
-  const danger = {
-    ...btn,
-    background: "#ef4444",
-    color: "#fff",
-  };
+  const primary = { ...btn, background: "#3b82f6", color: "#fff" };
+  const success = { ...btn, background: "#22c55e", color: "#fff" };
+  const danger = { ...btn, background: "#ef4444", color: "#fff" };
 
   const input = {
     padding: 10,
@@ -136,13 +156,16 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ================= HEALTH ================= */}
+      {/* HEALTH */}
       <div style={card}>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <h3>🩺 Health Logs</h3>
 
           <button
-            onClick={() => setShowHealthForm(!showHealthForm)}
+            onClick={() => {
+              setEditingLog(null);
+              setShowHealthForm(!showHealthForm);
+            }}
             style={success}
           >
             + Add Health Log
@@ -182,67 +205,48 @@ export default function ChickenProfile({
               }
             />
 
-            <button onClick={addHealthLog} style={success}>
-              Save Log
+            <button onClick={saveHealthLog} style={success}>
+              {editingLog ? "Update Log" : "Save Log"}
             </button>
           </div>
         )}
 
         {/* LIST */}
         {healthLogs.map((log: any) => (
-          <div
-            key={log.id}
-            style={{
-              borderBottom: "1px solid #eee",
-              padding: "12px 0",
-            }}
-          >
-            {/* ROW 1 */}
+          <div key={log.id} style={{ padding: "12px 0", borderBottom: "1px solid #eee" }}>
+            
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    background: getColor(log.status),
-                  }}
-                />
+              <div style={{ display: "flex", gap: 10 }}>
+                <div style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  background: getColor(log.status),
+                }} />
                 <b>{log.status}</b>
-                <span style={{ fontSize: 12, color: "#666" }}>
-                  {formatDate(log.date)}
-                </span>
+                <span style={{ fontSize: 12 }}>{formatDate(log.date)}</span>
               </div>
 
-              <button
-                style={primary}
-                onClick={() => setViewLog(log)}
-              >
+              <button style={primary} onClick={() => setViewLog(log)}>
                 View
               </button>
             </div>
 
-            {/* ROW 2 */}
-            <div style={{ marginTop: 5, fontSize: 13 }}>
-              {log.symptoms}
-            </div>
+            <div style={{ marginTop: 5 }}>{log.symptoms}</div>
 
-            {/* ROW 3 */}
-            <div style={{ marginTop: 5 }}>
-              <label style={{ fontSize: 13 }}>
-                <input
-                  type="checkbox"
-                  checked={log.resolved}
-                  onChange={() => toggleResolved(log.id)}
-                />{" "}
-                Health Issue Solved
-              </label>
-            </div>
+            <label style={{ fontSize: 13 }}>
+              <input
+                type="checkbox"
+                checked={log.resolved}
+                onChange={() => toggleResolved(log.id)}
+              />{" "}
+              Health Issue Solved
+            </label>
           </div>
         ))}
       </div>
 
-      {/* ================= VIEW PANEL ================= */}
+      {/* VIEW PANEL */}
       {viewLog && (
         <div style={card}>
           <h3>📋 Health Log Details</h3>
@@ -251,8 +255,13 @@ export default function ChickenProfile({
           <p><b>Status:</b> {viewLog.status}</p>
           <p><b>Symptoms:</b> {viewLog.symptoms}</p>
 
-          <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-            <button style={primary}>Edit</button>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button
+              style={primary}
+              onClick={() => handleEdit(viewLog)}
+            >
+              Edit
+            </button>
 
             <button
               style={danger}
@@ -261,7 +270,9 @@ export default function ChickenProfile({
               Delete
             </button>
 
-            <button onClick={() => setViewLog(null)}>Close</button>
+            <button onClick={() => setViewLog(null)}>
+              Close
+            </button>
           </div>
         </div>
       )}
