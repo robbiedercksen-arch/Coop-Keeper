@@ -319,7 +319,6 @@ const NotesSection = () => {
 {/* PROFILE */}
 <div style={card}>
 
-  {/* HEADER */}
   <div style={{
     display: "flex",
     justifyContent: "space-between",
@@ -337,13 +336,7 @@ const NotesSection = () => {
     )}
   </div>
 
-  {/* CONTENT */}
-  <div style={{
-    display: "flex",
-    gap: 20,
-    marginTop: 15,
-    flexWrap: "wrap"
-  }}>
+  <div style={{ display: "flex", gap: 20, marginTop: 15 }}>
 
     {chicken.image && (
       <img
@@ -352,12 +345,8 @@ const NotesSection = () => {
           width: 140,
           height: 140,
           borderRadius: 16,
-          objectFit: "cover",
-          boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
-          transition: "0.2s"
+          objectFit: "cover"
         }}
-        onMouseOver={(e:any)=>e.currentTarget.style.transform="scale(1.05)"}
-        onMouseOut={(e:any)=>e.currentTarget.style.transform="scale(1)"}
       />
     )}
 
