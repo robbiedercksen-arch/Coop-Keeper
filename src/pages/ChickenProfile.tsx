@@ -17,12 +17,10 @@ export default function ChickenProfile({
     );
   }
 
-  // ================= STATE =================
   const [chicken, setChicken] = useState(selectedChicken);
   useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
   const [activeImage, setActiveImage] = useState<string | null>(null);
-
   const [showHealthForm, setShowHealthForm] = useState(false);
   const [viewLog, setViewLog] = useState<any>(null);
 
@@ -35,8 +33,8 @@ export default function ChickenProfile({
   });
 
   const healthLogs = chicken.healthLogs || [];
+  const notes = chicken.notes || [];
 
-  // ================= UPDATE =================
   const updateChicken = (updated: any) => {
     setChicken(updated);
     setChickens((prev: any[]) =>
@@ -45,7 +43,6 @@ export default function ChickenProfile({
     setSelectedChicken(updated);
   };
 
-  // ================= ADD HEALTH =================
   const addHealth = () => {
     if (!healthForm.date) return alert("Date required");
 
@@ -67,7 +64,6 @@ export default function ChickenProfile({
     });
   };
 
-  // ================= STYLES =================
   const card = {
     background: "#fff",
     padding: 20,
@@ -76,62 +72,55 @@ export default function ChickenProfile({
     marginBottom: 20,
   };
 
-  const sectionTitle = {
-    fontSize: 18,
-    fontWeight: 700,
-    marginBottom: 10,
-  };
-
-  const primary = {
-    background: "#3b82f6",
-    color: "#fff",
+  const btn = {
     padding: "8px 14px",
     borderRadius: 8,
     border: "none",
     cursor: "pointer",
-  };
-
-  const success = {
-    background: "#22c55e",
-    color: "#fff",
-    padding: "8px 14px",
-    borderRadius: 8,
-    border: "none",
-    cursor: "pointer",
-  };
-
-  const inputStyle = {
-    padding: "8px",
-    borderRadius: 8,
-    border: "1px solid #d1d5db",
-    width: "100%",
-    marginBottom: 8,
   };
 
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
 
       {/* BACK */}
-      <div style={{ marginBottom: 20 }}>
-        <button onClick={() => navigate("registry")} style={primary}>
-          ← Back
-        </button>
+      <button
+        onClick={() => navigate("registry")}
+        style={{ ...btn, background: "#3b82f6", color: "#fff", marginBottom: 20 }}
+      >
+        ← Back
+      </button>
+
+      {/* ✅ PROFILE (IMAGE RESTORED SAFELY) */}
+      <div style={card}>
+        <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+          {chicken.image && (
+            <img
+              src={chicken.image}
+              style={{
+                width: 140,
+                height: 140,
+                borderRadius: 12,
+                objectFit: "cover",
+                flexShrink: 0,
+              }}
+            />
+          )}
+
+          <div>
+            <h1>{chicken.name}</h1>
+            <div><b>ID Tag:</b> {chicken.idTag}</div>
+            <div><b>Breed:</b> {chicken.breed}</div>
+            <div><b>Sex:</b> {chicken.sex}</div>
+            <div><b>Age:</b> {chicken.ageGroup}</div>
+          </div>
+        </div>
       </div>
 
-      {/* PROFILE */}
+      {/* ================= PHOTO ALBUM (UNCHANGED) ================= */}
       <div style={card}>
-        <h1>{chicken.name}</h1>
-        <div><b>ID Tag:</b> {chicken.idTag}</div>
-        <div><b>Breed:</b> {chicken.breed}</div>
-        <div><b>Sex:</b> {chicken.sex}</div>
-        <div><b>Age:</b> {chicken.ageGroup}</div>
-      </div>
+        <h3>📸 Photo Album</h3>
 
-      {/* ================= PHOTO ALBUM ================= */}
-      <div style={card}>
-        <div style={sectionTitle}>📸 Photo Album</div>
-
-        <label style={success}>
+        <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
           + Add Photos
           <input
             type="file"
@@ -165,10 +154,14 @@ export default function ChickenProfile({
               <img
                 src={img}
                 onClick={() => setActiveImage(img)}
-                style={{ width: 100, height: 100, borderRadius: 8 }}
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 8,
+                  objectFit: "cover",
+                }}
               />
 
-              {/* 🔥 DELETE BACK */}
               <button
                 onClick={() =>
                   updateChicken({
@@ -200,48 +193,44 @@ export default function ChickenProfile({
 
       {/* ================= HEALTH LOGS ================= */}
       <div style={card}>
-        <div style={sectionTitle}>🩺 Health Logs</div>
+        <h3>🩺 Health Logs</h3>
 
-        {/* 🔥 BUTTON FIXED */}
-        <button style={success} onClick={() => setShowHealthForm(!showHealthForm)}>
+        <button
+          style={{ ...btn, background: "#22c55e", color: "#fff" }}
+          onClick={() => setShowHealthForm(!showHealthForm)}
+        >
           + Add Health Log
         </button>
 
         {showHealthForm && (
           <div style={{ marginTop: 10 }}>
-            <input type="date" onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })} style={inputStyle} />
-            <select onChange={(e) => setHealthForm({ ...healthForm, status: e.target.value })} style={inputStyle}>
-              <option>Healthy</option>
-              <option>Sick</option>
-              <option>Recovering</option>
-            </select>
-            <input placeholder="Symptoms" onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })} style={inputStyle} />
-            <button onClick={addHealth} style={success}>Save</button>
+            <input type="date" onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })} />
+            <input placeholder="Symptoms" onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })} />
+
+            <button onClick={addHealth}>Save</button>
           </div>
         )}
 
-        {/* LIST */}
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{ marginTop: 10 }}>
             <b>{log.status}</b> — {log.symptoms}
 
-            {/* ✔ RESOLVED BACK */}
-            <label style={{ marginLeft: 10 }}>
-              <input
-                type="checkbox"
-                checked={log.resolved}
-                onChange={() =>
-                  updateChicken({
-                    ...chicken,
-                    healthLogs: healthLogs.map((l: any) =>
-                      l.id === log.id ? { ...l, resolved: !l.resolved } : l
-                    ),
-                  })
-                }
-              /> ✔
-            </label>
+            <input
+              type="checkbox"
+              checked={log.resolved}
+              onChange={() =>
+                updateChicken({
+                  ...chicken,
+                  healthLogs: healthLogs.map((l: any) =>
+                    l.id === log.id
+                      ? { ...l, resolved: !l.resolved }
+                      : l
+                  ),
+                })
+              }
+              style={{ marginLeft: 10 }}
+            />
 
-            {/* 🔥 VIEW BUTTON BACK */}
             <button
               onClick={() => setViewLog(log)}
               style={{ marginLeft: 10 }}
@@ -252,33 +241,33 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* ================= VIEW POPUP ================= */}
+      {/* ================= CLEAN POPUP ================= */}
       {viewLog && (
         <div
           style={{
             position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            background: "rgba(0,0,0,0.7)",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+            zIndex: 1000,
           }}
         >
-          <div style={{ background: "#fff", padding: 20, borderRadius: 10 }}>
+          <div
+            style={{
+              background: "#fff",
+              padding: 20,
+              borderRadius: 12,
+              width: 320,
+              boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+            }}
+          >
             <h3>{viewLog.status}</h3>
             <p>{viewLog.symptoms}</p>
 
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={() => {
-                  setHealthForm(viewLog);
-                  setShowHealthForm(true);
-                  setViewLog(null);
-                }}
-              >
+            <div style={{ display: "flex", gap: 8 }}>
+              <button style={{ ...btn, background: "#3b82f6", color: "#fff" }}>
                 Edit
               </button>
 
@@ -287,6 +276,7 @@ export default function ChickenProfile({
               </button>
 
               <button
+                style={{ ...btn, background: "#ef4444", color: "#fff" }}
                 onClick={() => {
                   updateChicken({
                     ...chicken,
@@ -296,7 +286,6 @@ export default function ChickenProfile({
                   });
                   setViewLog(null);
                 }}
-                style={{ background: "red", color: "#fff" }}
               >
                 Delete
               </button>
@@ -311,10 +300,7 @@ export default function ChickenProfile({
           onClick={() => setActiveImage(null)}
           style={{
             position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
+            inset: 0,
             background: "rgba(0,0,0,0.8)",
             display: "flex",
             justifyContent: "center",
