@@ -176,77 +176,21 @@ const NotesSection = () => {
         </>
       )}
 
-      {notes.map((note: any) => (
-  <div
-    key={note.id}
-    style={{
-      marginTop: 10,
-      padding: 12,
-      borderRadius: 12,
-      background: "#f9fafb",
-      border: "1px solid #e5e7eb",
-    }}
-  >
-    <div style={{ display: "flex", justifyContent: "space-between" }}>
-      
-      <div
-        style={{ cursor: "pointer" }}
-        onClick={() => setViewNote(note)}
-      >
-        <b>{note.type}</b> — {note.description}
-        <div style={{ fontSize: 12, color: "#6b7280" }}>
-          {note.date}
+      {notes.map((note:any)=>(
+        <div key={note.id} style={{
+          marginTop:10,
+          padding:10,
+          borderRadius:10,
+          background:"#f9fafb",
+          border:"1px solid #e5e7eb"
+        }}>
+          <b>{note.type}</b> — {note.description}
+          <div style={{fontSize:12,color:"#6b7280"}}>{note.date}</div>
         </div>
-      </div>
-
-      {/* 🔥 SMALL ACTION BUTTONS */}
-      <div style={{ display: "flex", gap: 6 }}>
-        
-        {/* EDIT */}
-        <button
-          onClick={() => {
-            setNoteForm(note);
-            setEditingNoteId(note.id);
-            setShowNoteForm(true);
-          }}
-          style={{
-            background: "#f59e0b",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            padding: "4px 6px",
-            fontSize: 12,
-            cursor: "pointer",
-          }}
-        >
-          ✏
-        </button>
-
-        {/* DELETE */}
-        <button
-          onClick={() => {
-            updateChicken({
-              ...chicken,
-              notes: notes.filter((n: any) => n.id !== note.id),
-            });
-          }}
-          style={{
-            background: "#ef4444",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            padding: "4px 6px",
-            fontSize: 12,
-            cursor: "pointer",
-          }}
-        >
-          🗑
-        </button>
-
-      </div>
+      ))}
     </div>
-  </div>
-))}
+  );
+};
 
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
@@ -424,46 +368,7 @@ const NotesSection = () => {
         >
           + Add Health Log
         </button>
-{showHealthForm && (
-  <>
-    <input
-      type="date"
-      style={input}
-      value={healthForm.date}
-      onChange={(e) =>
-        setHealthForm({ ...healthForm, date: e.target.value })
-      }
-    />
 
-    <select
-      style={input}
-      value={healthForm.status}
-      onChange={(e) =>
-        setHealthForm({ ...healthForm, status: e.target.value })
-      }
-    >
-      <option>Healthy</option>
-      <option>Sick</option>
-      <option>Recovering</option>
-    </select>
-
-    <input
-      style={input}
-      placeholder="Symptoms"
-      value={healthForm.symptoms}
-      onChange={(e) =>
-        setHealthForm({ ...healthForm, symptoms: e.target.value })
-      }
-    />
-
-    <button
-      style={{ ...btn, background: "#22c55e", color: "#fff" }}
-      onClick={saveHealth}
-    >
-      Save
-    </button>
-  </>
-)}
 
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{
