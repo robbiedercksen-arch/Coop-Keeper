@@ -297,7 +297,7 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* VIEW MODAL */}
+      {/* ✅ IMPROVED VIEW MODAL */}
       {viewLog && (
         <div style={{
           position: "fixed",
@@ -309,18 +309,97 @@ export default function ChickenProfile({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          zIndex: 1000,
         }}>
           <div style={{
             background: "#fff",
-            padding: 20,
+            padding: 24,
             borderRadius: 16,
-            width: 320,
+            width: 340,
             position: "relative",
+            boxShadow: "0 15px 40px rgba(0,0,0,0.25)"
           }}>
-            <button onClick={() => setViewLog(null)}>×</button>
 
-            <h3>{viewLog.status}</h3>
-            <p>{viewLog.symptoms}</p>
+            <button
+              onClick={() => {
+                setViewLog(null);
+                setEditingId(null);
+              }}
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                background: "#ef4444",
+                color: "#fff",
+                border: "none",
+                borderRadius: "50%",
+                width: 26,
+                height: 26,
+                cursor: "pointer"
+              }}
+            >
+              ×
+            </button>
+
+            {editingId === viewLog.id ? (
+              <>
+                <input type="date" style={input}
+                  value={healthForm.date}
+                  onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })}
+                />
+
+                <select style={input}
+                  value={healthForm.status}
+                  onChange={(e) => setHealthForm({ ...healthForm, status: e.target.value })}
+                >
+                  <option>Healthy</option>
+                  <option>Sick</option>
+                  <option>Recovering</option>
+                </select>
+
+                <input style={input}
+                  value={healthForm.symptoms}
+                  onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })}
+                />
+
+                <button
+                  style={{ ...btn, background: "#22c55e", color: "#fff", width: "100%" }}
+                  onClick={saveHealth}
+                >
+                  Save Log
+                </button>
+              </>
+            ) : (
+              <>
+                <h3>{viewLog.status}</h3>
+                <p>{viewLog.symptoms}</p>
+
+                <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+                  <button
+                    style={{ flex: 1, background: "#f59e0b", color: "#fff", border: "none", padding: 8, borderRadius: 8 }}
+                    onClick={() => {
+                      setHealthForm(viewLog);
+                      setEditingId(viewLog.id);
+                    }}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    style={{ flex: 1, background: "#ef4444", color: "#fff", border: "none", padding: 8, borderRadius: 8 }}
+                    onClick={() => {
+                      updateChicken({
+                        ...chicken,
+                        healthLogs: healthLogs.filter((l: any) => l.id !== viewLog.id),
+                      });
+                      setViewLog(null);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
