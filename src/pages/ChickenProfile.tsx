@@ -17,10 +17,22 @@ export default function ChickenProfile({
     );
   }
 
-  const [chicken, setChicken] = useState(selectedChicken);
-  useEffect(() => setChicken(selectedChicken), [selectedChicken]);
+const [chicken, setChicken] = useState(selectedChicken);
+useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
- useEffect(() => {
+// ✅ FIRST define edit state
+const [isEditingChicken, setIsEditingChicken] = useState(false);
+
+const [editForm, setEditForm] = useState({
+  name: chicken.name,
+  idTag: chicken.idTag,
+  breed: chicken.breed,
+  sex: chicken.sex,
+  ageGroup: chicken.ageGroup,
+});
+
+// ✅ THEN use it
+useEffect(() => {
   setEditForm({
     name: chicken.name,
     idTag: chicken.idTag,
@@ -28,11 +40,12 @@ export default function ChickenProfile({
     sex: chicken.sex,
     ageGroup: chicken.ageGroup,
   });
-}, [chicken]); 
+}, [chicken]);
 
-  const [activeImage, setActiveImage] = useState<string | null>(null);
-  const [showHealthForm, setShowHealthForm] = useState(false);
-  const [viewLog, setViewLog] = useState<any>(null);
+// rest of your states
+const [activeImage, setActiveImage] = useState<string | null>(null);
+const [showHealthForm, setShowHealthForm] = useState(false);
+const [viewLog, setViewLog] = useState<any>(null);
 
   const [healthForm, setHealthForm] = useState({
     date: "",
