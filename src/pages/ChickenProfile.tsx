@@ -349,15 +349,9 @@ const header = {
 
   {healthLogs.map((log: any) => (
     <div
-  <div
   key={log.id}
   style={{
     marginTop: 12,
-    padding: 10,
-    borderRadius: 10,
-    background: "#f9fafb",
-  }}
->
     padding: 10,
     borderRadius: 10,
     background: "#f9fafb",
