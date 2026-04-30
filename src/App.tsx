@@ -1,283 +1,105 @@
 import { useState, useEffect } from "react";
+import ChickenRegistry from "./pages/ChickenRegistry";
+import ChickenProfile from "./pages/ChickenProfile";
+import Dashboard from "./pages/Dashboard";
 
-export default function ChickenProfile({
-  selectedChicken,
-  setChickens,
-  setSelectedChicken,
-  navigate,
-}: any) {
+export default function App() {
+  const [page, setPage] = useState("dashboard");
 
-  if (!selectedChicken || !selectedChicken.id) {
-    return (
-      <div style={{ padding: 20 }}>
-        <p>Loading chicken...</p>
-        <button onClick={() => navigate("registry")}>
-          ← Back to Registry
-        </button>
-      </div>
-    );
-  }
-
-  const [chicken, setChicken] = useState(selectedChicken);
-  useEffect(() => setChicken(selectedChicken), [selectedChicken]);
-
-  const [activeImage, setActiveImage] = useState<string | null>(null);
-  const [showHealthForm, setShowHealthForm] = useState(false);
-  const [viewLog, setViewLog] = useState<any>(null);
-
-  const [editingId, setEditingId] = useState<number | null>(null);
-
-  const [healthForm, setHealthForm] = useState({
-    date: "",
-    status: "Healthy",
-    symptoms: "",
+  // ✅ PERSIST DATA
+  const [chickens, setChickens] = useState<any[]>(() => {
+    const saved = localStorage.getItem("chickens");
+    return saved ? JSON.parse(saved) : [];
   });
 
-  const getPriority = (log: any) => {
-    if (log.resolved) return 99;
-    if (log.status === "Sick") return 1;
-    if (log.status === "Recovering") return 2;
-    return 3;
-  };
+  const [selectedChicken, setSelectedChicken] = useState<any>(null);
 
-  const healthLogs = (chicken.healthLogs || []).sort((a: any, b: any) => {
-    const priorityDiff = getPriority(a) - getPriority(b);
-    if (priorityDiff !== 0) return priorityDiff;
-    return b.id - a.id;
-  });
+  useEffect(() => {
+    localStorage.setItem("chickens", JSON.stringify(chickens));
+  }, [chickens]);
 
-  const updateChicken = (updated: any) => {
-    setChicken(updated);
-    setChickens((prev: any[]) =>
-      prev.map((c) => (c.id === updated.id ? updated : c))
-    );
-    setSelectedChicken(updated);
-  };
-
-  const saveHealth = () => {
-    if (!healthForm.date) return;
-
-    if (editingId) {
-      updateChicken({
-        ...chicken,
-        healthLogs: healthLogs.map((l: any) =>
-          l.id === editingId ? { ...l, ...healthForm } : l
-        ),
-      });
-    } else {
-      updateChicken({
-        ...chicken,
-        healthLogs: [
-          ...healthLogs,
-          { id: Date.now(), ...healthForm, resolved: false },
-        ],
-      });
+  useEffect(() => {
+    if (selectedChicken) {
+      const updated = chickens.find(c => c.id === selectedChicken.id);
+      if (updated) setSelectedChicken(updated);
     }
+  }, [chickens]);
 
-    setHealthForm({ date: "", status: "Healthy", symptoms: "" });
-    setShowHealthForm(false);
-    setEditingId(null);
-    setViewLog(null);
-  };
-
-  const getColor = (status: string) => {
-    if (status === "Healthy") return "#22c55e";
-    if (status === "Sick") return "#ef4444";
-    return "#eab308";
-  };
-
-  const card = {
-    background: "#fff",
-    padding: 20,
-    borderRadius: 16,
-    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-    marginBottom: 20,
-  };
-
-  const btn = {
-    padding: "8px 14px",
-    borderRadius: 8,
-    border: "none",
-    cursor: "pointer",
-  };
-
-  const input = {
-    display: "block",
-    width: "100%",
-    marginBottom: 10,
-    padding: 8,
-    borderRadius: 6,
-    border: "1px solid #e5e7eb",
+  const navigate = (pageName: string) => {
+    setPage(pageName);
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 1100 }}>
+    <div style={{ display: "flex" }}>
 
-      <button
-        onClick={() => navigate("registry")}
-        style={{ ...btn, background: "#3b82f6", color: "#fff", marginBottom: 20 }}
-      >
-        ← Back
-      </button>
+      {/* 🔥 SIDEBAR */}
+      <div style={{
+        width: 220,
+        background: "#111827",
+        color: "#fff",
+        minHeight: "100vh",
+        padding: 20
+      }}>
+        <h2 style={{ marginBottom: 20 }}>🐔 Coop Manager</h2>
 
-      {/* PROFILE */}
-      <div style={card}>
-        <div style={{ display: "flex", gap: 20 }}>
-          {chicken.image && (
-            <img src={chicken.image} style={{ width: 140, height: 140, borderRadius: 12 }} />
-          )}
-          <div>
-            <h1>{chicken.name}</h1>
-            <div><b>ID Tag:</b> {chicken.idTag}</div>
-            <div><b>Breed:</b> {chicken.breed}</div>
-            <div><b>Sex:</b> {chicken.sex}</div>
-            <div><b>Age:</b> {chicken.ageGroup}</div>
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+          <button
+            onClick={() => navigate("dashboard")}
+            style={menuBtn}
+          >
+            Dashboard
+          </button>
+
+          <button
+            onClick={() => navigate("registry")}
+            style={menuBtn}
+          >
+            Chicken Registry
+          </button>
+
         </div>
       </div>
 
-      {/* 🔥 FIXED PHOTO ALBUM */}
-      <div style={card}>
-        <div style={{ fontWeight: 700, marginBottom: 10 }}>📸 Photo Album</div>
+      {/* 🔥 MAIN CONTENT */}
+      <div style={{ flex: 1, padding: 20 }}>
 
-        <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
-          + Add Photos
-          <input
-            type="file"
-            multiple
-            style={{ display: "none" }}
-            onChange={(e: any) => {
-              const files = Array.from(e.target.files);
+        {page === "dashboard" && (
+          <Dashboard chickens={chickens} />
+        )}
 
-              Promise.all(
-                files.map(
-                  (file: any) =>
-                    new Promise((resolve) => {
-                      const reader = new FileReader();
-                      reader.onloadend = () => resolve(reader.result);
-                      reader.readAsDataURL(file);
-                    })
-                )
-              ).then((images: any) => {
-                updateChicken({
-                  ...chicken,
-                  album: [...(chicken.album || []), ...images],
-                });
-              });
+        {page === "registry" && (
+          <ChickenRegistry
+            chickens={chickens}
+            setChickens={setChickens}
+            setSelectedChicken={(chicken: any) => {
+              setSelectedChicken(chicken);
+              setPage("profile");
             }}
           />
-        </label>
+        )}
 
-        {/* SHOW IMAGES */}
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
-          {(chicken.album || []).map((img: any, i: number) => (
-            <img
-              key={i}
-              src={img}
-              onClick={() => setActiveImage(img)}
-              style={{
-                width: 100,
-                height: 100,
-                borderRadius: 10,
-                objectFit: "cover",
-                cursor: "pointer",
-              }}
-            />
-          ))}
-        </div>
+        {page === "profile" && (
+          <ChickenProfile
+            selectedChicken={selectedChicken}
+            setChickens={setChickens}
+            setSelectedChicken={setSelectedChicken}
+            navigate={navigate}
+          />
+        )}
+
       </div>
-
-      {/* FULLSCREEN VIEW */}
-      {activeImage && (
-        <div
-          onClick={() => setActiveImage(null)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            background: "rgba(0,0,0,0.7)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <img src={activeImage} style={{ maxWidth: "90%", maxHeight: "90%" }} />
-        </div>
-      )}
-
-      {/* 🚫 EVERYTHING BELOW UNCHANGED (your health + modal stays exactly same) */}
-
-      {/* HEALTH LOGS */}
-      <div style={card}>
-        <div style={{ fontWeight: 700, marginBottom: 10 }}>🩺 Health Logs</div>
-
-        <button
-          style={{ ...btn, background: "#22c55e", color: "#fff", marginBottom: 10 }}
-          onClick={() => {
-            setShowHealthForm(!showHealthForm);
-            setEditingId(null);
-          }}
-        >
-          + Add Health Log
-        </button>
-
-        {healthLogs.map((log: any) => (
-          <div key={log.id} style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 12,
-            background: "#f9fafb",
-            border: "1px solid #e5e7eb",
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <div style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: "50%",
-                  background: getColor(log.status),
-                }} />
-                <b>{log.status}</b>
-                <span>— {log.symptoms}</span>
-              </div>
-
-              <button
-                style={{ padding: "4px 8px", fontSize: 12, borderRadius: 6, border: "none", background: "#3b82f6", color: "#fff" }}
-                onClick={() => setViewLog(log)}
-              >
-                View
-              </button>
-            </div>
-
-            <div style={{ marginTop: 8 }}>
-              <label style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                fontSize: 13,
-                color: "#374151"
-              }}>
-                Health risk resolved
-                <input
-                  type="checkbox"
-                  checked={log.resolved || false}
-                  onChange={() =>
-                    updateChicken({
-                      ...chicken,
-                      healthLogs: healthLogs.map((l: any) =>
-                        l.id === log.id ? { ...l, resolved: !l.resolved } : l
-                      ),
-                    })
-                  }
-                />
-              </label>
-            </div>
-          </div>
-        ))}
-      </div>
-
     </div>
   );
 }
+
+// 🔥 MENU BUTTON STYLE
+const menuBtn = {
+  background: "#1f2937",
+  color: "#fff",
+  border: "none",
+  padding: "10px 12px",
+  borderRadius: 8,
+  cursor: "pointer",
+  textAlign: "left" as const,
+};
