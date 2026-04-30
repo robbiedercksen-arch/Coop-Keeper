@@ -131,14 +131,35 @@ export default function ChickenProfile({
       </button>
 
       {/* PROFILE */}
-      <div style={card}>
-        <h1>{chicken.name}</h1>
-        <div>ID Tag: {chicken.idTag}</div>
-        <div>Breed: {chicken.breed}</div>
-        <div>Sex: {chicken.sex}</div>
-        <div>Age: {chicken.ageGroup}</div>
-      </div>
+      
+<div style={card}>
+  <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
 
+    {/* ✅ PROFILE IMAGE (THIS IS THE ONLY ADDITION) */}
+    {chicken.image && (
+      <img
+        src={chicken.image}
+        onClick={() => setActiveImage(chicken.image)}
+        style={{
+          width: 140,
+          height: 140,
+          borderRadius: 12,
+          objectFit: "cover",
+          cursor: "pointer",
+        }}
+      />
+    )}
+
+    <div>
+      <h1>{chicken.name}</h1>
+      <div>ID Tag: {chicken.idTag}</div>
+      <div>Breed: {chicken.breed}</div>
+      <div>Sex: {chicken.sex}</div>
+      <div>Age: {chicken.ageGroup}</div>
+    </div>
+
+  </div>
+</div>
       {/* PHOTO ALBUM */}
       <div style={card}>
         <div style={header}>📸 Photo Album</div>
