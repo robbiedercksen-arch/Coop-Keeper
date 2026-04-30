@@ -40,7 +40,6 @@ export default function ChickenProfile({
 
   const healthLogs = selectedChicken.healthLogs || [];
   const notes = selectedChicken.notes || [];
-  const album = selectedChicken.album || [];
 
   // ================= UPDATE =================
   const updateChicken = (updated: any) => {
@@ -158,33 +157,36 @@ export default function ChickenProfile({
                     })
                 )
               ).then((images: any) => {
-                const updated = {
+                updateChicken({
                   ...selectedChicken,
-                  album: [...album, ...images],
-                };
-
-                updateChicken(updated);
+                  album: [...(selectedChicken.album || []), ...images],
+                });
               });
             }}
           />
         </label>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
-          {album.map((img: any, i: number) => (
+          {(selectedChicken.album || []).map((img: any, i: number) => (
             <div key={i} style={{ position: "relative" }}>
               <img
                 src={img}
-                style={{ width: 100, height: 100, borderRadius: 8 }}
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 8,
+                  objectFit: "cover",
+                }}
               />
 
               <button
                 onClick={() => {
-                  const updated = {
+                  updateChicken({
                     ...selectedChicken,
-                    album: album.filter((_: any, index: number) => index !== i),
-                  };
-
-                  updateChicken(updated);
+                    album: (selectedChicken.album || []).filter(
+                      (_: any, index: number) => index !== i
+                    ),
+                  });
                 }}
                 style={{
                   position: "absolute",
@@ -196,6 +198,7 @@ export default function ChickenProfile({
                   border: "none",
                   width: 20,
                   height: 20,
+                  cursor: "pointer",
                 }}
               >
                 ×
