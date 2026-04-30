@@ -168,21 +168,49 @@ export default function ChickenProfile({
     />
   </label>
 
-  {/* SHOW IMAGES */}
+  {/* IMAGES */}
   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
     {(chicken.album || []).map((img: any, i: number) => (
-      <img
-        key={i}
-        src={img}
-        onClick={() => setActiveImage(img)}
-        style={{
-          width: 100,
-          height: 100,
-          borderRadius: 10,
-          objectFit: "cover",
-          cursor: "pointer",
-        }}
-      />
+      <div key={i} style={{ position: "relative" }}>
+        
+        <img
+          src={img}
+          onClick={() => setActiveImage(img)}
+          style={{
+            width: 100,
+            height: 100,
+            borderRadius: 10,
+            objectFit: "cover",
+            cursor: "pointer",
+          }}
+        />
+
+        {/* 🗑 DELETE BUTTON */}
+        <button
+          onClick={() =>
+            updateChicken({
+              ...chicken,
+              album: chicken.album.filter((_: any, index: number) => index !== i),
+            })
+          }
+          style={{
+            position: "absolute",
+            top: -6,
+            right: -6,
+            background: "#ef4444",
+            color: "#fff",
+            border: "none",
+            borderRadius: "50%",
+            width: 22,
+            height: 22,
+            cursor: "pointer",
+            fontSize: 12,
+          }}
+        >
+          🗑
+        </button>
+
+      </div>
     ))}
   </div>
 
@@ -193,6 +221,56 @@ export default function ChickenProfile({
     </div>
   )}
 </div>
+
+{/* FULL SCREEN IMAGE VIEW */}
+{activeImage && (
+  <div
+    onClick={() => setActiveImage(null)}
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.8)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 2000,
+    }}
+  >
+    <div style={{ position: "relative" }}>
+      <img
+        src={activeImage}
+        style={{
+          maxWidth: "90vw",
+          maxHeight: "90vh",
+          borderRadius: 12,
+        }}
+      />
+
+      {/* CLOSE BUTTON */}
+      <button
+        onClick={() => setActiveImage(null)}
+        style={{
+          position: "absolute",
+          top: -10,
+          right: -10,
+          background: "#ef4444",
+          color: "#fff",
+          border: "none",
+          borderRadius: "50%",
+          width: 30,
+          height: 30,
+          cursor: "pointer",
+          fontWeight: "bold",
+        }}
+      >
+        ×
+      </button>
+    </div>
+  </div>
+)}
 
       {/* HEALTH LOGS */}
       <div style={card}>
