@@ -115,14 +115,79 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* PHOTO ALBUM (UNCHANGED) */}
+      {/* 🔥 FULL PHOTO ALBUM RESTORED */}
       <div style={card}>
         <div style={header}>📸 Photo Album</div>
 
         <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
           + Add Photos
-          <input type="file" multiple style={{ display: "none" }} />
+          <input
+            type="file"
+            multiple
+            style={{ display: "none" }}
+            onChange={(e: any) => {
+              const files = Array.from(e.target.files);
+
+              Promise.all(
+                files.map(
+                  (file: any) =>
+                    new Promise((resolve) => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => resolve(reader.result);
+                      reader.readAsDataURL(file);
+                    })
+                )
+              ).then((images: any) => {
+                updateChicken({
+                  ...chicken,
+                  album: [...(chicken.album || []), ...images],
+                });
+              });
+            }}
+          />
         </label>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+          {(chicken.album || []).map((img: any, i: number) => (
+            <div key={i} style={{ position: "relative" }}>
+              <img
+                src={img}
+                onClick={() => setActiveImage(img)}
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 8,
+                  objectFit: "cover",
+                }}
+              />
+
+              <button
+                onClick={() =>
+                  updateChicken({
+                    ...chicken,
+                    album: (chicken.album || []).filter(
+                      (_: any, index: number) => index !== i
+                    ),
+                  })
+                }
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  background: "red",
+                  color: "#fff",
+                  borderRadius: "50%",
+                  border: "none",
+                  width: 20,
+                  height: 20,
+                  cursor: "pointer",
+                }}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* HEALTH LOGS */}
@@ -136,45 +201,6 @@ export default function ChickenProfile({
           + Add Health Log
         </button>
 
-        {showHealthForm && (
-          <div style={{ marginTop: 10 }}>
-            <input
-              type="date"
-              value={healthForm.date}
-              onChange={(e) =>
-                setHealthForm({ ...healthForm, date: e.target.value })
-              }
-            />
-
-            <select
-              value={healthForm.status}
-              onChange={(e) =>
-                setHealthForm({ ...healthForm, status: e.target.value })
-              }
-            >
-              <option>Healthy</option>
-              <option>Sick</option>
-              <option>Recovering</option>
-            </select>
-
-            <input
-              placeholder="Symptoms"
-              value={healthForm.symptoms}
-              onChange={(e) =>
-                setHealthForm({ ...healthForm, symptoms: e.target.value })
-              }
-            />
-
-            <button
-              onClick={addHealth}
-              style={{ ...btn, background: "#22c55e", color: "#fff" }}
-            >
-              Save Log
-            </button>
-          </div>
-        )}
-
-        {/* 🔥 UPDATED LOG DISPLAY */}
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{ marginTop: 14 }}>
 
@@ -190,9 +216,8 @@ export default function ChickenProfile({
               <b>{log.status}</b> — {log.symptoms}
             </div>
 
-            {/* ✅ NEW RESOLVED TICK */}
             <div style={{ marginTop: 6 }}>
-              <label style={{ fontSize: 13 }}>
+              <label>
                 Health risk resolved
                 <input
                   type="checkbox"
