@@ -368,22 +368,7 @@ const NotesSection = () => {
         >
           + Add Health Log
         </button>
-<button
-  style={{ ...btn, background: "#22c55e", color: "#fff", marginBottom: 10 }}
-  onClick={() => {
-    setShowHealthForm(!showHealthForm);
-    setEditingId(null);
-  }}
->
-  + Add Health Log
-</button>
 
-{/* 👇 PASTE HERE */}
-{showHealthForm && (
-  <>
-    ...
-  </>
-)}
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{
             marginTop: 12,
