@@ -79,27 +79,7 @@ export default function ChickenProfile({
     setEditingId(null);
     setViewLog(null);
   };
-// 🔥 EDIT CHICKEN STATE
-const [editingChicken, setEditingChicken] = useState(false);
 
-const [editForm, setEditForm] = useState({
-  name: chicken.name || "",
-  idTag: chicken.idTag || "",
-  breed: chicken.breed || "",
-  sex: chicken.sex || "Hen",
-  ageGroup: chicken.ageGroup || "",
-});
-
-// 🔄 Sync form when chicken changes
-useEffect(() => {
-  setEditForm({
-    name: chicken.name,
-    idTag: chicken.idTag,
-    breed: chicken.breed,
-    sex: chicken.sex,
-    ageGroup: chicken.ageGroup,
-  });
-}, [chicken]);
 
 // 💾 Save updated chicken info
 const saveChickenInfo = () => {
