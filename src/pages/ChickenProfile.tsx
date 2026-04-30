@@ -123,12 +123,12 @@ export default function ChickenProfile({
       </button>
 
       {/* EDIT CHICKEN */}
-      <button
-        style={{ ...btn, background: "#6366f1", color: "#fff", marginBottom: 10 }}
-        onClick={() => alert("Edit Chicken Coming Next")}
-      >
-        Edit Chicken Profile
-      </button>
+  <button
+  style={{ ...btn, background: "#6366f1", color: "#fff", marginBottom: 10 }}
+  onClick={() => setIsEditingChicken(true)}
+>
+  Edit Chicken Profile
+</button>
 
       {/* PROFILE */}
       
