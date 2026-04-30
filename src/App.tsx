@@ -5,6 +5,7 @@ import ChickenProfile from "./pages/ChickenProfile";
 export default function App() {
   const [page, setPage] = useState("registry");
 
+  // 🔥 LOAD FROM LOCAL STORAGE
   const [chickens, setChickens] = useState<any[]>(() => {
     const saved = localStorage.getItem("chickens");
     return saved ? JSON.parse(saved) : [];
@@ -12,42 +13,46 @@ export default function App() {
 
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
 
+  // 💾 AUTO SAVE TO LOCAL STORAGE
   useEffect(() => {
     localStorage.setItem("chickens", JSON.stringify(chickens));
   }, [chickens]);
 
-  const navigate = (p: string) => setPage(p);
+  // 🔄 KEEP SELECTED CHICKEN IN SYNC
+  useEffect(() => {
+    if (selectedChicken) {
+      const updated = chickens.find((c) => c.id === selectedChicken.id);
+      if (updated) {
+        setSelectedChicken(updated);
+      }
+    }
+  }, [chickens]);
+
+  const navigate = (pageName: string) => {
+    setPage(pageName);
+  };
 
   return (
-    <div style={{ display: "flex" }}>
-      {/* Sidebar */}
-      <div style={{ width: 200, background: "#444", color: "#fff", padding: 20 }}>
-        <h3>Coop Keeper</h3>
+    <div>
+      {page === "registry" && (
+        <ChickenRegistry
+          chickens={chickens}
+          setChickens={setChickens}
+          setSelectedChicken={(chicken: any) => {
+            setSelectedChicken(chicken);
+            setPage("profile");
+          }}
+        />
+      )}
 
-        <div onClick={() => navigate("registry")} style={{ cursor: "pointer" }}>
-          Chicken Registry
-        </div>
-      </div>
-
-      {/* Main */}
-      <div style={{ flex: 1, padding: 20 }}>
-        {page === "registry" && (
-          <ChickenRegistry
-            chickens={chickens}
-            setChickens={setChickens}
-            setSelectedChicken={setSelectedChicken}
-            navigate={navigate}
-          />
-        )}
-
-        {page === "profile" && selectedChicken && (
-          <ChickenProfile
-            selectedChicken={selectedChicken}
-            setChickens={setChickens}
-            navigate={navigate}
-          />
-        )}
-      </div>
+      {page === "profile" && (
+        <ChickenProfile
+          selectedChicken={selectedChicken}
+          setChickens={setChickens}
+          setSelectedChicken={setSelectedChicken}
+          navigate={navigate}
+        />
+      )}
     </div>
   );
 }
