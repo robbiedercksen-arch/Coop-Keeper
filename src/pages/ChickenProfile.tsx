@@ -185,7 +185,15 @@ const NotesSection = () => {
 
   return (
     <div style={card}>
-      <div style={{ fontWeight: 700, marginBottom: 10 }}>
+      <div style={{
+  fontWeight: 700,
+  marginBottom: 12,
+  fontSize: 15,
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  color: "#374151"
+}}>
         📝 Notes & Observations
       </div>
 
