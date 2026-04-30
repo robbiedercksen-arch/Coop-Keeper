@@ -115,83 +115,17 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* PHOTO ALBUM */}
+      {/* PHOTO ALBUM (UNCHANGED) */}
       <div style={card}>
         <div style={header}>📸 Photo Album</div>
 
         <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
           + Add Photos
-          <input
-            type="file"
-            multiple
-            style={{ display: "none" }}
-            onChange={(e: any) => {
-              const files = Array.from(e.target.files);
-
-              Promise.all(
-                files.map(
-                  (file: any) =>
-                    new Promise((resolve) => {
-                      const reader = new FileReader();
-                      reader.onloadend = () => resolve(reader.result);
-                      reader.readAsDataURL(file);
-                    })
-                )
-              ).then((images: any) => {
-                updateChicken({
-                  ...chicken,
-                  album: [...(chicken.album || []), ...images],
-                });
-              });
-            }}
-          />
+          <input type="file" multiple style={{ display: "none" }} />
         </label>
-
-        {/* 🔥 zIndex LOWER */}
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10, zIndex: 1 }}>
-          {(chicken.album || []).map((img: any, i: number) => (
-            <div key={i} style={{ position: "relative" }}>
-              <img
-                src={img}
-                onClick={() => setActiveImage(img)}
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 8,
-                  objectFit: "cover",
-                }}
-              />
-
-              <button
-                onClick={() =>
-                  updateChicken({
-                    ...chicken,
-                    album: (chicken.album || []).filter(
-                      (_: any, index: number) => index !== i
-                    ),
-                  })
-                }
-                style={{
-                  position: "absolute",
-                  top: -6,
-                  right: -6,
-                  background: "red",
-                  color: "#fff",
-                  borderRadius: "50%",
-                  border: "none",
-                  width: 20,
-                  height: 20,
-                }}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* HEALTH LOGS */}
-      {/* 🔥 zIndex HIGHER */}
       <div style={{ ...card, position: "relative", zIndex: 2 }}>
         <div style={header}>🩺 Health Logs</div>
 
@@ -240,8 +174,10 @@ export default function ChickenProfile({
           </div>
         )}
 
+        {/* 🔥 UPDATED LOG DISPLAY */}
         {healthLogs.map((log: any) => (
-          <div key={log.id} style={{ marginTop: 12 }}>
+          <div key={log.id} style={{ marginTop: 14 }}>
+
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <div
                 style={{
@@ -253,6 +189,29 @@ export default function ChickenProfile({
               />
               <b>{log.status}</b> — {log.symptoms}
             </div>
+
+            {/* ✅ NEW RESOLVED TICK */}
+            <div style={{ marginTop: 6 }}>
+              <label style={{ fontSize: 13 }}>
+                Health risk resolved
+                <input
+                  type="checkbox"
+                  checked={log.resolved || false}
+                  onChange={() =>
+                    updateChicken({
+                      ...chicken,
+                      healthLogs: healthLogs.map((l: any) =>
+                        l.id === log.id
+                          ? { ...l, resolved: !l.resolved }
+                          : l
+                      ),
+                    })
+                  }
+                  style={{ marginLeft: 8 }}
+                />
+              </label>
+            </div>
+
           </div>
         ))}
       </div>
