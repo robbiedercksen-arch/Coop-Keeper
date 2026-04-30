@@ -345,6 +345,8 @@ export default function ChickenProfile({
         ))}
       </div>
 
+      
+
       {/* 🚀 NEXT LEVEL MODAL */}
       {viewLog && (
         <div style={{
