@@ -48,7 +48,6 @@ export default function ChickenProfile({
     marginBottom: 8,
   };
 
-  // Format date nicely
   const formatDate = (date: string) => {
     if (!date) return "-";
     return new Date(date).toLocaleDateString();
@@ -69,6 +68,7 @@ export default function ChickenProfile({
           fontWeight: 600,
           cursor: "pointer",
           marginBottom: 20,
+          boxShadow: "0 3px 8px rgba(0,0,0,0.15)",
         }}
       >
         ← Back to Registry
@@ -81,23 +81,27 @@ export default function ChickenProfile({
           {/* IMAGE */}
           <img
             src={selectedChicken.image}
-            style={{ width: 140, borderRadius: 12, objectFit: "cover" }}
+            style={{
+              width: 140,
+              height: 140,
+              borderRadius: 12,
+              objectFit: "cover",
+            }}
           />
 
           {/* DETAILS */}
           <div>
-            <h2 style={{ marginBottom: 10 }}>{selectedChicken.name}</h2>
+            <h2 style={{ marginBottom: 10 }}>
+              {selectedChicken.name}
+            </h2>
 
             <div style={value}>
               <span style={label}>ID Tag:</span> {selectedChicken.idTag}
             </div>
 
             <div style={value}>
-              <span style={label}>Name:</span> {selectedChicken.name}
-            </div>
-
-            <div style={value}>
-              <span style={label}>Breed:</span> {selectedChicken.breed || "-"}
+              <span style={label}>Breed:</span>{" "}
+              {selectedChicken.breed || "-"}
             </div>
 
             <div style={value}>
@@ -117,7 +121,7 @@ export default function ChickenProfile({
               <span style={label}>Status:</span> {selectedChicken.status}
             </div>
 
-            {/* ACTION BUTTONS */}
+            {/* ACTIONS */}
             <div style={{ marginTop: 15 }}>
               <button
                 style={{ ...btn, background: "#3b82f6", color: "#fff" }}
@@ -201,20 +205,37 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* ================= VIEW MODALS ================= */}
+      {/* ================= VIEW HEALTH ================= */}
       {viewLog && (
         <div style={card}>
-          <h3>Health Details</h3>
-          <p>{viewLog.notes || "No details"}</p>
-          <button onClick={() => setViewLog(null)}>Close</button>
+          <h3>📋 Health Details</h3>
+          <p><b>Date:</b> {viewLog.date}</p>
+          <p><b>Status:</b> {viewLog.status}</p>
+          <p><b>Notes:</b> {viewLog.notes || "-"}</p>
+
+          <button
+            style={{ ...btn, background: "#6b7280", color: "#fff" }}
+            onClick={() => setViewLog(null)}
+          >
+            Close
+          </button>
         </div>
       )}
 
+      {/* ================= VIEW NOTE ================= */}
       {viewNote && (
         <div style={card}>
-          <h3>Note Details</h3>
-          <p>{viewNote.description}</p>
-          <button onClick={() => setViewNote(null)}>Close</button>
+          <h3>📋 Note Details</h3>
+          <p><b>Date:</b> {viewNote.date}</p>
+          <p><b>Type:</b> {viewNote.type}</p>
+          <p><b>Description:</b> {viewNote.description}</p>
+
+          <button
+            style={{ ...btn, background: "#6b7280", color: "#fff" }}
+            onClick={() => setViewNote(null)}
+          >
+            Close
+          </button>
         </div>
       )}
     </div>
