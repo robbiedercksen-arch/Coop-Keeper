@@ -357,6 +357,7 @@ const header = {
       background: "#f9fafb",
     }}
   >
+
     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
       <div
         style={{
@@ -395,4 +396,6 @@ const header = {
       <button onClick={() => editHealthLog(log)}>Edit</button>
       <button onClick={() => deleteHealthLog(log.id)}>Delete</button>
     </div>
-  ))}
+
+  </div>
+))}
