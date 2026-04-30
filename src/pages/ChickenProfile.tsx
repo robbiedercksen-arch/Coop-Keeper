@@ -17,19 +17,18 @@ export default function ChickenProfile({
     );
   }
 
-  // 🔥 LOCAL STATE FIX (THIS SOLVES YOUR ISSUE)
+  // 🔥 LOCAL STATE
   const [chicken, setChicken] = useState(selectedChicken);
 
   useEffect(() => {
     setChicken(selectedChicken);
   }, [selectedChicken]);
 
-  // ================= STATE =================
+  // 🆕 IMAGE POPUP STATE
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+
   const [showHealthForm, setShowHealthForm] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
-
-  const [viewLog, setViewLog] = useState<any>(null);
-  const [viewNote, setViewNote] = useState<any>(null);
 
   const [healthForm, setHealthForm] = useState({
     date: "",
@@ -50,43 +49,11 @@ export default function ChickenProfile({
 
   // ================= UPDATE =================
   const updateChicken = (updated: any) => {
-    setChicken(updated); // 🔥 INSTANT UI UPDATE
-
+    setChicken(updated);
     setChickens((prev: any[]) =>
       prev.map((c) => (c.id === updated.id ? updated : c))
     );
-
     setSelectedChicken(updated);
-  };
-
-  // ================= ADD HEALTH =================
-  const addHealth = () => {
-    if (!healthForm.date) return alert("Date required");
-
-    const newLog = {
-      id: Date.now(),
-      ...healthForm,
-      resolved: false,
-    };
-
-    updateChicken({
-      ...chicken,
-      healthLogs: [...healthLogs, newLog],
-    });
-
-    setShowHealthForm(false);
-  };
-
-  // ================= ADD NOTE =================
-  const addNote = () => {
-    if (!noteForm.description) return alert("Fill fields");
-
-    updateChicken({
-      ...chicken,
-      notes: [...notes, { id: Date.now(), ...noteForm }],
-    });
-
-    setShowNoteForm(false);
   };
 
   // ================= STYLES =================
@@ -143,7 +110,7 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* ================= PHOTO ALBUM (FINAL WORKING) ================= */}
+      {/* ================= PHOTO ALBUM ================= */}
       <div style={card}>
         <div style={sectionTitle}>📸 Photo Album</div>
 
@@ -180,7 +147,14 @@ export default function ChickenProfile({
             <div key={i} style={{ position: "relative" }}>
               <img
                 src={img}
-                style={{ width: 100, height: 100, borderRadius: 8 }}
+                onClick={() => setActiveImage(img)} // 🔥 CLICK TO VIEW
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 8,
+                  objectFit: "cover",
+                  cursor: "pointer",
+                }}
               />
 
               <button
@@ -211,46 +185,57 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* HEALTH LOGS */}
-      <div style={card}>
-        <div style={sectionTitle}>🩺 Health Logs</div>
+      {/* ================= IMAGE POPUP ================= */}
+      {activeImage && (
+        <div
+          onClick={() => setActiveImage(null)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "rgba(0,0,0,0.8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 999,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ position: "relative" }}
+          >
+            <img
+              src={activeImage}
+              style={{
+                maxWidth: "90vw",
+                maxHeight: "90vh",
+                borderRadius: 12,
+              }}
+            />
 
-        <button style={success} onClick={() => setShowHealthForm(!showHealthForm)}>
-          + Add Health Log
-        </button>
-
-        {showHealthForm && (
-          <div style={{ marginTop: 10 }}>
-            <input type="date" onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })} />
-            <select onChange={(e) => setHealthForm({ ...healthForm, status: e.target.value })}>
-              <option>Healthy</option>
-              <option>Sick</option>
-              <option>Recovering</option>
-            </select>
-            <input placeholder="Symptoms" onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })} />
-            <input placeholder="Treatment" onChange={(e) => setHealthForm({ ...healthForm, treatment: e.target.value })} />
-            <textarea placeholder="Notes" onChange={(e) => setHealthForm({ ...healthForm, notes: e.target.value })} />
-            <button onClick={addHealth}>Save</button>
+            <button
+              onClick={() => setActiveImage(null)}
+              style={{
+                position: "absolute",
+                top: -10,
+                right: -10,
+                background: "#ef4444",
+                color: "#fff",
+                border: "none",
+                borderRadius: "50%",
+                width: 30,
+                height: 30,
+                cursor: "pointer",
+                fontSize: 16,
+              }}
+            >
+              ×
+            </button>
           </div>
-        )}
-
-        {healthLogs.map((log: any) => (
-          <div key={log.id}>{log.status} - {log.symptoms}</div>
-        ))}
-      </div>
-
-      {/* NOTES */}
-      <div style={card}>
-        <div style={sectionTitle}>📝 Notes & Observations</div>
-
-        <button style={primary} onClick={() => setShowNoteForm(!showNoteForm)}>
-          + Add Note
-        </button>
-
-        {notes.map((n: any) => (
-          <div key={n.id}>{n.description}</div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
