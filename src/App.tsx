@@ -5,8 +5,8 @@ import Dashboard from "./pages/Dashboard";
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
+  const [collapsed, setCollapsed] = useState(false);
 
-  // ✅ PERSIST DATA
   const [chickens, setChickens] = useState<any[]>(() => {
     const saved = localStorage.getItem("chickens");
     return saved ? JSON.parse(saved) : [];
@@ -30,78 +30,126 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", background: "#f3f4f6" }}>
 
       {/* 🔥 SIDEBAR */}
       <div style={{
-        width: 220,
+        width: collapsed ? 70 : 230,
         background: "#111827",
         color: "#fff",
         minHeight: "100vh",
-        padding: 20
+        padding: 15,
+        transition: "all 0.25s ease"
       }}>
-        <h2 style={{ marginBottom: 20 }}>🐔 Coop Manager</h2>
+        
+        {/* LOGO */}
+        <div style={{
+          display: "flex",
+          justifyContent: collapsed ? "center" : "space-between",
+          alignItems: "center",
+          marginBottom: 20
+        }}>
+          {!collapsed && <h2>🐔 Coop</h2>}
 
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            style={collapseBtn}
+          >
+            {collapsed ? "➡" : "⬅"}
+          </button>
+        </div>
+
+        {/* MENU */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 
           <button
             onClick={() => navigate("dashboard")}
-            style={menuBtn(page === "dashboard")}
+            style={menuBtn(page === "dashboard", collapsed)}
           >
-            🏠 Dashboard
+            🏠 {!collapsed && "Dashboard"}
           </button>
 
           <button
             onClick={() => navigate("registry")}
-            style={menuBtn(page === "registry")}
+            style={menuBtn(page === "registry", collapsed)}
           >
-            🐔 Chicken Registry
+            🐔 {!collapsed && "Registry"}
           </button>
 
         </div>
       </div>
 
-      {/* 🔥 MAIN CONTENT */}
-      <div style={{ flex: 1, padding: 20 }}>
+      {/* 🔥 MAIN AREA */}
+      <div style={{ flex: 1 }}>
 
-        {page === "dashboard" && (
-          <Dashboard chickens={chickens} />
-        )}
+        {/* HEADER */}
+        <div style={{
+          background: "#fff",
+          padding: "14px 20px",
+          borderBottom: "1px solid #e5e7eb",
+          fontWeight: 600,
+        }}>
+          {page === "dashboard" && "Dashboard"}
+          {page === "registry" && "Chicken Registry"}
+          {page === "profile" && "Chicken Profile"}
+        </div>
 
-        {page === "registry" && (
-          <ChickenRegistry
-            chickens={chickens}
-            setChickens={setChickens}
-            setSelectedChicken={(chicken: any) => {
-              setSelectedChicken(chicken);
-              setPage("profile");
-            }}
-          />
-        )}
+        {/* CONTENT */}
+        <div style={{ padding: 20 }}>
 
-        {page === "profile" && (
-          <ChickenProfile
-            selectedChicken={selectedChicken}
-            setChickens={setChickens}
-            setSelectedChicken={setSelectedChicken}
-            navigate={navigate}
-          />
-        )}
+          {page === "dashboard" && (
+            <Dashboard chickens={chickens} />
+          )}
 
+          {page === "registry" && (
+            <ChickenRegistry
+              chickens={chickens}
+              setChickens={setChickens}
+              setSelectedChicken={(chicken: any) => {
+                setSelectedChicken(chicken);
+                setPage("profile");
+              }}
+            />
+          )}
+
+          {page === "profile" && (
+            <ChickenProfile
+              selectedChicken={selectedChicken}
+              setChickens={setChickens}
+              setSelectedChicken={setSelectedChicken}
+              navigate={navigate}
+            />
+          )}
+
+        </div>
       </div>
     </div>
   );
 }
 
-// 🔥 UPGRADED MENU BUTTON
-const menuBtn = (active: boolean) => ({
+// 🔥 BUTTON STYLES
+
+const menuBtn = (active: boolean, collapsed: boolean) => ({
   background: active ? "#2563eb" : "#1f2937",
   color: "#fff",
   border: "none",
-  padding: "10px 12px",
+  padding: collapsed ? "10px" : "10px 12px",
   borderRadius: 10,
   cursor: "pointer",
   textAlign: "left" as const,
   fontWeight: active ? 700 : 500,
   transition: "all 0.2s ease",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: collapsed ? "center" : "flex-start",
+  gap: 8,
 });
+
+const collapseBtn = {
+  background: "#1f2937",
+  color: "#fff",
+  border: "none",
+  borderRadius: 8,
+  padding: "4px 8px",
+  cursor: "pointer",
+};
