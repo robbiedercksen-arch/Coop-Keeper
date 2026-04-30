@@ -81,14 +81,6 @@ export default function ChickenProfile({
   };
 
 
-// 💾 Save updated chicken info
-const saveChickenInfo = () => {
-  updateChicken({
-    ...chicken,
-    ...editForm,
-  });
-  setEditingChicken(false);
-};
   const getColor = (status: string) => {
     if (status === "Healthy") return "#22c55e";
     if (status === "Sick") return "#ef4444";
