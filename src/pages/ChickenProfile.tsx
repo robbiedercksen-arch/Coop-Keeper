@@ -305,9 +305,31 @@ export default function ChickenProfile({
           </div>
         )}
 
+        {/* ✔ RESOLVED TICK RESTORED */}
         {healthLogs.map((log: any) => (
-          <div key={log.id} style={{ marginTop: 10 }}>
-            <b>{log.status}</b> — {log.symptoms}
+          <div key={log.id} style={{ marginTop: 12 }}>
+            <div>
+              <b>{log.status}</b> — {log.symptoms}
+            </div>
+
+            <label style={{ fontSize: 13, color: "#555" }}>
+              <input
+                type="checkbox"
+                checked={log.resolved}
+                onChange={() =>
+                  updateChicken({
+                    ...chicken,
+                    healthLogs: healthLogs.map((l: any) =>
+                      l.id === log.id
+                        ? { ...l, resolved: !l.resolved }
+                        : l
+                    ),
+                  })
+                }
+                style={{ marginRight: 6 }}
+              />
+              ✔ Health Issue Resolved
+            </label>
           </div>
         ))}
       </div>
