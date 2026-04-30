@@ -112,6 +112,8 @@ export default function ChickenProfile({
 // 📝 NOTES SECTION (PASTE RIGHT HERE)
 const NotesSection = () => {
   const [showForm, setShowForm] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+
   const [noteForm, setNoteForm] = useState({
     date: "",
     type: "General",
@@ -123,12 +125,26 @@ const NotesSection = () => {
   const saveNote = () => {
     if (!noteForm.date || !noteForm.description) return;
 
+    let updatedNotes;
+
+    if (editingNoteId) {
+      updatedNotes = notes.map((n: any) =>
+        n.id === editingNoteId ? { ...n, ...noteForm } : n
+      );
+    } else {
+      updatedNotes = [
+        ...notes,
+        { id: Date.now(), ...noteForm },
+      ];
+    }
+
     updateChicken({
       ...chicken,
-      notes: [...notes, { id: Date.now(), ...noteForm }]
+      notes: updatedNotes,
     });
 
     setNoteForm({ date: "", type: "General", description: "" });
+    setEditingNoteId(null);
     setShowForm(false);
   };
 
@@ -140,7 +156,10 @@ const NotesSection = () => {
 
       <button
         style={{ ...btn, background: "#6366f1", color: "#fff", marginBottom: 10 }}
-        onClick={() => setShowForm(!showForm)}
+        onClick={() => {
+          setShowForm(!showForm);
+          setEditingNoteId(null);
+        }}
       >
         + Add Note
       </button>
@@ -177,75 +196,70 @@ const NotesSection = () => {
       )}
 
       {notes.map((note: any) => (
-  <div key={note.id}
-    style={{
-      marginTop: 10,
-      padding: 12,
-      borderRadius: 12,
-      background: "#f9fafb",
-      border: "1px solid #e5e7eb",
-    }}
-  >
-    <div style={{ display: "flex", justifyContent: "space-between" }}>
-      
-      <div
-        style={{ cursor: "pointer" }}
-        onClick={() => setViewNote(note)}
-      >
-        <b>{note.type}</b> — {note.description}
-        <div style={{ fontSize: 12, color: "#6b7280" }}>
-          {note.date}
+        <div key={note.id} style={{
+          marginTop: 10,
+          padding: 12,
+          borderRadius: 12,
+          background: "#f9fafb",
+          border: "1px solid #e5e7eb",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            
+            <div>
+              <b>{note.type}</b> — {note.description}
+              <div style={{ fontSize: 12, color: "#6b7280" }}>
+                {note.date}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 6 }}>
+              
+              <button
+                onClick={() => {
+                  setNoteForm(note);
+                  setEditingNoteId(note.id);
+                  setShowForm(true);
+                }}
+                style={{
+                  background: "#f59e0b",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "4px 6px",
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >
+                ✏
+              </button>
+
+              <button
+                onClick={() => {
+                  updateChicken({
+                    ...chicken,
+                    notes: notes.filter((n: any) => n.id !== note.id),
+                  });
+                }}
+                style={{
+                  background: "#ef4444",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "4px 6px",
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >
+                🗑
+              </button>
+
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* 🔥 SMALL ACTION BUTTONS */}
-      <div style={{ display: "flex", gap: 6 }}>
-        
-        {/* EDIT */}
-        <button
-          onClick={() => {
-            setNoteForm(note);
-            setEditingNoteId(note.id);
-            setShowNoteForm(true);
-          }}
-          style={{
-            background: "#f59e0b",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            padding: "4px 6px",
-            fontSize: 12,
-            cursor: "pointer",
-          }}
-        >
-          ✏
-        </button>
-
-        {/* DELETE */}
-        <button
-          onClick={() => {
-            updateChicken({
-              ...chicken,
-              notes: notes.filter((n: any) => n.id !== note.id),
-            });
-          }}
-          style={{
-            background: "#ef4444",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            padding: "4px 6px",
-            fontSize: 12,
-            cursor: "pointer",
-          }}
-        >
-          🗑
-        </button>
-
-      </div>
+      ))}
     </div>
-  </div>
-))}
+  );
+};
 
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
