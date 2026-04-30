@@ -123,12 +123,12 @@ export default function ChickenProfile({
       </button>
 
       {/* EDIT CHICKEN */}
-  <button
-  style={{ ...btn, background: "#6366f1", color: "#fff", marginBottom: 10 }}
-  onClick={() => setIsEditingChicken(true)}
->
-  Edit Chicken Profile
-</button>
+      <button
+        style={{ ...btn, background: "#6366f1", color: "#fff", marginBottom: 10 }}
+        onClick={() => alert("Edit Chicken Coming Next")}
+      >
+        Edit Chicken Profile
+      </button>
 
       {/* PROFILE */}
       
@@ -151,11 +151,11 @@ export default function ChickenProfile({
     )}
 
     <div>
-    <h1>{chicken.name}</h1>
-<div>ID Tag: {chicken.idTag}</div>
-<div>Breed: {chicken.breed}</div>
-<div>Sex: {chicken.sex}</div>
-<div>Age: {chicken.ageGroup}</div>
+      <h1>{chicken.name}</h1>
+      <div>ID Tag: {chicken.idTag}</div>
+      <div>Breed: {chicken.breed}</div>
+      <div>Sex: {chicken.sex}</div>
+      <div>Age: {chicken.ageGroup}</div>
     </div>
 
   </div>
