@@ -9,14 +9,11 @@ export default function ChickenProfile({
   if (!selectedChicken) return <div style={{ padding: 20 }}>Loading...</div>;
 
   // ================= STATE =================
-  const [showHealthForm, setShowHealthForm] = useState(false);
-  const [showNoteForm, setShowNoteForm] = useState(false);
-
   const [viewLog, setViewLog] = useState<any>(null);
   const [viewNote, setViewNote] = useState<any>(null);
 
-  const [editingLog, setEditingLog] = useState<any>(null);
-  const [editingNote, setEditingNote] = useState<any>(null);
+  const [showHealthForm, setShowHealthForm] = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false);
 
   const [healthForm, setHealthForm] = useState({
     date: "",
@@ -50,60 +47,21 @@ export default function ChickenProfile({
 
   // ================= PHOTO ALBUM =================
   const handleAddPhoto = (e: any) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      updateChicken({
-        ...selectedChicken,
-        album: [...album, reader.result],
-      });
-    };
-    reader.readAsDataURL(file);
+    files.forEach((file: any) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateChicken({
+          ...selectedChicken,
+          album: [...album, reader.result],
+        });
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   // ================= HEALTH =================
-  const saveHealthLog = () => {
-    if (!healthForm.date) return alert("Date required");
-
-    if (editingLog) {
-      const updated = healthLogs.map((l: any) =>
-        l.id === editingLog.id ? { ...l, ...healthForm } : l
-      );
-      updateChicken({ ...selectedChicken, healthLogs: updated });
-      setEditingLog(null);
-    } else {
-      const newLog = {
-        id: Date.now(),
-        ...healthForm,
-        resolved: false,
-      };
-      updateChicken({
-        ...selectedChicken,
-        healthLogs: [...healthLogs, newLog],
-      });
-    }
-
-    setHealthForm({ date: "", status: "Healthy", symptoms: "" });
-    setShowHealthForm(false);
-  };
-
-  const handleEditLog = (log: any) => {
-    setHealthForm(log);
-    setEditingLog(log);
-    setShowHealthForm(true);
-    setViewLog(null);
-  };
-
-  const deleteLog = (id: number) => {
-    updateChicken({
-      ...selectedChicken,
-      healthLogs: healthLogs.filter((l: any) => l.id !== id),
-    });
-    setViewLog(null);
-  };
-
   const toggleResolved = (id: number) => {
     updateChicken({
       ...selectedChicken,
@@ -114,34 +72,6 @@ export default function ChickenProfile({
   };
 
   // ================= NOTES =================
-  const saveNote = () => {
-    if (!noteForm.date || !noteForm.description)
-      return alert("Fill all fields");
-
-    if (editingNote) {
-      const updated = notes.map((n: any) =>
-        n.id === editingNote.id ? { ...n, ...noteForm } : n
-      );
-      updateChicken({ ...selectedChicken, notes: updated });
-      setEditingNote(null);
-    } else {
-      updateChicken({
-        ...selectedChicken,
-        notes: [...notes, { id: Date.now(), ...noteForm }],
-      });
-    }
-
-    setNoteForm({ date: "", type: "General", description: "" });
-    setShowNoteForm(false);
-  };
-
-  const handleEditNote = (note: any) => {
-    setNoteForm(note);
-    setEditingNote(note);
-    setShowNoteForm(true);
-    setViewNote(null);
-  };
-
   const deleteNote = (id: number) => {
     updateChicken({
       ...selectedChicken,
@@ -159,6 +89,15 @@ export default function ChickenProfile({
     marginBottom: 20,
   };
 
+  const sectionTitle = {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    fontSize: 18,
+    fontWeight: 700,
+    marginBottom: 10,
+  };
+
   const btn = {
     padding: "8px 14px",
     borderRadius: 8,
@@ -171,17 +110,10 @@ export default function ChickenProfile({
   const success = { ...btn, background: "#22c55e", color: "#fff" };
   const danger = { ...btn, background: "#ef4444", color: "#fff" };
 
-  const input = {
-    padding: 10,
-    borderRadius: 8,
-    border: "1px solid #ddd",
-    width: "100%",
-  };
-
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
 
-      {/* 🔙 BACK BUTTON FIXED */}
+      {/* BACK */}
       <div style={{ marginBottom: 20 }}>
         <button onClick={() => navigate("registry")} style={primary}>
           ← Back to Registry
@@ -193,23 +125,41 @@ export default function ChickenProfile({
         <div style={{ display: "flex", gap: 20 }}>
           <img
             src={selectedChicken.image}
-            style={{ width: 150, height: 150, borderRadius: 12 }}
+            style={{
+              width: 150,
+              height: 150,
+              borderRadius: 12,
+              objectFit: "cover",
+            }}
           />
 
           <div>
-            <h2>{selectedChicken.name}</h2>
-            <div><b>ID Tag:</b> {selectedChicken.idTag}</div>
-            <div><b>Breed:</b> {selectedChicken.breed}</div>
-            <div><b>Sex:</b> {selectedChicken.sex}</div>
-            <div><b>Age:</b> {selectedChicken.ageGroup}</div>
+            <h1 style={{ margin: 0 }}>{selectedChicken.name}</h1>
+
+            <div style={{ marginTop: 10 }}>
+              <div><b>ID Tag:</b> {selectedChicken.idTag}</div>
+              <div><b>Breed:</b> {selectedChicken.breed}</div>
+              <div><b>Sex:</b> {selectedChicken.sex}</div>
+              <div><b>Age:</b> {selectedChicken.ageGroup}</div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* PHOTO ALBUM */}
       <div style={card}>
-        <h3>📸 Photo Album</h3>
-        <input type="file" onChange={handleAddPhoto} />
+        <div style={sectionTitle}>📸 Photo Album</div>
+
+        <label style={success}>
+          + Add Photos
+          <input
+            type="file"
+            multiple
+            onChange={handleAddPhoto}
+            style={{ display: "none" }}
+          />
+        </label>
+
         <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
           {album.map((img: any, i: number) => (
             <img key={i} src={img} style={{ width: 100, borderRadius: 8 }} />
@@ -219,33 +169,13 @@ export default function ChickenProfile({
 
       {/* HEALTH */}
       <div style={card}>
-        <h3>🩺 Health Logs</h3>
+        <div style={sectionTitle}>🩺 Health Logs</div>
 
-        <button onClick={() => setShowHealthForm(!showHealthForm)} style={success}>
-          + Add Health Log
-        </button>
-
-        {showHealthForm && (
-          <div style={{ marginTop: 10 }}>
-            <input type="date" style={input}
-              value={healthForm.date}
-              onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })}
-            />
-
-            <input
-              placeholder="Symptoms"
-              style={input}
-              value={healthForm.symptoms}
-              onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })}
-            />
-
-            <button onClick={saveHealthLog}>Save</button>
-          </div>
-        )}
+        <button style={success}>+ Add Health Log</button>
 
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{ marginTop: 10 }}>
-            <b>{log.status}</b> - {log.symptoms}
+            <b>{log.status}</b> — {log.symptoms}
 
             <div>
               <label>
@@ -263,60 +193,34 @@ export default function ChickenProfile({
         ))}
       </div>
 
-      {/* HEALTH VIEW */}
-      {viewLog && (
-        <div style={card}>
-          <h3>Health Details</h3>
-          <p>{viewLog.symptoms}</p>
-
-          <button onClick={() => handleEditLog(viewLog)}>Edit</button>
-          <button onClick={() => deleteLog(viewLog.id)}>Delete</button>
-          <button onClick={() => setViewLog(null)}>Close</button>
-        </div>
-      )}
-
       {/* NOTES */}
       <div style={card}>
-        <h3>📝 Notes</h3>
+        <div style={sectionTitle}>📝 Notes & Observations</div>
 
-        <button onClick={() => setShowNoteForm(!showNoteForm)} style={primary}>
-          + Add Note
-        </button>
-
-        {showNoteForm && (
-          <div>
-            <input type="date" style={input}
-              value={noteForm.date}
-              onChange={(e) => setNoteForm({ ...noteForm, date: e.target.value })}
-            />
-
-            <textarea
-              style={input}
-              value={noteForm.description}
-              onChange={(e) => setNoteForm({ ...noteForm, description: e.target.value })}
-            />
-
-            <button onClick={saveNote}>Save</button>
-          </div>
-        )}
+        <button style={primary}>+ Add Note</button>
 
         {notes.map((n: any) => (
-          <div key={n.id}>
+          <div key={n.id} style={{ marginTop: 10 }}>
             {n.description}
-            <button onClick={() => setViewNote(n)}>View</button>
+
+            <div>
+              <button onClick={() => setViewNote(n)}>View</button>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* NOTES VIEW */}
+      {/* NOTE VIEW */}
       {viewNote && (
         <div style={card}>
           <h3>Note Details</h3>
           <p>{viewNote.description}</p>
 
-          <button onClick={() => handleEditNote(viewNote)}>Edit</button>
-          <button onClick={() => deleteNote(viewNote.id)}>Delete</button>
-          <button onClick={() => setViewNote(null)}>Close</button>
+          <button style={primary}>Edit</button>
+          <button style={danger} onClick={() => deleteNote(viewNote.id)}>
+            Delete
+          </button>
+          <button onClick={() => setViewNote(null)}>Cancel</button>
         </div>
       )}
     </div>
