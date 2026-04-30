@@ -20,7 +20,15 @@ export default function ChickenProfile({
   const [chicken, setChicken] = useState(selectedChicken);
   useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
-  
+ useEffect(() => {
+  setEditForm({
+    name: chicken.name,
+    idTag: chicken.idTag,
+    breed: chicken.breed,
+    sex: chicken.sex,
+    ageGroup: chicken.ageGroup,
+  });
+}, [chicken]); 
 
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [showHealthForm, setShowHealthForm] = useState(false);
