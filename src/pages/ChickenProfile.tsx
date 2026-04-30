@@ -194,6 +194,23 @@ const NotesSection = () => {
   gap: 6,
   color: "#374151"
 }}>
+const [editingChicken, setEditingChicken] = useState(false);
+
+const [editForm, setEditForm] = useState({
+  name: chicken.name || "",
+  idTag: chicken.idTag || "",
+  breed: chicken.breed || "",
+  sex: chicken.sex || "Hen",
+  ageGroup: chicken.ageGroup || "",
+});
+
+const saveChickenInfo = () => {
+  updateChicken({
+    ...chicken,
+    ...editForm,
+  });
+  setEditingChicken(false);
+};
         📝 Notes & Observations
       </div>
 
