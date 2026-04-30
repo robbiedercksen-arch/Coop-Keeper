@@ -135,7 +135,7 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* PHOTO ALBUM */}
+      {/* ================= PHOTO ALBUM (FIXED) ================= */}
       <div style={card}>
         <div style={sectionTitle}>📸 Photo Album</div>
 
@@ -147,15 +147,23 @@ export default function ChickenProfile({
             style={{ display: "none" }}
             onChange={(e: any) => {
               const files = Array.from(e.target.files);
-              files.forEach((file: any) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  updateChicken({
-                    ...selectedChicken,
-                    album: [...album, reader.result],
-                  });
+
+              Promise.all(
+                files.map(
+                  (file: any) =>
+                    new Promise((resolve) => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => resolve(reader.result);
+                      reader.readAsDataURL(file);
+                    })
+                )
+              ).then((images: any) => {
+                const updated = {
+                  ...selectedChicken,
+                  album: [...album, ...images],
                 };
-                reader.readAsDataURL(file);
+
+                updateChicken(updated);
               });
             }}
           />
@@ -168,13 +176,16 @@ export default function ChickenProfile({
                 src={img}
                 style={{ width: 100, height: 100, borderRadius: 8 }}
               />
+
               <button
-                onClick={() =>
-                  updateChicken({
+                onClick={() => {
+                  const updated = {
                     ...selectedChicken,
                     album: album.filter((_: any, index: number) => index !== i),
-                  })
-                }
+                  };
+
+                  updateChicken(updated);
+                }}
                 style={{
                   position: "absolute",
                   top: -6,
@@ -221,23 +232,20 @@ export default function ChickenProfile({
           <div key={log.id} style={{ marginTop: 10 }}>
             <b>{log.status}</b> — {log.symptoms}
 
-            <div>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={log.resolved}
-                  onChange={() =>
-                    updateChicken({
-                      ...selectedChicken,
-                      healthLogs: healthLogs.map((l: any) =>
-                        l.id === log.id ? { ...l, resolved: !l.resolved } : l
-                      ),
-                    })
-                  }
-                />
-                ✔ Resolved
-              </label>
-            </div>
+            <label>
+              <input
+                type="checkbox"
+                checked={log.resolved}
+                onChange={() =>
+                  updateChicken({
+                    ...selectedChicken,
+                    healthLogs: healthLogs.map((l: any) =>
+                      l.id === log.id ? { ...l, resolved: !l.resolved } : l
+                    ),
+                  })
+                }
+              /> ✔ Resolved
+            </label>
 
             <button onClick={() => setViewLog(log)}>View</button>
           </div>
