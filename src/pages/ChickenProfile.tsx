@@ -151,11 +151,11 @@ export default function ChickenProfile({
     )}
 
     <div>
-      <h1>{chicken.name}</h1>
-      <div>ID Tag: {chicken.idTag}</div>
-      <div>Breed: {chicken.breed}</div>
-      <div>Sex: {chicken.sex}</div>
-      <div>Age: {chicken.ageGroup}</div>
+    <h1>{chicken.name}</h1>
+<div>ID Tag: {chicken.idTag}</div>
+<div>Breed: {chicken.breed}</div>
+<div>Sex: {chicken.sex}</div>
+<div>Age: {chicken.ageGroup}</div>
     </div>
 
   </div>
