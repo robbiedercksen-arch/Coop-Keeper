@@ -12,12 +12,9 @@ export default function ChickenRegistry({
     idTag: "",
     name: "",
     breed: "",
-    sex: "Hen",
-    ageGroup: "Adult",
     image: "",
   });
 
-  // ================= IMAGE =================
   const handleImage = (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -29,7 +26,6 @@ export default function ChickenRegistry({
     reader.readAsDataURL(file);
   };
 
-  // ================= ADD =================
   const addChicken = () => {
     if (!form.name) return alert("Name required");
 
@@ -43,29 +39,65 @@ export default function ChickenRegistry({
 
     setChickens((prev: any[]) => [...prev, newChicken]);
     setShowForm(false);
+  };
 
-    // reset form
-    setForm({
-      idTag: "",
-      name: "",
-      breed: "",
-      sex: "Hen",
-      ageGroup: "Adult",
-      image: "",
-    });
+  // ================= STYLES =================
+  const container = {
+    padding: 20,
+    maxWidth: 1000,
+  };
+
+  const header = {
+    background: "#fff",
+    padding: 20,
+    borderRadius: 16,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  };
+
+  const card = {
+    background: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    border: "1px solid #eee",
+    marginBottom: 12,
+    cursor: "pointer",
+    transition: "0.2s",
+  };
+
+  const button = {
+    padding: "10px 16px",
+    borderRadius: 10,
+    border: "none",
+    background: "#22c55e",
+    color: "#fff",
+    cursor: "pointer",
+    fontWeight: 600,
   };
 
   return (
-    <div>
-      <h1>🐔 Chicken Registry</h1>
+    <div style={container}>
 
-      <button onClick={() => setShowForm(!showForm)}>
-        {showForm ? "Cancel" : "+ Add Chicken"}
-      </button>
+      {/* HEADER */}
+      <div style={header}>
+        <div>
+          <h2 style={{ margin: 0 }}>🐔 Chicken Registry</h2>
+          <p style={{ margin: 0, fontSize: 13, color: "#666" }}>
+            Manage your chickens
+          </p>
+        </div>
+
+        <button onClick={() => setShowForm(!showForm)} style={button}>
+          {showForm ? "Cancel" : "+ Add Chicken"}
+        </button>
+      </div>
 
       {/* FORM */}
       {showForm && (
-        <div style={{ marginTop: 10 }}>
+        <div style={header}>
           <input
             placeholder="ID Tag"
             value={form.idTag}
@@ -96,19 +128,16 @@ export default function ChickenRegistry({
       {chickens.map((c: any) => (
         <div
           key={c.id}
-          style={{
-            padding: 12,
-            border: "1px solid #ddd",
-            marginTop: 10,
-            cursor: "pointer",
-          }}
+          style={card}
           onClick={() => {
-            setSelectedChicken({ ...c }); // 🔥 CRITICAL FIX
+            setSelectedChicken({ ...c });
             navigate("profile");
           }}
         >
-          <b>{c.name}</b>
-          <div style={{ fontSize: 12 }}>ID Tag: {c.idTag}</div>
+          <h3 style={{ margin: 0 }}>{c.name}</h3>
+          <p style={{ margin: 0, fontSize: 13 }}>
+            ID Tag: {c.idTag}
+          </p>
         </div>
       ))}
     </div>
