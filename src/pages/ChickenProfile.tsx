@@ -21,9 +21,8 @@ export default function ChickenProfile({
   useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
   const [activeImage, setActiveImage] = useState<string | null>(null);
-
-  // 🔥 FIX: control form visibility
   const [showHealthForm, setShowHealthForm] = useState(false);
+  const [viewLog, setViewLog] = useState<any>(null);
 
   const [healthForm, setHealthForm] = useState({
     date: "",
@@ -54,7 +53,26 @@ export default function ChickenProfile({
       ],
     });
 
-    setShowHealthForm(false); // close after save
+    setShowHealthForm(false);
+    setHealthForm({
+      date: "",
+      status: "Healthy",
+      symptoms: "",
+      treatment: "",
+      notes: "",
+    });
+  };
+
+  const deleteHealthLog = (id: number) => {
+    updateChicken({
+      ...chicken,
+      healthLogs: healthLogs.filter((l: any) => l.id !== id),
+    });
+  };
+
+  const editHealthLog = (log: any) => {
+    setHealthForm(log);
+    setShowHealthForm(true);
   };
 
   const card = {
@@ -104,49 +122,99 @@ export default function ChickenProfile({
         ← Back
       </button>
 
+      {/* EDIT CHICKEN */}
+      <button
+        style={{ ...btn, background: "#6366f1", color: "#fff", marginBottom: 10 }}
+        onClick={() => alert("Edit Chicken Coming Next")}
+      >
+        Edit Chicken Profile
+      </button>
+
       {/* PROFILE */}
       <div style={card}>
-        <div style={{ display: "flex", gap: 20 }}>
-          {chicken.image && (
-            <img
-              src={chicken.image}
-              style={{ width: 140, height: 140, borderRadius: 12 }}
-            />
-          )}
-
-          <div>
-            <h1>{chicken.name}</h1>
-            <div><b>ID Tag:</b> {chicken.idTag}</div>
-            <div><b>Breed:</b> {chicken.breed}</div>
-            <div><b>Sex:</b> {chicken.sex}</div>
-            <div><b>Age:</b> {chicken.ageGroup}</div>
-          </div>
-        </div>
+        <h1>{chicken.name}</h1>
+        <div>ID Tag: {chicken.idTag}</div>
+        <div>Breed: {chicken.breed}</div>
+        <div>Sex: {chicken.sex}</div>
+        <div>Age: {chicken.ageGroup}</div>
       </div>
 
-      {/* PHOTO ALBUM (UNCHANGED) */}
+      {/* PHOTO ALBUM */}
       <div style={card}>
         <div style={header}>📸 Photo Album</div>
 
         <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
           + Add Photos
-          <input type="file" multiple style={{ display: "none" }} />
+          <input
+            type="file"
+            multiple
+            style={{ display: "none" }}
+            onChange={(e: any) => {
+              const files = Array.from(e.target.files);
+
+              Promise.all(
+                files.map(
+                  (file: any) =>
+                    new Promise((resolve) => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => resolve(reader.result);
+                      reader.readAsDataURL(file);
+                    })
+                )
+              ).then((images: any) => {
+                updateChicken({
+                  ...chicken,
+                  album: [...(chicken.album || []), ...images],
+                });
+              });
+            }}
+          />
         </label>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+          {(chicken.album || []).map((img: any, i: number) => (
+            <div key={i} style={{ position: "relative" }}>
+              <img
+                src={img}
+                onClick={() => setActiveImage(img)}
+                style={{ width: 100, height: 100, borderRadius: 8 }}
+              />
+              <button
+                onClick={() =>
+                  updateChicken({
+                    ...chicken,
+                    album: chicken.album.filter((_: any, index: number) => index !== i),
+                  })
+                }
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  background: "red",
+                  color: "#fff",
+                  borderRadius: "50%",
+                  width: 20,
+                  height: 20,
+                }}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* HEALTH LOGS */}
       <div style={card}>
         <div style={header}>🩺 Health Logs</div>
 
-        {/* 🔥 FIX: BUTTON ADDED BACK */}
         <button
-          style={{ ...btn, background: "#22c55e", color: "#fff", marginBottom: 10 }}
+          style={{ ...btn, background: "#22c55e", color: "#fff" }}
           onClick={() => setShowHealthForm(prev => !prev)}
         >
           + Add Health Log
         </button>
 
-        {/* 🔥 FIX: FORM TOGGLED */}
         {showHealthForm && (
           <>
             <input type="date" style={input}
@@ -163,39 +231,89 @@ export default function ChickenProfile({
               <option>Recovering</option>
             </select>
 
-            <textarea style={input} placeholder="Notes"
-              value={healthForm.notes}
-              onChange={(e) => setHealthForm({ ...healthForm, notes: e.target.value })}
+            <textarea style={input} placeholder="Symptoms"
+              value={healthForm.symptoms}
+              onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })}
             />
 
             <button style={{ ...btn, background: "#f59e0b", color: "#fff" }} onClick={saveHealth}>
-              Add
+              Save Log
             </button>
           </>
         )}
 
         {healthLogs.map((log: any) => (
-          <div key={log.id} style={{ display: "flex", justifyContent: "space-between", padding: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div key={log.id} style={{ marginTop: 12 }}>
+
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <div style={{
                 width: 10,
                 height: 10,
                 borderRadius: "50%",
                 background: getColor(log.status),
               }} />
-              {log.date} — {log.status}
+              <b>{log.status}</b> — {log.symptoms}
             </div>
 
             <div>
-              <button style={btn} onClick={() => setViewLog(log)}>View</button>
-              <button style={btn} onClick={() => editHealthLog(log)}>Edit</button>
-              <button style={btn} onClick={() => deleteHealthLog(log.id)}>Delete</button>
+              <label>
+                Health risk resolved
+                <input
+                  type="checkbox"
+                  checked={log.resolved || false}
+                  onChange={() =>
+                    updateChicken({
+                      ...chicken,
+                      healthLogs: healthLogs.map((l: any) =>
+                        l.id === log.id ? { ...l, resolved: !l.resolved } : l
+                      ),
+                    })
+                  }
+                  style={{ marginLeft: 8 }}
+                />
+              </label>
             </div>
+
+            <div>
+              <button onClick={() => setViewLog(log)}>View</button>
+              <button onClick={() => editHealthLog(log)}>Edit</button>
+              <button onClick={() => deleteHealthLog(log.id)}>Delete</button>
+            </div>
+
           </div>
         ))}
       </div>
 
-      {/* (REST OF YOUR FILE LEFT EXACTLY AS-IS) */}
+      {/* VIEW POPUP */}
+      {viewLog && (
+        <div
+          onClick={() => setViewLog(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+          }}
+        >
+          <div style={{ background: "#fff", padding: 20, margin: "10% auto", width: 300 }}>
+            <h3>{viewLog.status}</h3>
+            <p>{viewLog.symptoms}</p>
+          </div>
+        </div>
+      )}
+
+      {/* IMAGE POPUP */}
+      {activeImage && (
+        <div
+          onClick={() => setActiveImage(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.8)",
+          }}
+        >
+          <img src={activeImage} style={{ maxWidth: "90%", margin: "auto", display: "block" }} />
+        </div>
+      )}
     </div>
   );
 }
