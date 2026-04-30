@@ -31,6 +31,7 @@ export default function App() {
         <ChickenProfile
           selectedChicken={selectedChicken}
           setChickens={setChickens}
+          setSelectedChicken={setSelectedChicken} // ✅ IMPORTANT FIX
           navigate={navigate}
         />
       )}
