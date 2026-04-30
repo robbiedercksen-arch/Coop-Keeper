@@ -128,13 +128,16 @@ export default function ChickenProfile({
     padding: 6,
   };
 
-  const header = {
-    fontSize: 18,
-    fontWeight: 700,
-    marginBottom: 12,
-    paddingBottom: 8,
-    borderBottom: "1px solid #e5e7eb",
-  };
+const header = {
+  fontSize: 18,
+  fontWeight: 700,
+  marginBottom: 14,
+  paddingBottom: 10,
+  borderBottom: "2px solid #f1f5f9",
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+};
 
   const getColor = (status: string) => {
     if (status === "Healthy") return "#22c55e";
