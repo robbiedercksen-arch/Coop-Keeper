@@ -19,14 +19,15 @@ export default function ChickenProfile({
 
   // 🔥 LOCAL STATE
   const [chicken, setChicken] = useState(selectedChicken);
-
   useEffect(() => {
     setChicken(selectedChicken);
   }, [selectedChicken]);
 
   const [activeImage, setActiveImage] = useState<string | null>(null);
-
   const [showHealthForm, setShowHealthForm] = useState(false);
+
+  // 🆕 EDIT STATE (only addition)
+  const [editingLogId, setEditingLogId] = useState<number | null>(null);
 
   const [healthForm, setHealthForm] = useState({
     date: "",
@@ -47,21 +48,28 @@ export default function ChickenProfile({
     setSelectedChicken(updated);
   };
 
-  // ================= ADD HEALTH =================
+  // ================= ADD / EDIT HEALTH =================
   const addHealth = () => {
     if (!healthForm.date) return alert("Date required");
 
-    const newLog = {
-      id: Date.now(),
-      ...healthForm,
-      resolved: false,
-    };
+    if (editingLogId) {
+      updateChicken({
+        ...chicken,
+        healthLogs: healthLogs.map((l: any) =>
+          l.id === editingLogId ? { ...l, ...healthForm } : l
+        ),
+      });
+    } else {
+      updateChicken({
+        ...chicken,
+        healthLogs: [
+          ...healthLogs,
+          { id: Date.now(), ...healthForm, resolved: false },
+        ],
+      });
+    }
 
-    updateChicken({
-      ...chicken,
-      healthLogs: [...healthLogs, newLog],
-    });
-
+    setEditingLogId(null);
     setShowHealthForm(false);
     setHealthForm({
       date: "",
@@ -225,91 +233,51 @@ export default function ChickenProfile({
         </button>
 
         {showHealthForm && (
-          <div
-            style={{
-              marginTop: 15,
-              padding: 15,
-              borderRadius: 12,
-              background: "#f9fafb",
-              border: "1px solid #e5e7eb",
-              display: "grid",
-              gap: 10,
-            }}
-          >
-            <input
-              type="date"
-              value={healthForm.date}
-              onChange={(e) =>
-                setHealthForm({ ...healthForm, date: e.target.value })
-              }
-              style={inputStyle}
-            />
-
-            <select
-              value={healthForm.status}
-              onChange={(e) =>
-                setHealthForm({ ...healthForm, status: e.target.value })
-              }
-              style={inputStyle}
-            >
+          <div style={{ marginTop: 15 }}>
+            <input type="date" value={healthForm.date} onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })} style={inputStyle} />
+            <select value={healthForm.status} onChange={(e) => setHealthForm({ ...healthForm, status: e.target.value })} style={inputStyle}>
               <option>Healthy</option>
               <option>Sick</option>
               <option>Recovering</option>
             </select>
+            <input placeholder="Symptoms" value={healthForm.symptoms} onChange={(e) => setHealthForm({ ...healthForm, symptoms: e.target.value })} style={inputStyle} />
 
-            <input
-              placeholder="Symptoms"
-              value={healthForm.symptoms}
-              onChange={(e) =>
-                setHealthForm({ ...healthForm, symptoms: e.target.value })
-              }
-              style={inputStyle}
-            />
-
-            <input
-              placeholder="Treatment"
-              value={healthForm.treatment}
-              onChange={(e) =>
-                setHealthForm({ ...healthForm, treatment: e.target.value })
-              }
-              style={inputStyle}
-            />
-
-            <textarea
-              placeholder="Notes"
-              value={healthForm.notes}
-              onChange={(e) =>
-                setHealthForm({ ...healthForm, notes: e.target.value })
-              }
-              style={{ ...inputStyle, minHeight: 70 }}
-            />
-
-            <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={addHealth} style={success}>
-                Save Log
-              </button>
-
-              <button
-                onClick={() => setShowHealthForm(false)}
-                style={{
-                  background: "#e5e7eb",
-                  border: "none",
-                  padding: "10px 16px",
-                  borderRadius: 8,
-                  cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-            </div>
+            <button onClick={addHealth} style={success}>
+              {editingLogId ? "Update Log" : "Save Log"}
+            </button>
           </div>
         )}
 
-        {/* ✔ RESOLVED TICK RESTORED */}
+        {/* LOG LIST */}
         {healthLogs.map((log: any) => (
           <div key={log.id} style={{ marginTop: 12 }}>
-            <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <b>{log.status}</b> — {log.symptoms}
+
+              {/* ✏️ SMALL EDIT BUTTON */}
+              <button
+                onClick={() => {
+                  setEditingLogId(log.id);
+                  setHealthForm({
+                    date: log.date || "",
+                    status: log.status,
+                    symptoms: log.symptoms,
+                    treatment: log.treatment || "",
+                    notes: log.notes || "",
+                  });
+                  setShowHealthForm(true);
+                }}
+                style={{
+                  fontSize: 11,
+                  padding: "2px 6px",
+                  borderRadius: 6,
+                  border: "1px solid #d1d5db",
+                  background: "#f3f4f6",
+                  cursor: "pointer",
+                }}
+              >
+                Edit
+              </button>
             </div>
 
             <label style={{ fontSize: 13, color: "#555" }}>
