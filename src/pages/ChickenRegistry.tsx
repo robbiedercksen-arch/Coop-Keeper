@@ -1,293 +1,229 @@
 import { useState } from "react";
 
-export default function ChickenRegistry({
-  chickens = [],
+export default function ChickenProfile({
+  selectedChicken,
   setChickens,
   setSelectedChicken,
   navigate,
 }: any) {
+  if (!selectedChicken) return <div style={{ padding: 20 }}>Loading...</div>;
 
-  const [showForm, setShowForm] = useState(false);
+  const [viewLog, setViewLog] = useState<any>(null);
+  const [viewNote, setViewNote] = useState<any>(null);
 
-  const [form, setForm] = useState({
-    idTag: "",
-    name: "",
-    breed: "",
-    sex: "Unknown",
-    ageGroup: "Adult",
-    status: "Active",
-    hatchDate: "",
-    image: "",
+  const [showHealthForm, setShowHealthForm] = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false);
+
+  const [healthForm, setHealthForm] = useState({
+    date: "",
+    status: "Healthy",
+    symptoms: "",
   });
 
-  // ================= IMAGE =================
-  const handleImage = (e: any) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const [noteForm, setNoteForm] = useState({
+    date: "",
+    type: "General",
+    description: "",
+  });
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setForm({ ...form, image: reader.result as string });
-    };
-    reader.readAsDataURL(file);
+  const healthLogs = selectedChicken.healthLogs || [];
+  const notes = selectedChicken.notes || [];
+
+  // ================= HELPERS =================
+  const updateChicken = (updated: any) => {
+    setChickens((prev: any[]) =>
+      prev.map((c) => (c.id === selectedChicken.id ? updated : c))
+    );
+    setSelectedChicken(updated);
   };
 
-  // ================= ADD =================
-  const addChicken = () => {
-    if (!form.idTag || !form.name || !form.image) {
-      alert("ID Tag, Name and Photo are required");
-      return;
-    }
+  const getColor = (s: string) =>
+    s === "Sick" ? "#ef4444" : s === "Recovering" ? "#eab308" : "#22c55e";
 
-    if (chickens.some((c: any) => c.idTag === form.idTag)) {
-      alert("ID Tag must be unique!");
-      return;
-    }
-
-    const newChicken = {
-      id: Date.now(),
-      ...form,
-      healthLogs: [],
-      notes: [],
-      eggs: [],
-    };
-
-    setChickens([...chickens, newChicken]);
-
-    setForm({
-      idTag: "",
-      name: "",
-      breed: "",
-      sex: "Unknown",
-      ageGroup: "Adult",
-      status: "Active",
-      hatchDate: "",
-      image: "",
-    });
-
-    setShowForm(false);
-  };
-
-  // ================= HEALTH STATUS =================
-  const getHealthStatus = (c: any) => {
-    const unresolved = c.healthLogs?.filter((l: any) => !l.resolved) || [];
-
-    if (unresolved.some((l: any) => l.status === "Sick"))
-      return "🔴 Sick";
-
-    if (unresolved.some((l: any) => l.status === "Recovering"))
-      return "🟡 Recovering";
-
-    return "🟢 Healthy";
-  };
-
-  // ================= SEX LABEL =================
-  const getSexLabel = (sex: string) => {
-    if (sex === "Hen") return "🐔 Hen";
-    if (sex === "Rooster") return "🐓 Rooster";
-    return "❓ Unknown";
-  };
-
-  // ================= STYLES =================
   const card = {
     background: "#fff",
     padding: 20,
-    borderRadius: 14,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-  };
-
-  const input = {
-    padding: 10,
-    borderRadius: 8,
-    border: "1px solid #ddd",
-    width: "100%",
+    borderRadius: 16,
+    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+    marginBottom: 20,
   };
 
   const btn = {
-    padding: "10px 16px",
-    borderRadius: 10,
+    padding: "8px 14px",
+    borderRadius: 8,
     border: "none",
     cursor: "pointer",
     fontWeight: 600,
   };
 
+  const primary = { ...btn, background: "#3b82f6", color: "#fff" };
+  const success = { ...btn, background: "#22c55e", color: "#fff" };
+  const danger = { ...btn, background: "#ef4444", color: "#fff" };
+
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: 20, maxWidth: 1100 }}>
 
-      {/* ================= HEADER ================= */}
-      <div
-        style={{
-          background: "#fff",
-          padding: "20px 24px",
-          borderRadius: 16,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-          marginBottom: 20,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>
-            🐔 Chicken Registry
-          </h1>
-          <div style={{ fontSize: 13, color: "#666", marginTop: 4 }}>
-            Manage and track all your chickens
-          </div>
-        </div>
-
-        <button
-          onClick={() => setShowForm(!showForm)}
-          style={{
-            ...btn,
-            background: "#22c55e",
-            color: "#fff",
-          }}
-        >
-          {showForm ? "Cancel" : "+ Add Chicken"}
+      {/* BACK */}
+      <div style={{ marginBottom: 20 }}>
+        <button onClick={() => navigate("registry")} style={primary}>
+          ← Back to Registry
         </button>
       </div>
 
-      {/* ================= FORM ================= */}
-      {showForm && (
-        <div style={{ ...card, marginBottom: 20 }}>
-          <h3>Add New Chicken</h3>
+      {/* PROFILE */}
+      <div style={card}>
+        <div style={{ display: "flex", gap: 20 }}>
+          <img
+            src={selectedChicken.image}
+            style={{ width: 150, height: 150, borderRadius: 12 }}
+          />
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 12,
-              marginTop: 10,
-            }}
-          >
-            <input
-              style={input}
-              placeholder="ID Tag"
-              value={form.idTag}
-              onChange={(e) => setForm({ ...form, idTag: e.target.value })}
-            />
-
-            <input
-              style={input}
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-
-            <select
-              style={input}
-              value={form.breed}
-              onChange={(e) => setForm({ ...form, breed: e.target.value })}
-            >
-              <option value="">Breed</option>
-              <option>Orpington</option>
-              <option>Wyandotte</option>
-              <option>Leghorn</option>
-              <option>Rhode Island Red</option>
-              <option>Plymouth Rock</option>
-            </select>
-
-            <select
-              style={input}
-              value={form.sex}
-              onChange={(e) => setForm({ ...form, sex: e.target.value })}
-            >
-              <option>Hen</option>
-              <option>Rooster</option>
-              <option>Unknown</option>
-            </select>
-
-            <select
-              style={input}
-              value={form.ageGroup}
-              onChange={(e) => setForm({ ...form, ageGroup: e.target.value })}
-            >
-              <option>Chick</option>
-              <option>Grower</option>
-              <option>Point of Lay</option>
-              <option>Adult</option>
-            </select>
-
-            <select
-              style={input}
-              value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value })}
-            >
-              <option>Active</option>
-              <option>Sold</option>
-              <option>Culled</option>
-            </select>
-
-            <input
-              type="date"
-              style={input}
-              value={form.hatchDate}
-              onChange={(e) => setForm({ ...form, hatchDate: e.target.value })}
-            />
-
-            <input type="file" onChange={handleImage} />
+          <div>
+            <h1>{selectedChicken.name}</h1>
+            <div><b>ID Tag:</b> {selectedChicken.idTag}</div>
+            <div><b>Breed:</b> {selectedChicken.breed}</div>
+            <div><b>Sex:</b> {selectedChicken.sex}</div>
+            <div><b>Age:</b> {selectedChicken.ageGroup}</div>
           </div>
-
-          <button
-            onClick={addChicken}
-            style={{
-              ...btn,
-              background: "#16a34a",
-              color: "#fff",
-              marginTop: 15,
-            }}
-          >
-            Save Chicken
-          </button>
         </div>
-      )}
+      </div>
 
-      {/* ================= LIST ================= */}
-      <div style={{ display: "grid", gap: 12 }}>
-        {chickens.map((c: any) => (
-          <div
-            key={c.id}
-            onClick={() => {
-              setSelectedChicken(c);
-              navigate("profile");
+      {/* ================= PHOTO ALBUM ================= */}
+      <div style={card}>
+        <h3>📸 Photo Album</h3>
+
+        <label style={success}>
+          + Add Photos
+          <input
+            type="file"
+            multiple
+            onChange={(e: any) => {
+              const files = Array.from(e.target.files);
+
+              files.forEach((file: any) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  updateChicken({
+                    ...selectedChicken,
+                    album: [...(selectedChicken.album || []), reader.result],
+                  });
+                };
+                reader.readAsDataURL(file);
+              });
             }}
-            style={{
-              ...card,
-              display: "flex",
-              alignItems: "center",
-              gap: 15,
-              cursor: "pointer",
-            }}
-          >
-            <img
-              src={c.image}
-              style={{
-                width: 70,
-                height: 70,
-                borderRadius: 10,
-                objectFit: "cover",
-              }}
-            />
+            style={{ display: "none" }}
+          />
+        </label>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
+          {(selectedChicken.album || []).map((img: any, i: number) => (
+            <div key={i} style={{ position: "relative" }}>
+              <img
+                src={img}
+                style={{
+                  width: 100,
+                  height: 100,
+                  objectFit: "cover",
+                  borderRadius: 8,
+                }}
+              />
+
+              <button
+                onClick={() => {
+                  const updated = selectedChicken.album.filter(
+                    (_: any, index: number) => index !== i
+                  );
+
+                  updateChicken({
+                    ...selectedChicken,
+                    album: updated,
+                  });
+                }}
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  background: "#ef4444",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "50%",
+                  width: 20,
+                  height: 20,
+                  cursor: "pointer",
+                  fontSize: 12,
+                }}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ================= HEALTH ================= */}
+      <div style={card}>
+        <h3>🩺 Health Logs</h3>
+
+        {healthLogs.map((log: any) => (
+          <div key={log.id} style={{ marginTop: 10 }}>
+            <b>{log.status}</b> — {log.symptoms}
 
             <div>
-              <b>{c.name}</b>
-
-              <div style={{ fontSize: 12, color: "#555" }}>
-                <b>ID Tag:</b> {c.idTag}
-              </div>
-
-              <div style={{ fontSize: 12, color: "#777" }}>
-                {getSexLabel(c.sex)}
-              </div>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={log.resolved}
+                  onChange={() =>
+                    updateChicken({
+                      ...selectedChicken,
+                      healthLogs: healthLogs.map((l: any) =>
+                        l.id === log.id
+                          ? { ...l, resolved: !l.resolved }
+                          : l
+                      ),
+                    })
+                  }
+                />{" "}
+                ✔ Resolved
+              </label>
             </div>
 
-            <div style={{ marginLeft: "auto", fontWeight: 500 }}>
-              {getHealthStatus(c)}
-            </div>
+            <button onClick={() => setViewLog(log)}>View</button>
           </div>
         ))}
       </div>
+
+      {/* ================= NOTES ================= */}
+      <div style={card}>
+        <h3>📝 Notes</h3>
+
+        {notes.map((n: any) => (
+          <div key={n.id} style={{ marginTop: 10 }}>
+            {n.description}
+            <button onClick={() => setViewNote(n)}>View</button>
+          </div>
+        ))}
+      </div>
+
+      {/* VIEW NOTE */}
+      {viewNote && (
+        <div style={card}>
+          <h3>Note Details</h3>
+          <p>{viewNote.description}</p>
+
+          <button style={danger} onClick={() => {
+            updateChicken({
+              ...selectedChicken,
+              notes: notes.filter((n: any) => n.id !== viewNote.id),
+            });
+            setViewNote(null);
+          }}>
+            Delete
+          </button>
+
+          <button onClick={() => setViewNote(null)}>Cancel</button>
+        </div>
+      )}
     </div>
   );
 }
