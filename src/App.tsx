@@ -7,17 +7,20 @@ import ChickenProfile from "./pages/ChickenProfile";
 export default function App() {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" />} />
+      <Routes>
 
+        {/* 🔹 Layout Wrapper */}
+        <Route element={<Layout />}>
+          <Route path="/" element={<Navigate to="/dashboard" />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/registry" element={<ChickenRegistry />} />
           <Route path="/chicken/:id" element={<ChickenProfile />} />
+        </Route>
 
-          <Route path="*" element={<Navigate to="/dashboard" />} />
-        </Routes>
-      </Layout>
+        {/* 🔹 Fallback */}
+        <Route path="*" element={<Navigate to="/dashboard" />} />
+
+      </Routes>
     </Router>
   );
 }
