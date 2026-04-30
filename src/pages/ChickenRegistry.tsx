@@ -6,7 +6,8 @@ export default function ChickenRegistry({
   setSelectedChicken,
   navigate,
 }: any) {
-  const [showActiveOnly, setShowActiveOnly] = useState(false);
+
+  const [showForm, setShowForm] = useState(false);
 
   const [form, setForm] = useState({
     idTag: "",
@@ -63,28 +64,30 @@ export default function ChickenRegistry({
       hatchDate: "",
       image: "",
     });
+
+    setShowForm(false); // 🔥 hide form after save
   };
 
-  // ================= FILTER =================
-  const filtered = showActiveOnly
-    ? chickens.filter((c: any) => c.status === "Active")
-    : chickens;
-
+  // ================= HEALTH STATUS =================
   const getHealthStatus = (c: any) => {
-    if (!c.healthLogs || c.healthLogs.length === 0) return "🟢 Healthy";
-    if (c.healthLogs.some((l: any) => l.status === "Sick" && !l.resolved))
+    const unresolved = c.healthLogs?.filter((l: any) => !l.resolved) || [];
+
+    if (unresolved.some((l: any) => l.status === "Sick"))
       return "🔴 Sick";
-    if (c.healthLogs.some((l: any) => l.status === "Recovering" && !l.resolved))
+
+    if (unresolved.some((l: any) => l.status === "Recovering"))
       return "🟡 Recovering";
+
     return "🟢 Healthy";
   };
 
   // ================= STYLES =================
   const card = {
     background: "#fff",
-    borderRadius: 16,
     padding: 20,
+    borderRadius: 14,
     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    marginBottom: 20,
   };
 
   const input = {
@@ -94,128 +97,130 @@ export default function ChickenRegistry({
     width: "100%",
   };
 
-  const btnPrimary = {
-    background: "linear-gradient(135deg, #22c55e, #16a34a)",
-    color: "#fff",
-    border: "none",
+  const btn = {
+    padding: "10px 16px",
     borderRadius: 10,
-    padding: "12px",
-    fontWeight: 600,
+    border: "none",
     cursor: "pointer",
+    fontWeight: 600,
   };
 
   return (
     <div style={{ padding: 20 }}>
-      <h1 style={{ marginBottom: 20 }}>🐔 Chicken Registry</h1>
+      <h1>🐔 Chicken Registry</h1>
 
-      {/* ================= FORM CARD ================= */}
-      <div style={{ ...card, marginBottom: 25 }}>
-        <h3 style={{ marginBottom: 15 }}>Add New Chicken</h3>
-
-        <div
+      {/* ================= ADD BUTTON ================= */}
+      <div style={{ marginBottom: 15 }}>
+        <button
+          onClick={() => setShowForm(!showForm)}
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 12,
+            ...btn,
+            background: "#22c55e",
+            color: "#fff",
           }}
         >
-          <input
-            style={input}
-            placeholder="ID Tag"
-            value={form.idTag}
-            onChange={(e) => setForm({ ...form, idTag: e.target.value })}
-          />
-
-          <input
-            style={input}
-            placeholder="Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-
-          <select
-            style={input}
-            value={form.breed}
-            onChange={(e) => setForm({ ...form, breed: e.target.value })}
-          >
-            <option value="">Breed</option>
-            <option>Orpington</option>
-            <option>Wyandotte</option>
-            <option>Leghorn</option>
-            <option>Rhode Island Red</option>
-            <option>Plymouth Rock</option>
-          </select>
-
-          <select
-            style={input}
-            value={form.sex}
-            onChange={(e) => setForm({ ...form, sex: e.target.value })}
-          >
-            <option>Hen</option>
-            <option>Rooster</option>
-            <option>Unknown</option>
-          </select>
-
-          <select
-            style={input}
-            value={form.ageGroup}
-            onChange={(e) => setForm({ ...form, ageGroup: e.target.value })}
-          >
-            <option>Chick</option>
-            <option>Grower</option>
-            <option>Point of Lay</option>
-            <option>Adult</option>
-          </select>
-
-          <select
-            style={input}
-            value={form.status}
-            onChange={(e) => setForm({ ...form, status: e.target.value })}
-          >
-            <option>Active</option>
-            <option>Sold</option>
-            <option>Culled</option>
-          </select>
-
-          <input
-            type="date"
-            style={input}
-            value={form.hatchDate}
-            onChange={(e) => setForm({ ...form, hatchDate: e.target.value })}
-          />
-
-          <input type="file" onChange={handleImage} />
-        </div>
-
-        <button
-          onClick={addChicken}
-          style={{ ...btnPrimary, marginTop: 15, width: "100%" }}
-        >
-          + Add Chicken
+          {showForm ? "Cancel" : "+ Add Chicken"}
         </button>
       </div>
 
-      {/* ================= FILTER ================= */}
-      <div style={{ marginBottom: 15 }}>
-        <label>
-          <input
-            type="checkbox"
-            checked={showActiveOnly}
-            onChange={(e) => setShowActiveOnly(e.target.checked)}
-          />{" "}
-          Show only Active Chickens
-        </label>
-      </div>
+      {/* ================= FORM ================= */}
+      {showForm && (
+        <div style={card}>
+          <h3>Add New Chicken</h3>
 
-      {/* ================= CARDS ================= */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-          gap: 15,
-        }}
-      >
-        {filtered.map((c: any) => (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: 12,
+              marginTop: 10,
+            }}
+          >
+            <input
+              style={input}
+              placeholder="ID Tag"
+              value={form.idTag}
+              onChange={(e) => setForm({ ...form, idTag: e.target.value })}
+            />
+
+            <input
+              style={input}
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+
+            <select
+              style={input}
+              value={form.breed}
+              onChange={(e) => setForm({ ...form, breed: e.target.value })}
+            >
+              <option value="">Breed</option>
+              <option>Orpington</option>
+              <option>Wyandotte</option>
+              <option>Leghorn</option>
+              <option>Rhode Island Red</option>
+              <option>Plymouth Rock</option>
+            </select>
+
+            <select
+              style={input}
+              value={form.sex}
+              onChange={(e) => setForm({ ...form, sex: e.target.value })}
+            >
+              <option>Hen</option>
+              <option>Rooster</option>
+              <option>Unknown</option>
+            </select>
+
+            <select
+              style={input}
+              value={form.ageGroup}
+              onChange={(e) => setForm({ ...form, ageGroup: e.target.value })}
+            >
+              <option>Chick</option>
+              <option>Grower</option>
+              <option>Point of Lay</option>
+              <option>Adult</option>
+            </select>
+
+            <select
+              style={input}
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+            >
+              <option>Active</option>
+              <option>Sold</option>
+              <option>Culled</option>
+            </select>
+
+            <input
+              type="date"
+              style={input}
+              value={form.hatchDate}
+              onChange={(e) => setForm({ ...form, hatchDate: e.target.value })}
+            />
+
+            <input type="file" onChange={handleImage} />
+          </div>
+
+          <button
+            onClick={addChicken}
+            style={{
+              ...btn,
+              background: "#16a34a",
+              color: "#fff",
+              marginTop: 15,
+            }}
+          >
+            Save Chicken
+          </button>
+        </div>
+      )}
+
+      {/* ================= CHICKEN CARDS ================= */}
+      <div style={{ display: "grid", gap: 12 }}>
+        {chickens.map((c: any) => (
           <div
             key={c.id}
             onClick={() => {
@@ -225,37 +230,27 @@ export default function ChickenRegistry({
             style={{
               ...card,
               display: "flex",
-              gap: 15,
               alignItems: "center",
+              gap: 15,
               cursor: "pointer",
-              transition: "0.2s",
             }}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.transform = "translateY(-3px)")
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.transform = "translateY(0)")
-            }
           >
             <img
               src={c.image}
               style={{
                 width: 70,
                 height: 70,
-                borderRadius: 12,
+                borderRadius: 10,
                 objectFit: "cover",
               }}
             />
 
-            <div style={{ flex: 1 }}>
-              <b style={{ fontSize: 16 }}>{c.name}</b>
-              <div style={{ color: "#666" }}>{c.idTag}</div>
-              <div style={{ fontSize: 12, marginTop: 4 }}>
-                {c.sex} • {c.ageGroup}
-              </div>
+            <div>
+              <b>{c.name}</b>
+              <div style={{ fontSize: 12 }}>{c.idTag}</div>
             </div>
 
-            <div style={{ textAlign: "right", fontSize: 13 }}>
+            <div style={{ marginLeft: "auto" }}>
               {getHealthStatus(c)}
             </div>
           </div>
