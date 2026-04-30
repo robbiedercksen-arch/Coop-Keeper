@@ -9,16 +9,14 @@ export default function App() {
   const [chickens, setChickens] = useState<any[]>([]);
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
 
-  // ✅ Central navigation function
-  const navigate = (p: string) => {
-    setPage(p);
-  };
+  const navigate = (p: string) => setPage(p);
 
   return (
     <Layout navigate={navigate}>
       
-      {/* 🔥 SAFETY FALLBACK */}
-      {page === "dashboard" && <Dashboard />}
+      {page === "dashboard" && (
+        <Dashboard chickens={chickens} />
+      )}
 
       {page === "registry" && (
         <ChickenRegistry
@@ -36,9 +34,6 @@ export default function App() {
           navigate={navigate}
         />
       )}
-
-      {/* 🚨 CRITICAL FALLBACK (prevents blank screen) */}
-      {!page && <Dashboard />}
     </Layout>
   );
 }
