@@ -109,6 +109,88 @@ export default function ChickenProfile({
     borderRadius: 6,
     border: "1px solid #e5e7eb",
   };
+// 📝 NOTES SECTION (PASTE RIGHT HERE)
+const NotesSection = () => {
+  const [showForm, setShowForm] = useState(false);
+  const [noteForm, setNoteForm] = useState({
+    date: "",
+    type: "General",
+    description: "",
+  });
+
+  const notes = chicken.notes || [];
+
+  const saveNote = () => {
+    if (!noteForm.date || !noteForm.description) return;
+
+    updateChicken({
+      ...chicken,
+      notes: [...notes, { id: Date.now(), ...noteForm }]
+    });
+
+    setNoteForm({ date: "", type: "General", description: "" });
+    setShowForm(false);
+  };
+
+  return (
+    <div style={card}>
+      <div style={{ fontWeight: 700, marginBottom: 10 }}>
+        📝 Notes & Observations
+      </div>
+
+      <button
+        style={{ ...btn, background: "#6366f1", color: "#fff", marginBottom: 10 }}
+        onClick={() => setShowForm(!showForm)}
+      >
+        + Add Note
+      </button>
+
+      {showForm && (
+        <>
+          <input type="date" style={input}
+            value={noteForm.date}
+            onChange={(e)=>setNoteForm({...noteForm,date:e.target.value})}
+          />
+
+          <select style={input}
+            value={noteForm.type}
+            onChange={(e)=>setNoteForm({...noteForm,type:e.target.value})}
+          >
+            <option>General</option>
+            <option>Concern</option>
+            <option>Planning</option>
+          </select>
+
+          <input style={input}
+            placeholder="Description"
+            value={noteForm.description}
+            onChange={(e)=>setNoteForm({...noteForm,description:e.target.value})}
+          />
+
+          <button
+            style={{ ...btn, background: "#22c55e", color: "#fff" }}
+            onClick={saveNote}
+          >
+            Save Note
+          </button>
+        </>
+      )}
+
+      {notes.map((note:any)=>(
+        <div key={note.id} style={{
+          marginTop:10,
+          padding:10,
+          borderRadius:10,
+          background:"#f9fafb",
+          border:"1px solid #e5e7eb"
+        }}>
+          <b>{note.type}</b> — {note.description}
+          <div style={{fontSize:12,color:"#6b7280"}}>{note.date}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
   return (
     <div style={{ padding: 20, maxWidth: 1100 }}>
