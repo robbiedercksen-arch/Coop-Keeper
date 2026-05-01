@@ -7,10 +7,7 @@ export default function App() {
   const [page, setPage] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
 
-  const [chickens, setChickens] = useState<any[]>(() => {
-    const saved = localStorage.getItem("chickens");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [chickens, setChickens] = useState<any[]>([]);
 
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
 
