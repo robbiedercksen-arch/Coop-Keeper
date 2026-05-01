@@ -5,6 +5,7 @@ export default function ChickenProfile({
   setChickens,
   setSelectedChicken,
   navigate,
+  saveChickenToDB, 
 }: any) {
 
   if (!selectedChicken || !selectedChicken.id) {
