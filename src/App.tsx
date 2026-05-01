@@ -11,7 +11,11 @@ export default function App() {
   const [chickens, setChickens] = useState<any[]>([]);
 
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
-const loadChickens = async () => {
+const formatted = data.map((row: any) => ({
+  ...row.data,
+}));
+
+setChickens(formatted);
   const { data, error } = await supabase
     .from("chickens")
     .select("*");
