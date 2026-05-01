@@ -11,9 +11,7 @@ export default function App() {
 
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
 
-  useEffect(() => {
-    localStorage.setItem("chickens", JSON.stringify(chickens));
-  }, [chickens]);
+  
 
   useEffect(() => {
     if (selectedChicken) {
