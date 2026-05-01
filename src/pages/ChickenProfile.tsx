@@ -375,7 +375,59 @@ export default function ChickenProfile({
       >
         ✕
       </button>
+{/* IMAGE VIEWER */}
+{activeImage && (
+  <div
+    onClick={() => setActiveImage(null)}
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.85)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 2000,
+      padding: 16,
+    }}
+  >
+    <div
+      style={{ position: "relative" }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <img
+        src={activeImage}
+        style={{
+          maxWidth: "90vw",
+          maxHeight: "85vh",
+          borderRadius: 12,
+          objectFit: "contain",
+        }}
+      />
 
+      <button
+        onClick={() => setActiveImage(null)}
+        style={{
+          position: "absolute",
+          top: -10,
+          right: -10,
+          background: "#ef4444",
+          color: "#fff",
+          border: "none",
+          borderRadius: "50%",
+          width: 32,
+          height: 32,
+          cursor: "pointer",
+          fontWeight: "bold",
+        }}
+      >
+        ×
+      </button>
+    </div>
+  </div>
+)}
     </div>
   ))}
 </div>
