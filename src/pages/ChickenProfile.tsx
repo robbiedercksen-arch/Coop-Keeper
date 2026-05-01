@@ -345,37 +345,25 @@ return (
       {editingNoteId === viewNote.id ? (
         <>
           <input
-            type="date"
             style={input}
-            value={noteForm.date}
+            value={viewNote.description}
             onChange={(e) =>
-              setNoteForm({ ...noteForm, date: e.target.value })
-            }
-          />
-
-          <select
-            style={input}
-            value={noteForm.type}
-            onChange={(e) =>
-              setNoteForm({ ...noteForm, type: e.target.value })
-            }
-          >
-            <option>General</option>
-            <option>Concern</option>
-            <option>Planning</option>
-          </select>
-
-          <input
-            style={input}
-            value={noteForm.description}
-            onChange={(e) =>
-              setNoteForm({ ...noteForm, description: e.target.value })
+              setViewNote({ ...viewNote, description: e.target.value })
             }
           />
 
           <button
             style={{ ...btn, background: "#22c55e", color: "#fff" }}
-            onClick={saveNote}
+            onClick={() => {
+              updateChicken({
+                ...chicken,
+                notes: (chicken.notes || []).map((n: any) =>
+                  n.id === viewNote.id ? viewNote : n
+                ),
+              });
+              setEditingNoteId(null);
+              setViewNote(null);
+            }}
           >
             ✔ Save Changes
           </button>
@@ -413,7 +401,6 @@ return (
             <button
               style={{ ...btn, background: "#f59e0b", color: "#fff" }}
               onClick={() => {
-                setNoteForm(viewNote);
                 setEditingNoteId(viewNote.id);
               }}
             >
