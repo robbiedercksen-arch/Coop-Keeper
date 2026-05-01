@@ -401,7 +401,10 @@ export default function ChickenProfile({
 
         <button
           style={{ ...btn, background: "#3b82f6", color: "#fff" }}
-          onClick={() => setViewLog(log)}
+          onClick={(e) => {
+  e.stopPropagation();
+  setViewLog(log);
+}}
         >
           View Details
         </button>
