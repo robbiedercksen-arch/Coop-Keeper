@@ -24,6 +24,28 @@ export default function ChickenProfile({
 
 const [activeImage, setActiveImage] = useState<string | null>(null);
 const [activeIndex, setActiveIndex] = useState<number>(0);
+const [activeImage, setActiveImage] = useState<string | null>(null);
+const [activeIndex, setActiveIndex] = useState<number>(0);
+
+// 👇 PASTE HERE
+const touchStartX = useRef(0);
+const touchEndX = useRef(0);
+
+const handleTouchStart = (e: any) => {
+  touchStartX.current = e.changedTouches[0].screenX;
+};
+
+const handleTouchEnd = (e: any) => {
+  touchEndX.current = e.changedTouches[0].screenX;
+  handleSwipe();
+};
+
+const handleSwipe = () => {
+  const diff = touchStartX.current - touchEndX.current;
+
+  if (diff > 50) nextImage();
+  if (diff < -50) prevImage();
+};
 
 useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
