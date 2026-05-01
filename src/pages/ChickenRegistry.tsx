@@ -5,6 +5,7 @@ export default function ChickenRegistry({
   setChickens,
   setSelectedChicken,
   navigate,
+  saveChickenToDB, // 🔥 ADD THIS LINE
 }: any) {
   const [showForm, setShowForm] = useState(false);
 
