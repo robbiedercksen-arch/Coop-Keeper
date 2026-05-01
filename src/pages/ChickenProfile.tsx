@@ -500,6 +500,7 @@ return (
   gap: 8,
   marginTop: 10
 }}>
+
   {(chicken.album || []).map((img: any, i: number) => (
     <div key={i} style={{ position: "relative" }}>
 
