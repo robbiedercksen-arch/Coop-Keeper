@@ -21,9 +21,9 @@ const loadChickens = async () => {
   if (error) {
     console.error("Load error:", error);
   } else {
-    const formatted = data.map((row: any) => ({
-      ...row.data,
-    }));
+    const formatted = (data || []).map((row: any) => ({
+  ...row.data,
+}));
 
     setChickens(formatted);
   }
