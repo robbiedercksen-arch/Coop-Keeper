@@ -11,10 +11,6 @@ export default function App() {
   const [chickens, setChickens] = useState<any[]>([]);
 
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
-useEffect(() => {
-  loadChickens();
-}, []);
-
 const loadChickens = async () => {
   const { data, error } = await supabase
     .from("chickens")
@@ -26,6 +22,10 @@ const loadChickens = async () => {
     setChickens(data);
   }
 };
+
+useEffect(() => {
+  loadChickens();
+}, []);
   
 
   useEffect(() => {
