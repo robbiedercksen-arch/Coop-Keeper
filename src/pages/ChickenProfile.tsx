@@ -500,7 +500,55 @@ return (
   gap: 8,
   marginTop: 10
 }}>
+{/* IMAGE VIEWER */}
+{activeImage && (
+  <div
+    onClick={() => setActiveImage(null)}
+    onTouchStart={handleTouchStart}
+    onTouchEnd={handleTouchEnd}
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      background: "rgba(0,0,0,0.95)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 999999,
+    }}
+  >
+    <img
+      src={activeImage}
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        maxWidth: "90vw",
+        maxHeight: "90vh",
+        objectFit: "contain",
+      }}
+    />
 
+    <button
+      onClick={() => setActiveImage(null)}
+      style={{
+        position: "fixed",
+        top: 20,
+        right: 20,
+        background: "#ef4444",
+        color: "#fff",
+        border: "none",
+        borderRadius: "50%",
+        width: 44,
+        height: 44,
+        fontSize: 22,
+        cursor: "pointer",
+      }}
+    >
+      ×
+    </button>
+  </div>
+)}
   {(chicken.album || []).map((img: any, i: number) => (
     <div key={i} style={{ position: "relative" }}>
 
