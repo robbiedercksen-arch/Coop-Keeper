@@ -521,51 +521,43 @@ return (
     onClick={() => setActiveImage(null)}
     style={{
       position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      background: "rgba(0,0,0,0.85)",
+      inset: 0,
+      background: "rgba(0,0,0,0.9)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      zIndex: 10000,
-      padding: 16,
+      zIndex: 9999,
     }}
   >
-    <div
-      style={{ position: "relative" }}
+    <img
+      src={activeImage}
       onClick={(e) => e.stopPropagation()}
-    >
-      <img
-        src={activeImage}
-        style={{
-          maxWidth: "90vw",
-          maxHeight: "85vh",
-          borderRadius: 12,
-          objectFit: "contain",
-        }}
-      />
+      style={{
+        maxWidth: "90%",
+        maxHeight: "90%",
+        borderRadius: 12,
+        boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
+      }}
+    />
 
-      <button
-        onClick={() => setActiveImage(null)}
-        style={{
-          position: "absolute",
-          top: -10,
-          right: -10,
-          background: "#ef4444",
-          color: "#fff",
-          border: "none",
-          borderRadius: "50%",
-          width: 32,
-          height: 32,
-          cursor: "pointer",
-          fontWeight: "bold",
-        }}
-      >
-        ×
-      </button>
-    </div>
+    <button
+      onClick={() => setActiveImage(null)}
+      style={{
+        position: "absolute",
+        top: 20,
+        right: 20,
+        background: "#ef4444",
+        color: "#fff",
+        border: "none",
+        borderRadius: "50%",
+        width: 40,
+        height: 40,
+        fontSize: 20,
+        cursor: "pointer",
+      }}
+    >
+      ×
+    </button>
   </div>
 )}
     </div>
