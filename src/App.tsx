@@ -136,6 +136,7 @@ useEffect(() => {
             <ChickenProfile
               selectedChicken={selectedChicken}
               setChickens={setChickens}
+              saveChickenToDB={saveChickenToDB}
               setSelectedChicken={setSelectedChicken}
               navigate={navigate}
             />
