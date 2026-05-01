@@ -304,7 +304,30 @@ export default function ChickenProfile({
 
         <label style={{ ...btn, background: "#22c55e", color: "#fff" }}>
           + Add Photos
-          <input type="file" multiple style={{ display: "none" }} />
+          <input
+  type="file"
+  multiple
+  style={{ display: "none" }}
+  onChange={(e: any) => {
+    const files = Array.from(e.target.files);
+
+    Promise.all(
+      files.map(
+        (file: any) =>
+          new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+          })
+      )
+    ).then((images: any) => {
+      updateChicken({
+        ...chicken,
+        album: [...(chicken.album || []), ...images],
+      });
+    });
+  }}
+/>
         </label>
 
         <div style={{
