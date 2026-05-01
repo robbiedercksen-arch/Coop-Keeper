@@ -530,15 +530,14 @@ return (
     }}
   >
     <img
-      src={activeImage}
-      onClick={(e) => e.stopPropagation()}
-      style={{
-        maxWidth: "90%",
-        maxHeight: "90%",
-        borderRadius: 12,
-        boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
-      }}
-    />
+  src={activeImage}
+  onClick={(e) => e.stopPropagation()}
+  style={{
+    width: "100%",
+    height: "100%",
+    objectFit: "contain", // 👈 keeps aspect ratio, fills screen
+  }}
+/>
 
     <button
       onClick={() => setActiveImage(null)}
