@@ -208,18 +208,15 @@ export default function ChickenProfile({
         )}
 
         {notes.map((note: any) => (
-          <div key={note.id} style={{
-            marginTop: 10,
-            padding: 12,
-            borderRadius: 12,
-            background: "#ffffffcc"
-          }}>
-            <b>{note.type}</b> — {note.description}
-          </div>
-        ))}
-      </div>
-    );
-  };
+  <div key={note.id} style={{
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 12,
+    background: "#ffffffcc"
+  }}>
+    <b>{note.type}</b> — {note.description}
+  </div>
+))}
 
   return (
     <div style={{
