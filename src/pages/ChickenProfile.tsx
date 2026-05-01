@@ -309,6 +309,92 @@ return (
       </div>
 
       <NotesSection />
+      {/* NOTE VIEW POPUP */}
+{viewNote && (
+  <div
+    onClick={() => {
+      setViewNote(null);
+    }}
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.6)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 2000,
+      padding: 16,
+    }}
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        background: "#fff",
+        padding: 20,
+        borderRadius: 16,
+        width: "90%",
+        maxWidth: 400,
+      }}
+    >
+
+      {/* TITLE */}
+      <div style={{ fontWeight: 700, marginBottom: 10 }}>
+        {viewNote.type}
+      </div>
+
+      {/* CONTENT */}
+      <div style={{
+        background: "#f9fafb",
+        padding: 12,
+        borderRadius: 12,
+        marginBottom: 12
+      }}>
+        {viewNote.description || "No description"}
+      </div>
+
+      {/* BUTTONS */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+        <button
+          style={{ ...btn, background: "#f59e0b", color: "#fff" }}
+          onClick={() => {
+            setNoteForm(viewNote);
+            setEditingNoteId(viewNote.id);
+          }}
+        >
+          ✏ Edit
+        </button>
+
+        <button
+          style={{ ...btn, background: "#ef4444", color: "#fff" }}
+          onClick={() => {
+            updateChicken({
+              ...chicken,
+              notes: (chicken.notes || []).filter(
+                (n: any) => n.id !== viewNote.id
+              ),
+            });
+            setViewNote(null);
+          }}
+        >
+          🗑 Delete
+        </button>
+
+        <button
+          style={{ ...btn, background: "#9ca3af", color: "#fff" }}
+          onClick={() => setViewNote(null)}
+        >
+          Close
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+)}
 
       {/* PHOTO GRID */}
       <div style={card}>
