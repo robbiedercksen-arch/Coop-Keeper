@@ -536,9 +536,9 @@ return (
   src={activeImage}
   onClick={(e) => e.stopPropagation()}
   style={{
-    width: "100%",
-    height: "100%",
-    objectFit: "contain", // 👈 keeps aspect ratio, fills screen
+    maxWidth: "100%",
+    maxHeight: "100%",
+    objectFit: "contain",
   }}
 />
 
