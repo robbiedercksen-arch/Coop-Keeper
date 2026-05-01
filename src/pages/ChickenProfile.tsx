@@ -23,7 +23,7 @@ export default function ChickenProfile({
   const [chicken, setChicken] = useState(selectedChicken);
   useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
-  const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
   const [viewNote, setViewNote] = useState<any>(null);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [showHealthForm, setShowHealthForm] = useState(false);
