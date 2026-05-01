@@ -39,15 +39,6 @@ const saveChickenToDB = async (chicken: any) => {
     console.error("Save error:", error);
   }
 };
-const saveChickenToDB = async (chicken: any) => {
-  const { error } = await supabase
-    .from("chickens")
-    .upsert(chicken);
-
-  if (error) {
-    console.error("Save error:", error);
-  }
-};
 
 useEffect(() => {
   loadChickens();
