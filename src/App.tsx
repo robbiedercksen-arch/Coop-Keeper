@@ -1,3 +1,4 @@
+import { supabase } from "./supabase";
 import { useState, useEffect } from "react";
 import ChickenRegistry from "./pages/ChickenRegistry";
 import ChickenProfile from "./pages/ChickenProfile";
