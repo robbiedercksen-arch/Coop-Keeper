@@ -517,24 +517,6 @@ return (
   gap: 8,
   marginTop: 10
 }}>
-{/* IMAGE VIEWER */}
-{activeImage && (
-  <div
-    onClick={() => setActiveImage(null)}
-    onTouchStart={handleTouchStart}
-    onTouchEnd={handleTouchEnd}
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      background: "rgba(0,0,0,0.95)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 999999,
-    }}
   >
     <img
       src={activeImage}
