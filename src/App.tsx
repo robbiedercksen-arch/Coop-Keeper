@@ -16,6 +16,8 @@ const loadChickens = async () => {
     .from("chickens")
     .select("*");
 
+  console.log("LOADED FROM DB:", data); // 👈 HERE
+
   if (error) {
     console.error("Load error:", error);
   } else {
