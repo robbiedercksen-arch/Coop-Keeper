@@ -545,21 +545,22 @@ return (
 {/* IMAGE VIEWER */}
 {activeImage && (
   <div
-  onClick={() => setActiveImage(null)}
-  onTouchStart={handleTouchStart}   // 👈 ADD THIS
-  onTouchEnd={handleTouchEnd}       // 👈 ADD THIS
-  style={{
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100vw",
-    height: "100vh",
-    background: "rgba(0,0,0,0.95)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 999999,
-  }}
+    onClick={() => setActiveImage(null)}
+    onTouchStart={handleTouchStart}   // ✅ HERE
+    onTouchEnd={handleTouchEnd}       // ✅ HERE
+    style={{ ... }}
+  >
+    <img
+      src={activeImage}
+      onClick={(e) => e.stopPropagation()}
+      style={{ ... }}
+    />
+
+    <button onClick={() => setActiveImage(null)}>
+      ×
+    </button>
+  </div>
+)}
 >
     <img
   src={activeImage}
