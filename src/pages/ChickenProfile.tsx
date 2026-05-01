@@ -517,6 +517,7 @@ return (
       </button>
 {/* IMAGE VIEWER */}
 {activeImage && (
+  zIndex: 10000,
   <div
     onClick={() => setActiveImage(null)}
     style={{
