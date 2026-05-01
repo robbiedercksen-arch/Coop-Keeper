@@ -21,16 +21,17 @@ export default function ChickenProfile({
   }
 
   const [chicken, setChicken] = useState(selectedChicken);
-  const [activeImage, setActiveImage] = useState<string | null>(null);
-const [activeIndex, setActiveIndex] = useState<number>(0);
-  useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
-  const [activeIndex, setActiveIndex] = useState<number>(0);
-  const [viewNote, setViewNote] = useState<any>(null);
-  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
-  const [showHealthForm, setShowHealthForm] = useState(false);
-  const [viewLog, setViewLog] = useState<any>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
+const [activeImage, setActiveImage] = useState<string | null>(null);
+const [activeIndex, setActiveIndex] = useState<number>(0);
+
+useEffect(() => setChicken(selectedChicken), [selectedChicken]);
+
+const [viewNote, setViewNote] = useState<any>(null);
+const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+const [showHealthForm, setShowHealthForm] = useState(false);
+const [viewLog, setViewLog] = useState<any>(null);
+const [editingId, setEditingId] = useState<number | null>(null);
 
   const [healthForm, setHealthForm] = useState({
     date: "",
