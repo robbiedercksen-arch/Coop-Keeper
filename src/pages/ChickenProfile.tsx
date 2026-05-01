@@ -318,43 +318,7 @@ export default function ChickenProfile({
           ))}
         </div>
       </div>
-{viewLog && (
-  <div
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      background: "rgba(0,0,0,0.45)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 1000,
-      padding: 16,
-    }}
-  >
-    <div
-      style={{
-        background: "#fff",
-        padding: 20,
-        borderRadius: 16,
-        width: "90%",
-        maxWidth: 420,
-      }}
-    >
-      <h3>{viewLog.status}</h3>
-      <p>{viewLog.symptoms}</p>
 
-      <button
-        style={{ ...btn, background: "#ef4444", color: "#fff" }}
-        onClick={() => setViewLog(null)}
-      >
-        Close
-      </button>
-    </div>
-  </div>
-)}
     </div>
   );
 }
