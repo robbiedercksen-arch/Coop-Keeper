@@ -19,7 +19,11 @@ const loadChickens = async () => {
   if (error) {
     console.error("Load error:", error);
   } else {
-    setChickens(data);
+    const formatted = data.map((row: any) => ({
+      ...row.data,
+    }));
+
+    setChickens(formatted);
   }
 };
 
