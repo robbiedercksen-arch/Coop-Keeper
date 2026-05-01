@@ -242,7 +242,13 @@ export default function ChickenProfile({
 </div>
 );
 };
-
+return (
+  <div style={{
+    maxWidth: 480,
+    margin: "0 auto",
+    padding: 16,
+    minHeight: "100vh"
+  }}>
       {/* PROFILE */}
       <div style={card}>
 
