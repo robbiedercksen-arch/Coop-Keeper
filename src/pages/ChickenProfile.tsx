@@ -546,7 +546,7 @@ return (
     <button
   onClick={() => setActiveImage(null)}
   style={{
-    position: "fixed",   // 👈 important (not absolute)
+    position: "fixed",
     top: 20,
     right: 20,
     background: "#ef4444",
@@ -557,7 +557,7 @@ return (
     height: 44,
     fontSize: 22,
     cursor: "pointer",
-    zIndex: 100000,
+    zIndex: 1000000,
   }}
 >
   ×
