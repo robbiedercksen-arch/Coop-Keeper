@@ -554,6 +554,58 @@ return (
       </div>
     </div>
   ))}
+{viewNote && (
+  <div
+    onClick={() => setViewNote(null)}
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.6)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 2000,
+      padding: 16,
+    }}
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        background: "#fff",
+        borderRadius: 16,
+        padding: 20,
+        width: "100%",
+        maxWidth: 400,
+      }}
+    >
+      <h3 style={{ marginBottom: 10 }}>{viewNote.type}</h3>
+
+      <div style={{
+        background: "#f9fafb",
+        padding: 12,
+        borderRadius: 10,
+        marginBottom: 12
+      }}>
+        {viewNote.description}
+      </div>
+
+      <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 16 }}>
+        {viewNote.date}
+      </div>
+
+      <button
+        style={{ ...btn, background: "#ef4444", color: "#fff" }}
+        onClick={() => setViewNote(null)}
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
 </div>
 {viewLog && (
   <div
