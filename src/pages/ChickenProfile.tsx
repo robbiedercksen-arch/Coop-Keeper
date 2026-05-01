@@ -108,7 +108,7 @@ export default function ChickenProfile({
 
   const card = {
     background: "rgba(255,255,255,0.75)",
-    backdropFilter: "blur(14px)",
+    backdropFilter: "none",
     padding: 16,
     borderRadius: 16,
     boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
