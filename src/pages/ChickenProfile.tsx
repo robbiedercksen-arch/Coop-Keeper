@@ -520,14 +520,14 @@ return (
   <div
     onClick={() => setActiveImage(null)}
     style={{
-      position: "fixed",
-      inset: 0,
-      background: "rgba(0,0,0,0.9)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 9999,
-    }}
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.95)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 9999,
+}}
   >
     <img
   src={activeImage}
