@@ -520,7 +520,7 @@ return (
   <div
     onClick={() => setActiveImage(null)}
     style={{
-      position: "fixed",
+      position: "relative",
       top: 0,
       left: 0,
       width: "100%",
