@@ -12,7 +12,7 @@ export default function ChickenProfile({
       <div style={{ padding: 20 }}>
         <p>Loading chicken...</p>
         <button onClick={() => navigate("registry")}>
-          ← Back to Registry
+          ← Back
         </button>
       </div>
     );
@@ -22,9 +22,9 @@ export default function ChickenProfile({
   useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
   const [activeImage, setActiveImage] = useState<string | null>(null);
-  const [showHealthForm, setShowHealthForm] = useState(false);
   const [viewLog, setViewLog] = useState<any>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [showHealthForm, setShowHealthForm] = useState(false);
 
   const [healthForm, setHealthForm] = useState({
     date: "",
@@ -32,28 +32,11 @@ export default function ChickenProfile({
     symptoms: "",
   });
 
-  const [editingChicken, setEditingChicken] = useState(false);
-
-  const [editForm, setEditForm] = useState({
-    name: chicken.name || "",
-    idTag: chicken.idTag || "",
-    breed: chicken.breed || "",
-    sex: chicken.sex || "Hen",
-    ageGroup: chicken.ageGroup || "",
-  });
-
-  const getPriority = (log: any) => {
-    if (log.resolved) return 99;
-    if (log.status === "Sick") return 1;
-    if (log.status === "Recovering") return 2;
-    return 3;
+  const getColor = (status: string) => {
+    if (status === "Healthy") return "#22c55e";
+    if (status === "Sick") return "#ef4444";
+    return "#eab308";
   };
-
-  const healthLogs = (chicken.healthLogs || []).sort((a: any, b: any) => {
-    const priorityDiff = getPriority(a) - getPriority(b);
-    if (priorityDiff !== 0) return priorityDiff;
-    return b.id - a.id;
-  });
 
   const updateChicken = (updated: any) => {
     setChicken(updated);
@@ -63,18 +46,13 @@ export default function ChickenProfile({
     setSelectedChicken(updated);
   };
 
-  const saveChickenInfo = () => {
-    updateChicken({ ...chicken, ...editForm });
-    setEditingChicken(false);
-  };
-
   const saveHealth = () => {
     if (!healthForm.date) return;
 
     if (editingId) {
       updateChicken({
         ...chicken,
-        healthLogs: healthLogs.map((l: any) =>
+        healthLogs: (chicken.healthLogs || []).map((l: any) =>
           l.id === editingId ? { ...l, ...healthForm } : l
         ),
       });
@@ -82,38 +60,30 @@ export default function ChickenProfile({
       updateChicken({
         ...chicken,
         healthLogs: [
-          ...healthLogs,
+          ...(chicken.healthLogs || []),
           { id: Date.now(), ...healthForm, resolved: false },
         ],
       });
     }
 
     setHealthForm({ date: "", status: "Healthy", symptoms: "" });
-    setShowHealthForm(false);
     setEditingId(null);
     setViewLog(null);
+    setShowHealthForm(false);
   };
 
-  const getColor = (status: string) => {
-    if (status === "Healthy") return "#22c55e";
-    if (status === "Sick") return "#ef4444";
-    return "#eab308";
-  };
-
+  // STYLES
   const card = {
     background: "rgba(255,255,255,0.75)",
-    backdropFilter: "blur(14px)",
     padding: 16,
     borderRadius: 16,
-    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
     marginBottom: 16,
   };
 
   const btn = {
     width: "100%",
-    minHeight: 44,
-    padding: "10px 14px",
-    borderRadius: 12,
+    padding: "10px",
+    borderRadius: 10,
     border: "none",
     cursor: "pointer",
     fontWeight: 600,
@@ -124,14 +94,12 @@ export default function ChickenProfile({
     marginBottom: 10,
     padding: 10,
     borderRadius: 8,
-    border: "1px solid #e5e7eb",
+    border: "1px solid #ddd",
   };
 
   const sectionTitle = {
-    fontSize: 14,
     fontWeight: 700,
     marginBottom: 10,
-    color: "#374151",
   };
 
   return (
@@ -139,8 +107,8 @@ export default function ChickenProfile({
       maxWidth: 480,
       margin: "0 auto",
       padding: 16,
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #eef2ff, #f8fafc)"
+      background: "#f5f7fb",
+      minHeight: "100vh"
     }}>
 
       <button
@@ -202,7 +170,7 @@ export default function ChickenProfile({
                 onClick={() => setActiveImage(img)}
                 style={{
                   width: "100%",
-                  aspectRatio: "1 / 1",
+                  aspectRatio: "1/1",
                   objectFit: "cover",
                   borderRadius: 10
                 }}
@@ -218,14 +186,14 @@ export default function ChickenProfile({
                 }}
                 style={{
                   position: "absolute",
-                  top: 6,
-                  right: 6,
-                  background: "rgba(0,0,0,0.6)",
+                  top: 5,
+                  right: 5,
+                  background: "#0008",
                   color: "#fff",
                   border: "none",
                   borderRadius: "50%",
-                  width: 22,
-                  height: 22,
+                  width: 20,
+                  height: 20,
                 }}
               >
                 ✕
@@ -235,28 +203,75 @@ export default function ChickenProfile({
         </div>
       </div>
 
+      {/* HEALTH LOGS */}
+      <div style={card}>
+        <div style={sectionTitle}>🩺 Health Logs</div>
+
+        <button
+          style={{ ...btn, background: "#22c55e", color: "#fff" }}
+          onClick={() => setShowHealthForm(!showHealthForm)}
+        >
+          + Add Log
+        </button>
+
+        {showHealthForm && (
+          <>
+            <input type="date" style={input}
+              value={healthForm.date}
+              onChange={(e)=>setHealthForm({...healthForm,date:e.target.value})}
+            />
+            <input style={input}
+              placeholder="Symptoms"
+              value={healthForm.symptoms}
+              onChange={(e)=>setHealthForm({...healthForm,symptoms:e.target.value})}
+            />
+            <button style={{ ...btn, background: "#22c55e", color: "#fff" }} onClick={saveHealth}>
+              Save
+            </button>
+          </>
+        )}
+
+        {(chicken.healthLogs || []).map((log:any)=>(
+          <div key={log.id} style={{ marginTop:10 }}>
+            <b>{log.status}</b> - {log.symptoms}
+            <button
+              style={{ ...btn, background:"#3b82f6", color:"#fff", marginTop:6 }}
+              onClick={()=>setViewLog(log)}
+            >
+              View Details
+            </button>
+          </div>
+        ))}
+      </div>
+
       {/* IMAGE VIEWER */}
       {activeImage && (
-        <div
-          onClick={() => setActiveImage(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.85)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 2000
-          }}
-        >
-          <img
-            src={activeImage}
-            style={{
-              maxWidth: "90vw",
-              maxHeight: "85vh",
-              borderRadius: 12
-            }}
-          />
+        <div onClick={()=>setActiveImage(null)} style={{
+          position:"fixed", inset:0,
+          background:"rgba(0,0,0,0.85)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          zIndex:2000
+        }}>
+          <img src={activeImage} style={{ maxWidth:"90%", borderRadius:12 }}/>
+        </div>
+      )}
+
+      {/* HEALTH MODAL */}
+      {viewLog && (
+        <div onClick={()=>setViewLog(null)} style={{
+          position:"fixed", inset:0,
+          background:"rgba(0,0,0,0.5)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          zIndex:1000
+        }}>
+          <div onClick={(e)=>e.stopPropagation()} style={{
+            background:"#fff",
+            padding:20,
+            borderRadius:12
+          }}>
+            <h3>{viewLog.status}</h3>
+            <p>{viewLog.symptoms}</p>
+          </div>
         </div>
       )}
 
