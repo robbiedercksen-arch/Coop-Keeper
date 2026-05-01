@@ -42,6 +42,7 @@ export default function ChickenRegistry({
     };
 
     setChickens((prev: any[]) => [...prev, newChicken]);
+    saveChickenToDB(newChicken);
     setShowForm(false);
   };
 
