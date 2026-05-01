@@ -64,6 +64,7 @@ export default function ChickenProfile({
       prev.map((c) => (c.id === updated.id ? updated : c))
     );
     setSelectedChicken(updated);
+    saveChickenToDB(updated);
   };
 
   const saveChickenInfo = () => {
