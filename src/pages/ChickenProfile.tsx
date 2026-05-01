@@ -208,6 +208,9 @@ export default function ChickenProfile({
         )}
 
         {notes.map((note: any) => (
+          </div>
+);
+};
   <div
     key={note.id}
     style={{
