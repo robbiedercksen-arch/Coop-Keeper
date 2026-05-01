@@ -112,7 +112,23 @@ export default function ChickenProfile({
 
       {/* PROFILE */}
       <div style={card}>
-        <h2>🐔 {chicken.name}</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+  {chicken.image && (
+    <img
+      src={chicken.image}
+      style={{
+        width: "100%",
+        maxWidth: 220,
+        borderRadius: 16,
+        alignSelf: "center"
+      }}
+    />
+  )}
+
+  <h2>🐔 {chicken.name}</h2>
+
+</div>
         <div>ID: {chicken.idTag}</div>
         <div>Breed: {chicken.breed}</div>
       </div>
