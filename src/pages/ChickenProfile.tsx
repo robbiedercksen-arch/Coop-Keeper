@@ -536,9 +536,10 @@ return (
   src={activeImage}
   onClick={(e) => e.stopPropagation()}
   style={{
-    maxWidth: "100%",
-    maxHeight: "100%",
+    maxWidth: "90vw",
+    maxHeight: "90vh",
     objectFit: "contain",
+    margin: "auto",
   }}
 />
 
