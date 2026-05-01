@@ -24,8 +24,6 @@ export default function ChickenProfile({
 
 const [activeImage, setActiveImage] = useState<string | null>(null);
 const [activeIndex, setActiveIndex] = useState<number>(0);
-const [activeImage, setActiveImage] = useState<string | null>(null);
-const [activeIndex, setActiveIndex] = useState<number>(0);
 
 // 👇 PASTE HERE
 const touchStartX = useRef(0);
