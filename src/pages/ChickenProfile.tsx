@@ -21,6 +21,8 @@ export default function ChickenProfile({
   }
 
   const [chicken, setChicken] = useState(selectedChicken);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+const [activeIndex, setActiveIndex] = useState<number>(0);
   useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
   const [activeIndex, setActiveIndex] = useState<number>(0);
