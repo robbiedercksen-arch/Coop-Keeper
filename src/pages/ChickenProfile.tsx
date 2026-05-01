@@ -239,6 +239,9 @@ export default function ChickenProfile({
     </button>
   </div>
 ))}
+</div>
+);
+};
 
       {/* PROFILE */}
       <div style={card}>
