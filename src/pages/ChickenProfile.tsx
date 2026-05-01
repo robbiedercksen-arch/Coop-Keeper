@@ -523,13 +523,13 @@ return (
       position: "fixed",
       top: 0,
       left: 0,
-      width: "100vw",      // 👈 force full screen
-      height: "100vh",     // 👈 force full screen
+      width: "100vw",
+      height: "100vh",
       background: "rgba(0,0,0,0.95)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      zIndex: 99999,       // 👈 above EVERYTHING
+      zIndex: 999999, // 👈 CRANK THIS UP
     }}
   >
     <img
