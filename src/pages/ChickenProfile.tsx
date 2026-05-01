@@ -529,7 +529,7 @@ return (
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      zIndex: 2000,
+      zIndex: 9999,
       padding: 16,
     }}
   >
