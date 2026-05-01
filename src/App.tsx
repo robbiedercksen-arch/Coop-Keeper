@@ -35,21 +35,23 @@ const saveChickenToDB = async (chicken: any) => {
   const { data, error } = await supabase
     .from("chickens")
     .upsert({
-  id: chicken.id,
-  name: chicken.name,
-  idTag: chicken.idTag,
-  breed: chicken.breed,
-  sex: chicken.sex,
-  data: chicken
-}, {
-  onConflict: "id"
-})
+      id: chicken.id,
+      name: chicken.name,
+      idTag: chicken.idTag,
+      breed: chicken.breed,
+      sex: chicken.sex,
+      data: chicken
+    }, {
+      onConflict: "id"
+    })
     .select();
 
   console.log("SAVE RESULT:", data, error);
 
   if (error) {
     console.error("Save error:", error);
+  } else {
+    await loadChickens(); // 🔥 VERY IMPORTANT
   }
 };
 
