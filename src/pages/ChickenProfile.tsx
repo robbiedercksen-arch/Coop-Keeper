@@ -482,7 +482,10 @@ return (
 
       <img
         src={img}
-        onClick={() => setActiveImage(img)}
+        onClick={() => {
+  setActiveIndex(i);
+  setActiveImage(img);
+}}
         style={{
           width: "100%",
           aspectRatio: "1 / 1",
