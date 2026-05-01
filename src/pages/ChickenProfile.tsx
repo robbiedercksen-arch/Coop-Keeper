@@ -543,23 +543,24 @@ return (
 />
 
     <button
-      onClick={() => setActiveImage(null)}
-      style={{
-        position: "absolute",
-        top: 20,
-        right: 20,
-        background: "#ef4444",
-        color: "#fff",
-        border: "none",
-        borderRadius: "50%",
-        width: 40,
-        height: 40,
-        fontSize: 20,
-        cursor: "pointer",
-      }}
-    >
-      ×
-    </button>
+  onClick={() => setActiveImage(null)}
+  style={{
+    position: "fixed",   // 👈 important (not absolute)
+    top: 20,
+    right: 20,
+    background: "#ef4444",
+    color: "#fff",
+    border: "none",
+    borderRadius: "50%",
+    width: 44,
+    height: 44,
+    fontSize: 22,
+    cursor: "pointer",
+    zIndex: 100000,
+  }}
+>
+  ×
+</button>
   </div>
 )}
     </div>
