@@ -208,32 +208,37 @@ export default function ChickenProfile({
         )}
 
         {notes.map((note: any) => (
-  <div key={note.id} style={{
-    marginTop: 10,
-    padding: 12,
-    borderRadius: 12,
-    background: "#ffffffcc"
-  }}>
-    <b>{note.type}</b> — {note.description}
+  <div
+    key={note.id}
+    style={{
+      marginTop: 10,
+      padding: 12,
+      borderRadius: 12,
+      background: "#ffffffcc",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center"
+    }}
+  >
+    <div>
+      <b>{note.type}</b> — {note.description}
+    </div>
+
+    <button
+      onClick={() => setViewNote(note)}
+      style={{
+        background: "#3b82f6",
+        color: "#fff",
+        border: "none",
+        borderRadius: 6,
+        padding: "4px 8px",
+        cursor: "pointer"
+      }}
+    >
+      View
+    </button>
   </div>
 ))}
-
-  return (
-    <div style={{
-      maxWidth: 480,
-      margin: "0 auto",
-      padding: 16,
-      paddingBottom: 80,
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #eef2ff, #f8fafc)"
-    }}>
-
-      <button
-        onClick={() => navigate("registry")}
-        style={{ ...btn, background: "#3b82f6", color: "#fff", marginBottom: 16 }}
-      >
-        ← Back
-      </button>
 
       {/* PROFILE */}
       <div style={card}>
