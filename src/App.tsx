@@ -19,14 +19,19 @@ const loadChickens = async () => {
   console.log("LOADED FROM DB:", data); // 👈 HERE
 
   if (error) {
-    console.error("Load error:", error);
-  } else {
-    const formatted = (data || []).map((row: any) => ({
-  ...row.data,
-}));
-
-    setChickens(formatted);
+  console.error("Load error:", error);
+} else {
+  if (!data) {
+    setChickens([]);
+    return;
   }
+
+  const formatted = data.map((row: any) => ({
+    ...row.data,
+  }));
+
+  setChickens(formatted);
+}
 };
 
 const saveChickenToDB = async (chicken: any) => {
