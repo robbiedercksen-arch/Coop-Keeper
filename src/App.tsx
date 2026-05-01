@@ -124,6 +124,7 @@ useEffect(() => {
             <ChickenRegistry
               chickens={chickens}
               setChickens={setChickens}
+              saveChickenToDB={saveChickenToDB}
               setSelectedChicken={(chicken: any) => {
                 setSelectedChicken(chicken);
                 setPage("profile");
