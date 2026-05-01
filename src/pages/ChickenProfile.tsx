@@ -314,6 +314,7 @@ return (
   <div
     onClick={() => {
       setViewNote(null);
+      setEditingNoteId(null);
     }}
     style={{
       position: "fixed",
@@ -340,58 +341,109 @@ return (
       }}
     >
 
-      {/* TITLE */}
-      <div style={{ fontWeight: 700, marginBottom: 10 }}>
-        {viewNote.type}
-      </div>
+      {/* EDIT MODE */}
+      {editingNoteId === viewNote.id ? (
+        <>
+          <input
+            type="date"
+            style={input}
+            value={noteForm.date}
+            onChange={(e) =>
+              setNoteForm({ ...noteForm, date: e.target.value })
+            }
+          />
 
-      {/* CONTENT */}
-      <div style={{
-        background: "#f9fafb",
-        padding: 12,
-        borderRadius: 12,
-        marginBottom: 12
-      }}>
-        {viewNote.description || "No description"}
-      </div>
+          <select
+            style={input}
+            value={noteForm.type}
+            onChange={(e) =>
+              setNoteForm({ ...noteForm, type: e.target.value })
+            }
+          >
+            <option>General</option>
+            <option>Concern</option>
+            <option>Planning</option>
+          </select>
 
-      {/* BUTTONS */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <input
+            style={input}
+            value={noteForm.description}
+            onChange={(e) =>
+              setNoteForm({ ...noteForm, description: e.target.value })
+            }
+          />
 
-        <button
-          style={{ ...btn, background: "#f59e0b", color: "#fff" }}
-          onClick={() => {
-            setNoteForm(viewNote);
-            setEditingNoteId(viewNote.id);
-          }}
-        >
-          ✏ Edit
-        </button>
+          <button
+            style={{ ...btn, background: "#22c55e", color: "#fff" }}
+            onClick={saveNote}
+          >
+            ✔ Save Changes
+          </button>
 
-        <button
-          style={{ ...btn, background: "#ef4444", color: "#fff" }}
-          onClick={() => {
-            updateChicken({
-              ...chicken,
-              notes: (chicken.notes || []).filter(
-                (n: any) => n.id !== viewNote.id
-              ),
-            });
-            setViewNote(null);
-          }}
-        >
-          🗑 Delete
-        </button>
+          <button
+            style={{ ...btn, background: "#9ca3af", color: "#fff" }}
+            onClick={() => {
+              setEditingNoteId(null);
+              setViewNote(null);
+            }}
+          >
+            Cancel
+          </button>
+        </>
+      ) : (
 
-        <button
-          style={{ ...btn, background: "#9ca3af", color: "#fff" }}
-          onClick={() => setViewNote(null)}
-        >
-          Close
-        </button>
+        /* VIEW MODE */
+        <>
+          <div style={{ fontWeight: 700, marginBottom: 10 }}>
+            {viewNote.type}
+          </div>
 
-      </div>
+          <div
+            style={{
+              background: "#f9fafb",
+              padding: 12,
+              borderRadius: 12,
+              marginBottom: 12,
+            }}
+          >
+            {viewNote.description || "No description"}
+          </div>
 
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button
+              style={{ ...btn, background: "#f59e0b", color: "#fff" }}
+              onClick={() => {
+                setNoteForm(viewNote);
+                setEditingNoteId(viewNote.id);
+              }}
+            >
+              ✏ Edit
+            </button>
+
+            <button
+              style={{ ...btn, background: "#ef4444", color: "#fff" }}
+              onClick={() => {
+                updateChicken({
+                  ...chicken,
+                  notes: (chicken.notes || []).filter(
+                    (n: any) => n.id !== viewNote.id
+                  ),
+                });
+                setViewNote(null);
+              }}
+            >
+              🗑 Delete
+            </button>
+
+            <button
+              style={{ ...btn, background: "#9ca3af", color: "#fff" }}
+              onClick={() => setViewNote(null)}
+            >
+              Close
+            </button>
+          </div>
+        </>
+      )}
     </div>
   </div>
 )}
