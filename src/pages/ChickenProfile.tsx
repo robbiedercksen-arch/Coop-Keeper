@@ -317,7 +317,6 @@ export default function ChickenProfile({
             <img key={i} src={img} style={{ width: "100%", borderRadius: 10 }} />
           ))}
         </div>
-        
       </div>
 
     </div>
