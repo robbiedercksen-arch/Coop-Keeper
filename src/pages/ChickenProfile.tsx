@@ -23,6 +23,7 @@ export default function ChickenProfile({
 
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [viewNote, setViewNote] = useState<any>(null);
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [showHealthForm, setShowHealthForm] = useState(false);
   const [viewLog, setViewLog] = useState<any>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
