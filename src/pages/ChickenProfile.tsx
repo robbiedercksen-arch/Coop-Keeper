@@ -580,18 +580,7 @@ return (
       justifyContent: "center",
       zIndex: 999999,
     }}
-  >
-    <img
-      src={activeImage}
-      onClick={(e) => e.stopPropagation()}
-      style={{
-        maxWidth: "90vw",
-        maxHeight: "90vh",
-        objectFit: "contain",
-      }}
-    />
-
-    <button
+  
       onClick={() => setActiveImage(null)}
       style={{
         position: "fixed",
