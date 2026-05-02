@@ -1023,4 +1023,15 @@ return (
           >
             Close
           </button>
- 
+                  </>
+      )}
+
+    </div>   {/* closes popup card */}
+  </div>     {/* closes overlay */}
+)}
+
+      </div>   {/* closes inner layout */}
+    </div>     {/* closes main container */}
+  </>
+);
+}
