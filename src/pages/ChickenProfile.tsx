@@ -518,47 +518,50 @@ return (
   marginTop: 10
 }}>
   {(chicken.album || []).map((img: any, i: number) => (
-    <div key={i} style={{ position: "relative" }}>
+  <div key={i} style={{ position: "relative" }}>
 
-      <img
-        src={img}
-        onClick={() => {
-  setActiveIndex(i);
-  setActiveImage(img);
-}}
-        style={{
-          width: "100%",
-          aspectRatio: "1 / 1",
-          objectFit: "cover",
-          borderRadius: 10,
-          cursor: "pointer"
-        }}
-      />
+    <img
+      src={img}
+      onClick={() => {
+        setActiveIndex(i);
+        setActiveImage(img);
+      }}
+      style={{
+        width: "100%",
+        aspectRatio: "1 / 1",
+        objectFit: "cover",
+        borderRadius: 10,
+        cursor: "pointer"
+      }}
+    />
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          updateChicken({
-            ...chicken,
-            album: chicken.album.filter((_: any, index: number) => index !== i),
-          });
-        }}
-        style={{
-          position: "absolute",
-          top: 6,
-          right: 6,
-          background: "rgba(0,0,0,0.6)",
-          color: "#fff",
-          border: "none",
-          borderRadius: "50%",
-          width: 22,
-          height: 22,
-          fontSize: 12,
-          cursor: "pointer",
-        }}
-      >
-        ✕
-      </button>
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        updateChicken({
+          ...chicken,
+          album: chicken.album.filter((_: any, index: number) => index !== i),
+        });
+      }}
+      style={{
+        position: "absolute",
+        top: 6,
+        right: 6,
+        background: "rgba(0,0,0,0.6)",
+        color: "#fff",
+        border: "none",
+        borderRadius: "50%",
+        width: 22,
+        height: 22,
+        fontSize: 12,
+        cursor: "pointer",
+      }}
+    >
+      ✕
+    </button>
+
+  </div>
+))}
 {/* IMAGE VIEWER */}
 {activeImage && (
   <div
