@@ -1022,7 +1022,6 @@ return (
           >
             Close
           </button>
-        </>
       )}
 
     </div>
