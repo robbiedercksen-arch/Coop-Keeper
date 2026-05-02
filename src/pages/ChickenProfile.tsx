@@ -565,7 +565,11 @@ return (
 {/* IMAGE VIEWER */}
 {activeImage && (
   <div
-    onClick={() => setActiveImage(null)}
+    onClick={(e) => {
+  if (touchStartX.current === touchEndX.current) {
+    setActiveImage(null);
+  }
+}}
     onTouchStart={handleTouchStart}
     onTouchEnd={handleTouchEnd}
     style={{
