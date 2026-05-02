@@ -873,7 +873,7 @@ return (
           setViewLog(log);
         }}
       >
-        View Details
+              View Details
       </button>
 
       <label style={{ fontSize: 13 }}>
@@ -895,11 +895,12 @@ return (
       </label>
 
     </div>
-
   </div>
 ))}
 
 </div>
+
+{/* VIEW LOG POPUP */}
 {viewLog && (
   <div
     onClick={() => {
@@ -1017,4 +1018,21 @@ return (
             🗑 Delete
           </button>
 
-          
+          <button
+            style={{ ...btn, background: "#6b7280", color: "#fff" }}
+            onClick={() => setViewLog(null)}
+          >
+            Close
+          </button>
+        </>
+      )}
+
+    </div>   {/* popup card */}
+  </div>     {/* overlay */}
+)}
+
+      </div>   {/* inner layout */}
+    </div>     {/* main container */}
+  </>
+);
+}
