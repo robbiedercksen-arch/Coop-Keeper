@@ -510,19 +510,19 @@ return (
             </button>
 
             <button
-              style={{ ...btn, background: "#ef4444", color: "#fff", borderRadius: 10 }}
-              onClick={() => {
-                updateChicken({
-                  ...chicken,
-                  notes: (chicken.notes || []).filter(
-                    (n: any) => n.id !== viewNote.id
-                  ),
-                });
-                setViewNote(null);
-              }}
-            
-              🗑 Delete
-            </button>
+  style={{ ...btn, background: "#ef4444", color: "#fff", borderRadius: 10 }}
+  onClick={() => {
+    updateChicken({
+      ...chicken,
+      notes: (chicken.notes || []).filter(
+        (n: any) => n.id !== viewNote.id
+      ),
+    });
+    setViewNote(null);
+  }}
+>
+  🗑 Delete
+</button>
 
             <button
               style={{ ...btn, background: "#6b7280", color: "#fff", borderRadius: 10 }}
