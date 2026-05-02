@@ -1009,56 +1009,52 @@ return (
         </>
       ) : (
 
-        /* VIEW MODE */
-        <>
-          <div
-            style={{
-              background: "#f3f4f6",
-              padding: 14,
-              borderRadius: 12,
-            }}
-          >
-            {viewLog.symptoms || "No symptoms recorded"}
-          </div>
+/* VIEW MODE */
+<>
+  <div
+    style={{
+      background: "#f3f4f6",
+      padding: 14,
+      borderRadius: 12,
+    }}
+  >
+    {viewLog.symptoms || "No symptoms recorded"}
+  </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-               </div>
-  </>
-)} 
-            <button
-              style={{ ...btn, background: "#f59e0b", color: "#fff", borderRadius: 10 }}
-              onClick={() => {
-                setHealthForm(viewLog);
-                setEditingId(viewLog.id);
-              }}
-            >
-              ✏ Edit
-            </button>
+  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    
+    <button
+      style={{ ...btn, background: "#f59e0b", color: "#fff", borderRadius: 10 }}
+      onClick={() => {
+        setHealthForm(viewLog);
+        setEditingId(viewLog.id);
+      }}
+    >
+      ✏ Edit
+    </button>
 
-            <button
-              style={{ ...btn, background: "#ef4444", color: "#fff", borderRadius: 10 }}
-              onClick={() => {
-                updateChicken({
-                  ...chicken,
-                  healthLogs: healthLogs.filter((l: any) => l.id !== viewLog.id),
-                });
-                setViewLog(null);
-              }}
-            >
-                          >
-              🗑 Delete
-            </button>
+    <button
+      style={{ ...btn, background: "#ef4444", color: "#fff", borderRadius: 10 }}
+      onClick={() => {
+        updateChicken({
+          ...chicken,
+          healthLogs: healthLogs.filter((l: any) => l.id !== viewLog.id),
+        });
+        setViewLog(null);
+      }}
+    >
+      🗑 Delete
+    </button>
 
-            <button
-              style={{ ...btn, background: "#6b7280", color: "#fff", borderRadius: 10 }}
-              onClick={() => setViewLog(null)}
-            >
-              Close
-            </button>
+    <button
+      style={{ ...btn, background: "#6b7280", color: "#fff", borderRadius: 10 }}
+      onClick={() => setViewLog(null)}
+    >
+      Close
+    </button>
 
-          </div>
-      )}
-
+  </div>
+</>
     </div>   // closes popup card
   </div>     // closes overlay
 )}
