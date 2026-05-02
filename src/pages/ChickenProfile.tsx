@@ -505,9 +505,9 @@ return (
     onClick={() => {
       setEditingNoteId(viewNote.id);
     }}
-  >
-    ✏ Edit
-  </button>
+ >
+  ✏ Edit
+</button>
 
   <button
     style={{ ...btn, background: "#ef4444", color: "#fff", borderRadius: 10 }}
