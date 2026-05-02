@@ -582,19 +582,6 @@ return (
     
   </div>
 )}
->
-    <img
-  src={activeImage}
-  onClick={(e) => e.stopPropagation()}
-  style={{
-    maxWidth: "90vw",
-    maxHeight: "90vh",
-    objectFit: "contain",
-    margin: "auto",
-  }}
-/>
-
-    <button
   onClick={() => setActiveImage(null)}
   style={{
     position: "fixed",
