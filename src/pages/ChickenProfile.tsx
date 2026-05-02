@@ -886,50 +886,60 @@ return (
 </div>
 {viewLog && (
   <div
+    onClick={() => {
+      setViewLog(null);
+      setEditingId(null);
+    }}
     style={{
       position: "fixed",
       top: 0,
       left: 0,
       width: "100%",
       height: "100%",
-      background: "rgba(0,0,0,0.45)",
+      background: "rgba(0,0,0,0.6)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      zIndex: 1000,
+      zIndex: 2000,
       padding: 16,
-    }}
-    onClick={() => {
-      setViewLog(null);
-      setEditingId(null);
     }}
   >
     <div
+      onClick={(e) => e.stopPropagation()}
       style={{
-        background: "#fff",
+        background: "rgba(255,255,255,0.95)",
+        backdropFilter: "blur(10px)",
         padding: 20,
-        borderRadius: 16,
+        borderRadius: 20,
         width: "90%",
         maxWidth: 420,
+        boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
       }}
-      onClick={(e) => e.stopPropagation()}
     >
 
-      {/* STATUS BADGE */}
+      {/* STATUS HEADER */}
       <div style={{
         display: "flex",
         alignItems: "center",
-        gap: 8,
-        marginBottom: 12,
-        fontWeight: 700
+        gap: 10,
+        fontWeight: 700,
+        fontSize: 16
       }}>
         <div style={{
-          width: 10,
-          height: 10,
+          width: 12,
+          height: 12,
           borderRadius: "50%",
           background: getColor(viewLog.status)
         }} />
         {viewLog.status}
+      </div>
+
+      {/* DATE */}
+      <div style={{ fontSize: 13, color: "#6b7280" }}>
+        {viewLog.date || ""}
       </div>
 
       {/* EDIT MODE */}
@@ -964,42 +974,41 @@ return (
             }
           />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button
-              style={{ ...btn, background: "#22c55e", color: "#fff" }}
-              onClick={saveHealth}
-            >
-              ✔ Save Changes
-            </button>
+          <button
+            style={{ ...btn, background: "#22c55e", color: "#fff", borderRadius: 10 }}
+            onClick={saveHealth}
+          >
+            ✔ Save Changes
+          </button>
 
-            <button
-              style={{ ...btn, background: "#9ca3af", color: "#fff" }}
-              onClick={() => {
-                setEditingId(null);
-                setViewLog(null);
-              }}
-            >
-              Cancel
-            </button>
-          </div>
+          <button
+            style={{ ...btn, background: "#9ca3af", color: "#fff", borderRadius: 10 }}
+            onClick={() => {
+              setEditingId(null);
+              setViewLog(null);
+            }}
+          >
+            Cancel
+          </button>
         </>
       ) : (
 
         /* VIEW MODE */
         <>
-          <div style={{
-            background: "#f9fafb",
-            padding: 12,
-            borderRadius: 12,
-            marginBottom: 12
-          }}>
+          <div
+            style={{
+              background: "#f3f4f6",
+              padding: 14,
+              borderRadius: 12,
+            }}
+          >
             {viewLog.symptoms || "No symptoms recorded"}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             
             <button
-              style={{ ...btn, background: "#f59e0b", color: "#fff" }}
+              style={{ ...btn, background: "#f59e0b", color: "#fff", borderRadius: 10 }}
               onClick={() => {
                 setHealthForm(viewLog);
                 setEditingId(viewLog.id);
@@ -1009,7 +1018,7 @@ return (
             </button>
 
             <button
-              style={{ ...btn, background: "#ef4444", color: "#fff" }}
+              style={{ ...btn, background: "#ef4444", color: "#fff", borderRadius: 10 }}
               onClick={() => {
                 updateChicken({
                   ...chicken,
@@ -1019,6 +1028,13 @@ return (
               }}
             >
               🗑 Delete
+            </button>
+
+            <button
+              style={{ ...btn, background: "#6b7280", color: "#fff", borderRadius: 10 }}
+              onClick={() => setViewLog(null)}
+            >
+              Close
             </button>
 
           </div>
