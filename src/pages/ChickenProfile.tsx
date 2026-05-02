@@ -579,16 +579,39 @@ return (
       alignItems: "center",
       justifyContent: "center",
       zIndex: 999999,
-    
-  </div>
+    }}
+  >
+    <img
+      src={activeImage}
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        maxWidth: "90vw",
+        maxHeight: "90vh",
+        objectFit: "contain",
+      }}
+    />
 
-</button>
+    <button
+      onClick={() => setActiveImage(null)}
+      style={{
+        position: "fixed",
+        top: 20,
+        right: 20,
+        background: "#ef4444",
+        color: "#fff",
+        border: "none",
+        borderRadius: "50%",
+        width: 44,
+        height: 44,
+        fontSize: 22,
+        cursor: "pointer",
+        zIndex: 1000000,
+      }}
+    >
+      ×
+    </button>
   </div>
 )}
-    </div>
-  ))}
-</div>
-</div>
 {/* HEALTH LOGS */}
 <div style={card}>
   <div style={sectionTitle}>🩺 Health Logs</div>
