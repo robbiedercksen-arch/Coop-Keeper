@@ -707,7 +707,131 @@ return (
 )}
 </div>
 {/* HEALTH LOGS */}
-healthLogs: healthLogs.map
+<div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+  <div style={sectionTitle}>🩺 Health Logs</div>
+
+  <button
+    style={{ ...btn, background: "#22c55e", color: "#fff" }}
+    onClick={() => {
+      setShowHealthForm(!showHealthForm);
+      setEditingId(null);
+    }}
+  >
+    + Add Health Log
+  </button>
+
+  {showHealthForm && (
+    <div style={{
+      background: "#f9fafb",
+      padding: 12,
+      borderRadius: 12
+    }}>
+      <input
+        type="date"
+        style={input}
+        value={healthForm.date}
+        onChange={(e) =>
+          setHealthForm({ ...healthForm, date: e.target.value })
+        }
+      />
+
+      <select
+        style={input}
+        value={healthForm.status}
+        onChange={(e) =>
+          setHealthForm({ ...healthForm, status: e.target.value })
+        }
+      >
+        <option>Healthy</option>
+        <option>Sick</option>
+        <option>Recovering</option>
+      </select>
+
+      <input
+        style={input}
+        placeholder="Symptoms"
+        value={healthForm.symptoms}
+        onChange={(e) =>
+          setHealthForm({ ...healthForm, symptoms: e.target.value })
+        }
+      />
+
+      <button
+        style={{ ...btn, background: "#3b82f6", color: "#fff" }}
+        onClick={saveHealth}
+      >
+        Save Log
+      </button>
+    </div>
+  )}
+
+  {healthLogs.map((log: any) => (
+    <div
+      key={log.id}
+      style={{
+        padding: 14,
+        borderRadius: 14,
+        background: "#ffffff",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+      }}
+    >
+
+      {/* STATUS ROW */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: "50%",
+            background: getColor(log.status),
+          }}
+        />
+        <b>{log.status}</b>
+      </div>
+
+      {/* SYMPTOMS */}
+      <div style={{ fontSize: 14, color: "#555" }}>
+        {log.symptoms || "No symptoms recorded"}
+      </div>
+
+      {/* ACTION BUTTON */}
+      <button
+        style={{ ...btn, background: "#3b82f6", color: "#fff" }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setViewLog(log);
+        }}
+      >
+        View Details
+      </button>
+
+      {/* RESOLVED */}
+      <label style={{ fontSize: 13 }}>
+        <input
+          type="checkbox"
+          checked={log.resolved || false}
+          onChange={() =>
+            updateChicken({
+              ...chicken,
+              healthLogs: healthLogs.map((l: any) =>
+                l.id === log.id
+                  ? { ...l, resolved: !l.resolved }
+                  : l
+              ),
+            })
+          }
+        />
+        {" "}Resolved
+      </label>
+
+    </div>
+  ))}
+
+</div>
 {viewLog && (
   <div
     style={{
