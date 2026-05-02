@@ -24,7 +24,23 @@ export default function ChickenProfile({
 
 const [activeImage, setActiveImage] = useState<string | null>(null);
 const [activeIndex, setActiveIndex] = useState<number>(0);
+const nextImage = () => {
+  const album = chicken.album || [];
+  if (activeIndex < album.length - 1) {
+    const next = activeIndex + 1;
+    setActiveIndex(next);
+    setActiveImage(album[next]);
+  }
+};
 
+const prevImage = () => {
+  const album = chicken.album || [];
+  if (activeIndex > 0) {
+    const prev = activeIndex - 1;
+    setActiveIndex(prev);
+    setActiveImage(album[prev]);
+  }
+};
 
 // 👇 PASTE HERE
 const touchStartX = useRef(0);
