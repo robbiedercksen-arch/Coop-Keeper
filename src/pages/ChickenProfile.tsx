@@ -316,10 +316,7 @@ const [editingId, setEditingId] = useState<number | null>(null);
 );
 };
 return (
-  <>
-    <style>{globalStyles}</style>
-
-    <div style={{
+  <div style={{
     maxWidth: 480,
     margin: "0 auto",
     padding: 16,
