@@ -211,7 +211,6 @@ const [editingId, setEditingId] = useState<number | null>(null);
     };
 
     return (
-      return (
   <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}>
 
     <div style={sectionTitle}>📝 Notes & Observations</div>
