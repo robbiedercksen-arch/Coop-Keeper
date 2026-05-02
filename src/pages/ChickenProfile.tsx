@@ -111,87 +111,229 @@ export default function ChickenProfile({
   const input = { width: "100%", padding: 8, marginBottom: 8 };
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", padding: 16 }}>
+  <div
+    style={{
+      maxWidth: 420,
+      margin: "0 auto",
+      padding: 16,
+      fontFamily: "system-ui, sans-serif",
+    }}
+  >
 
-      {/* ================= PROFILE ================= */}
-      <div style={card}>
-        <h2>🐔 {chicken.name}</h2>
-        <div>ID: {chicken.idTag}</div>
-        <div>Breed: {chicken.breed}</div>
-      </div>
+    {/* PROFILE CARD */}
+    <div style={{
+      background: "#fff",
+      borderRadius: 18,
+      padding: 18,
+      boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+      marginBottom: 16
+    }}>
+      <h2 style={{ marginBottom: 8 }}>🐔 {chicken.name}</h2>
+      <div style={{ color: "#555" }}>ID: {chicken.idTag}</div>
+      <div style={{ color: "#555" }}>Breed: {chicken.breed}</div>
+    </div>
 
-      {/* ================= NOTES ================= */}
-      <div style={card}>
-        <h3>📝 Notes</h3>
+    {/* NOTES */}
+    <div style={{
+      background: "#fff",
+      borderRadius: 18,
+      padding: 16,
+      boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+      marginBottom: 16
+    }}>
+      <h3 style={{ marginBottom: 10 }}>📝 Notes</h3>
 
-        {(chicken.notes || []).map((n: any) => (
-          <div key={n.id}>{n.description}</div>
-        ))}
-      </div>
-
-      {/* ================= PHOTO GRID ================= */}
-      <div style={card}>
-        <h3>📸 Photos</h3>
-
-        <input
-          type="file"
-          multiple
-          onChange={(e: any) => {
-            const files = Array.from(e.target.files);
-            Promise.all(
-              files.map(
-                (file: any) =>
-                  new Promise((res) => {
-                    const r = new FileReader();
-                    r.onloadend = () => res(r.result);
-                    r.readAsDataURL(file);
-                  })
-              )
-            ).then((images: any) => {
-              updateChicken({
-                ...chicken,
-                album: [...(chicken.album || []), ...images],
-              });
-            });
-          }}
-        />
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
-          {(chicken.album || []).map((img: any, i: number) => (
-            <img
-              key={i}
-              src={img}
-              onClick={() => {
-                setActiveIndex(i);
-                setActiveImage(img);
-              }}
-              style={{ width: "100%", cursor: "pointer" }}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* ================= IMAGE VIEWER ================= */}
-      {activeImage && (
+      {(chicken.notes || []).map((n: any) => (
         <div
-          onClick={() => setActiveImage(null)}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
+          key={n.id}
           style={{
-            position: "fixed",
-            inset: 0,
-            background: "black",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            padding: 10,
+            borderRadius: 10,
+            background: "#f3f4f6",
+            marginBottom: 8
           }}
         >
-          <img
-            src={activeImage}
-            style={{ maxWidth: "90%", maxHeight: "90%" }}
-          />
+          {n.description}
         </div>
+      ))}
+    </div>
+
+    {/* PHOTOS */}
+    <div style={{
+      background: "#fff",
+      borderRadius: 18,
+      padding: 16,
+      boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+      marginBottom: 16
+    }}>
+      <h3 style={{ marginBottom: 10 }}>📸 Photos</h3>
+
+      <input
+        type="file"
+        multiple
+        style={{ marginBottom: 12 }}
+        onChange={(e: any) => {
+          const files = Array.from(e.target.files);
+
+          Promise.all(
+            files.map(
+              (file: any) =>
+                new Promise((res) => {
+                  const r = new FileReader();
+                  r.onloadend = () => res(r.result);
+                  r.readAsDataURL(file);
+                })
+            )
+          ).then((images: any) => {
+            updateChicken({
+              ...chicken,
+              album: [...(chicken.album || []), ...images],
+            });
+          });
+        }}
+      />
+
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: 8
+      }}>
+        {(chicken.album || []).map((img: any, i: number) => (
+          <img
+            key={i}
+            src={img}
+            onClick={() => {
+              setActiveIndex(i);
+              setActiveImage(img);
+            }}
+            style={{
+              width: "100%",
+              aspectRatio: "1 / 1",
+              objectFit: "cover",
+              borderRadius: 12,
+              cursor: "pointer"
+            }}
+          />
+        ))}
+      </div>
+    </div>
+
+    {/* HEALTH */}
+    <div style={{
+      background: "#fff",
+      borderRadius: 18,
+      padding: 16,
+      boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+    }}>
+      <h3 style={{ marginBottom: 10 }}>🩺 Health Logs</h3>
+
+      <button
+        style={{
+          width: "100%",
+          padding: 10,
+          borderRadius: 12,
+          background: "#22c55e",
+          color: "#fff",
+          border: "none",
+          marginBottom: 10,
+          cursor: "pointer"
+        }}
+        onClick={() => setShowHealthForm(!showHealthForm)}
+      >
+        + Add Log
+      </button>
+
+      {showHealthForm && (
+        <>
+          <input
+            type="date"
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              marginBottom: 8
+            }}
+            value={healthForm.date}
+            onChange={(e) =>
+              setHealthForm({ ...healthForm, date: e.target.value })
+            }
+          />
+
+          <input
+            placeholder="Symptoms"
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 10,
+              border: "1px solid #ddd",
+              marginBottom: 8
+            }}
+            value={healthForm.symptoms}
+            onChange={(e) =>
+              setHealthForm({ ...healthForm, symptoms: e.target.value })
+            }
+          />
+
+          <button
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 12,
+              background: "#3b82f6",
+              color: "#fff",
+              border: "none"
+            }}
+            onClick={saveHealth}
+          >
+            Save
+          </button>
+        </>
       )}
+
+      {(chicken.healthLogs || []).map((log: any) => (
+        <div
+          key={log.id}
+          style={{
+            marginTop: 10,
+            padding: 10,
+            background: "#f9fafb",
+            borderRadius: 10
+          }}
+        >
+          {log.symptoms}
+        </div>
+      ))}
+    </div>
+
+    {/* IMAGE VIEWER */}
+    {activeImage && (
+      <div
+        onClick={() => setActiveImage(null)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.95)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999
+        }}
+      >
+        <img
+          src={activeImage}
+          style={{
+            maxWidth: "90%",
+            maxHeight: "90%",
+            borderRadius: 12
+          }}
+        />
+      </div>
+    )}
+  </div>
+);
 
       {/* ================= HEALTH ================= */}
       <div style={card}>
