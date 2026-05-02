@@ -409,6 +409,7 @@ return (
       justifyContent: "center",
       zIndex: 2000,
       padding: 16,
+      animation: "fadeIn 0.2s ease"
     }}
   >
     <div
