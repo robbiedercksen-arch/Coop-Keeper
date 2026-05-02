@@ -562,6 +562,7 @@ return (
 
   </div>
 ))}
+</div>
 {/* IMAGE VIEWER */}
 {activeImage && (
   <div
