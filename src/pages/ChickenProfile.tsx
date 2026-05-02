@@ -558,16 +558,18 @@ return (
         <div style={{
   display: "grid",
   gridTemplateColumns: "repeat(3, 1fr)",
-  gap: 10,
-  marginTop: 12
+  gap: 12,
+  marginTop: 14
 }}>
   {(chicken.album || []).map((img: any, i: number) => (
     <div
       key={i}
       style={{
         position: "relative",
-        borderRadius: 14,
+        borderRadius: 16,
         overflow: "hidden",
+        background: "#f3f4f6",
+        boxShadow: "0 6px 14px rgba(0,0,0,0.08)",
       }}
     >
 
@@ -583,11 +585,20 @@ return (
           aspectRatio: "1 / 1",
           objectFit: "cover",
           cursor: "pointer",
-          transition: "transform 0.2s ease"
+          transition: "transform 0.2s ease, opacity 0.2s ease",
         }}
-        onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.96)")}
-        onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = "scale(0.95)";
+          e.currentTarget.style.opacity = "0.85";
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.opacity = "1";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.opacity = "1";
+        }}
       />
 
       {/* DELETE BUTTON */}
@@ -603,18 +614,25 @@ return (
           position: "absolute",
           top: 6,
           right: 6,
-          background: "rgba(0,0,0,0.6)",
+          background: "rgba(0,0,0,0.55)",
           backdropFilter: "blur(6px)",
           color: "#fff",
           border: "none",
           borderRadius: "50%",
-          width: 26,
-          height: 26,
+          width: 28,
+          height: 28,
           fontSize: 14,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
+          transition: "background 0.2s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "rgba(239,68,68,0.9)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "rgba(0,0,0,0.55)";
         }}
       >
         ✕
