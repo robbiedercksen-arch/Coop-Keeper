@@ -53,17 +53,40 @@ export default function ChickenRegistry({
 
   // ================= HEALTH STATUS =================
   const getHealthStatus = (c: any) => {
-    const unresolved = c.healthLogs?.filter((l: any) => !l.resolved) || [];
+  const logs = c.healthLogs || [];
 
-    if (unresolved.some((l: any) => l.status === "Sick"))
-      return { color: "#ef4444", label: "Sick" };
+  if (logs.some((l: any) => l.status === "Ongoing"))
+    return { color: "#ef4444", label: "Ongoing" };
 
-    if (unresolved.some((l: any) => l.status === "Recovering"))
-      return { color: "#eab308", label: "Recovering" };
+  if (logs.some((l: any) => l.status === "Monitoring"))
+    return { color: "#eab308", label: "Monitoring" };
 
-    return { color: "#22c55e", label: "Healthy" };
-  };
+  return { color: "#22c55e", label: "Healthy" };
+};
+const getAttentionCount = () => {
+  let count = 0;
 
+  chickens.forEach((chicken: any) => {
+    const logs = chicken.healthLogs || [];
+
+    const needsAttention = logs.some((log: any) => {
+      if (!log.date) return false;
+
+      const daysOld =
+        (new Date().getTime() - new Date(log.date).getTime()) /
+        (1000 * 60 * 60 * 24);
+
+      return (
+        (log.status === "Ongoing" && daysOld > 2) ||
+        (log.status === "Monitoring" && daysOld > 5)
+      );
+    });
+
+    if (needsAttention) count++;
+  });
+
+  return count;
+};
   // ================= STYLES =================
   const container = {
     padding: 20,
@@ -102,12 +125,27 @@ export default function ChickenRegistry({
     cursor: "pointer",
     fontWeight: 600,
   };
+const attentionCount = getAttentionCount();
 
   return (
   <div style={container}>
 
     <Dashboard chickens={chickens} />  
-    <QuickActions setShowForm={setShowForm} setFilter={setFilter} />
+
+{attentionCount > 0 && (
+  <div style={{
+    background: "#fee2e2",
+    padding: "10px 14px",
+    borderRadius: 10,
+    marginBottom: 10,
+    fontSize: 13,
+    fontWeight: 600,
+  }}>
+    ⚠️ {attentionCount} chicken(s) need attention
+  </div>
+)}
+
+<QuickActions setShowForm={setShowForm} setFilter={setFilter} />
 
     {/* rest of your UI */}
 
@@ -157,16 +195,17 @@ export default function ChickenRegistry({
 
       {chickens
   .filter((c: any) => {
-    if (filter === "all") return true;
+  if (filter === "all") return true;
 
-    if (filter === "issues") {
-      return (c.healthLogs || []).some(
-        (log: any) => log.status === "Ongoing"
-      );
-    }
+  if (filter === "issues") {
+    return (c.healthLogs || []).some(
+      (log: any) =>
+        log.status === "Ongoing" || log.status === "Monitoring"
+    );
+  }
 
-    return true;
-  })
+  return true;
+})
   .map((c: any) => {
         const status = getHealthStatus(c);
 
