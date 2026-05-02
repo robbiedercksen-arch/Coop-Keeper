@@ -4,12 +4,12 @@ export default function Dashboard({ chickens }: any) {
 
   // 🔥 STATS CALCULATIONS
   const stats = useMemo(() => {
-    let total = chickens.length;
+    const total = chickens.length;
     let sick = 0;
     let recovering = 0;
     let healthy = 0;
 
-    let recentLogs: any[] = [];
+    const recentLogs: any[] = [];
 
     chickens.forEach((c: any) => {
       (c.healthLogs || []).forEach((log: any) => {
