@@ -73,6 +73,23 @@ const filteredLogs = (showActiveOnly
     healthLogs: updatedLogs,
   });
 };
+const getAlert = (log: any) => {
+  if (!log.date) return null;
+
+  const daysOld =
+    (new Date().getTime() - new Date(log.date).getTime()) /
+    (1000 * 60 * 60 * 24);
+
+  if (log.status === "Ongoing" && daysOld > 2) {
+    return "⚠️ Needs attention";
+  }
+
+  if (log.status === "Monitoring" && daysOld > 5) {
+    return "⏳ Still monitoring";
+  }
+
+  return null;
+};
 
   return (
     <div className="flex flex-col gap-3">
@@ -117,40 +134,64 @@ const filteredLogs = (showActiveOnly
 </button>
 
       <div className="flex flex-col gap-2">
-        {filteredLogs.map((log: any) => (
-  <div
-    key={log.id}
-    onClick={() => toggleStatus(log.id)}
-    className={`p-3 rounded-lg cursor-pointer ${
-      log.status === "Ongoing"
-        ? "bg-red-50"
-        : log.status === "Monitoring"
-        ? "bg-yellow-50"
-        : "bg-green-50"
-    }`}
-  >
+        {filteredLogs.map((log: any) => {
+          const alert = getAlert(log);
+          const isCritical =
+  log.status === "Ongoing" &&
+  log.date &&
+  (new Date().getTime() - new Date(log.date).getTime()) /
+    (1000 * 60 * 60 * 24) >
+    2;
+
+          return (
+            <div
+              className={`p-3 rounded-lg cursor-pointer border ${
+  isCritical
+    ? "bg-red-100 border-red-400 shadow-md animate-pulse"
+    : log.status === "Ongoing"
+    ? "bg-red-50"
+    : log.status === "Monitoring"
+    ? "bg-yellow-50"
+    : "bg-green-50"
+}`}
+              onClick={() => toggleStatus(log.id)}
+            >
+
+    {/* 👇 ADD THIS RIGHT HERE */}
+    {isCritical && (
+      <div className="text-[10px] font-bold text-white bg-red-500 px-2 py-0.5 rounded-full w-fit mb-1">
+        URGENT
+      </div>
+    )}
+
     <div className="text-xs text-gray-500 mb-1 flex items-center gap-2">
-      <span>
-        {log.status === "Ongoing"
-          ? "🔴"
-          : log.status === "Monitoring"
-          ? "🟡"
-          : "🟢"}
-      </span>
-      <span>
-        {new Date(log.date).toLocaleDateString()} • {log.status}
-      </span>
-    </div>
+                <span>
+                  {log.status === "Ongoing"
+                    ? "🔴"
+                    : log.status === "Monitoring"
+                    ? "🟡"
+                    : "🟢"}
+                </span>
+                <span>
+                  {new Date(log.date).toLocaleDateString()} • {log.status}
+                </span>
+              </div>
 
-    <div className="text-sm font-semibold">
-      {log.symptom}
-    </div>
+              <div className="text-sm font-semibold">
+                {log.symptom}
+              </div>
 
-    <div className="text-sm text-gray-700">
-      {log.treatment}
-    </div>
-  </div>
-))}
+              <div className="text-sm text-gray-700">
+                {log.treatment}
+              </div>
+              {alert && (
+                <div className="text-xs text-orange-600 mt-1">
+                  {alert}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
     </div>

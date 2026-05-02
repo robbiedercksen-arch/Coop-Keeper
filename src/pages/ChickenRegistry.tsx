@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import ProfileSection from "../components/ProfileSection";
+import Dashboard from "../components/Dashboard";  // 👈 ADD THIS
+import QuickActions from "../components/QuickActions";
 
 export default function ChickenRegistry({
   chickens,
@@ -8,6 +11,7 @@ export default function ChickenRegistry({
   saveChickenToDB, // 🔥 ADD THIS LINE
 }: any) {
   const [showForm, setShowForm] = useState(false);
+  const [filter, setFilter] = useState("all");
 
   const [form, setForm] = useState({
     idTag: "",
@@ -100,7 +104,12 @@ export default function ChickenRegistry({
   };
 
   return (
-    <div style={container}>
+  <div style={container}>
+
+    <Dashboard chickens={chickens} />  
+    <QuickActions setShowForm={setShowForm} setFilter={setFilter} />
+
+    {/* rest of your UI */}
 
       {/* HEADER */}
       <div style={header}>
@@ -146,7 +155,19 @@ export default function ChickenRegistry({
       {/* LIST */}
       {chickens.length === 0 && <p>No chickens yet</p>}
 
-      {chickens.map((c: any) => {
+      {chickens
+  .filter((c: any) => {
+    if (filter === "all") return true;
+
+    if (filter === "issues") {
+      return (c.healthLogs || []).some(
+        (log: any) => log.status === "Ongoing"
+      );
+    }
+
+    return true;
+  })
+  .map((c: any) => {
         const status = getHealthStatus(c);
 
         return (

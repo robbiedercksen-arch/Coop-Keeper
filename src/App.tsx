@@ -2,7 +2,7 @@ import { supabase } from "./supabase";
 import { useState, useEffect } from "react";
 import ChickenRegistry from "./pages/ChickenRegistry";
 import ChickenProfile from "./pages/ChickenProfile";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./components/Dashboard";
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
