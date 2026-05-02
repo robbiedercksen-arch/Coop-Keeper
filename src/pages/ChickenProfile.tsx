@@ -1012,7 +1012,7 @@ return (
               });
               setViewLog(null);
             }}
-          
+          >
             🗑 Delete
           </button>
 
@@ -1022,14 +1022,15 @@ return (
           >
             Close
           </button>
+        </>
       )}
 
     </div>
   </div>
 )}
 
-      </div>  
-    </div>     
+      </div>
+    </div>
   </>
 );
 }
