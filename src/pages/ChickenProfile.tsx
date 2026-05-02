@@ -527,7 +527,7 @@ return (
   <button
     style={{ ...btn, background: "#6b7280", color: "#fff", borderRadius: 10 }}
     onClick={() => setViewNote(null)}
-  >
+  
     Close
   </button>
 
