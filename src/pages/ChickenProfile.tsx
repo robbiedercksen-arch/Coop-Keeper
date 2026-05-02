@@ -211,77 +211,98 @@ const [editingId, setEditingId] = useState<number | null>(null);
     };
 
     return (
-      <div style={card}>
-        <div style={sectionTitle}>📝 Notes & Observations</div>
+      return (
+  <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}>
 
-        <button
-          style={{ ...btn, background: "#6366f1", color: "#fff" }}
-          onClick={() => {
-            setShowForm(!showForm);
-            setEditingNoteId(null);
-          }}
-        >
-          + Add Note
-        </button>
-
-        {showForm && (
-          <>
-            <input type="date" style={input}
-              value={noteForm.date}
-              onChange={(e)=>setNoteForm({...noteForm,date:e.target.value})}
-            />
-
-            <select style={input}
-              value={noteForm.type}
-              onChange={(e)=>setNoteForm({...noteForm,type:e.target.value})}
-            >
-              <option>General</option>
-              <option>Concern</option>
-              <option>Planning</option>
-            </select>
-
-            <input style={input}
-              placeholder="Description"
-              value={noteForm.description}
-              onChange={(e)=>setNoteForm({...noteForm,description:e.target.value})}
-            />
-
-            <button style={{ ...btn, background: "#22c55e", color: "#fff" }} onClick={saveNote}>
-              Save Note
-            </button>
-          </>
-        )}
-
-        {notes.map((note: any) => (
-  <div
-    key={note.id}
-    style={{
-      marginTop: 10,
-      padding: 12,
-      borderRadius: 12,
-      background: "#ffffffcc",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center"
-    }}
-  >
-    <div>
-      <b>{note.type}</b> — {note.description}
-    </div>
+    <div style={sectionTitle}>📝 Notes & Observations</div>
 
     <button
-      onClick={() => setViewNote(note)}
-      style={{
-        background: "#3b82f6",
-        color: "#fff",
-        border: "none",
-        borderRadius: 6,
-        padding: "4px 8px",
-        cursor: "pointer"
+      style={{ ...btn, background: "#6366f1", color: "#fff" }}
+      onClick={() => {
+        setShowForm(!showForm);
+        setEditingNoteId(null);
       }}
     >
-      View
+      + Add Note
     </button>
+
+    {showForm && (
+      <div style={{
+        background: "#f9fafb",
+        padding: 12,
+        borderRadius: 12
+      }}>
+        <input
+          type="date"
+          style={input}
+          value={noteForm.date}
+          onChange={(e)=>setNoteForm({...noteForm,date:e.target.value})}
+        />
+
+        <select
+          style={input}
+          value={noteForm.type}
+          onChange={(e)=>setNoteForm({...noteForm,type:e.target.value})}
+        >
+          <option>General</option>
+          <option>Concern</option>
+          <option>Planning</option>
+        </select>
+
+        <input
+          style={input}
+          placeholder="Description"
+          value={noteForm.description}
+          onChange={(e)=>setNoteForm({...noteForm,description:e.target.value})}
+        />
+
+        <button
+          style={{ ...btn, background: "#22c55e", color: "#fff" }}
+          onClick={saveNote}
+        >
+          Save Note
+        </button>
+      </div>
+    )}
+
+    {notes.map((note: any) => (
+      <div
+        key={note.id}
+        style={{
+          padding: 14,
+          borderRadius: 14,
+          background: "#ffffff",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div>
+          <div style={{ fontWeight: 600 }}>{note.type}</div>
+          <div style={{ fontSize: 14, color: "#555" }}>
+            {note.description}
+          </div>
+        </div>
+
+        <button
+          onClick={() => setViewNote(note)}
+          style={{
+            background: "#3b82f6",
+            color: "#fff",
+            border: "none",
+            borderRadius: 8,
+            padding: "6px 10px",
+            cursor: "pointer"
+          }}
+        >
+          View
+        </button>
+      </div>
+    ))}
+
+  </div>
+);
   </div>
 ))}
 </div>
