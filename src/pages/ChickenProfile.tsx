@@ -537,7 +537,6 @@ return (
 
     </div>
   </div>
-)}
 
       {/* PHOTO GRID */}
       <div style={card}>
