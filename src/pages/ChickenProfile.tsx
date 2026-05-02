@@ -517,6 +517,7 @@ return (
   gap: 8,
   marginTop: 10
 }}>
+
   >
     <img
       src={activeImage}
