@@ -8,6 +8,29 @@ export default function HealthSection({ chicken, updateChicken }: any) {
 
   const logs = chicken.healthLogs || [];
 
+// ✅ FIRST define this
+const statusPriority: any = {
+  Ongoing: 1,
+  Monitoring: 2,
+  Resolved: 3,
+};
+
+// ✅ THEN use it
+const filteredLogs = (showActiveOnly
+  ? logs.filter(
+      (log: any) =>
+        log.status === "Ongoing" || log.status === "Monitoring"
+    )
+  : logs
+).sort((a: any, b: any) => {
+  if (statusPriority[a.status] !== statusPriority[b.status]) {
+    return statusPriority[a.status] - statusPriority[b.status];
+  }
+  return new Date(b.date).getTime() - new Date(a.date).getTime();
+});
+
+
+
   const handleAdd = () => {
     if (!symptom.trim()) return;
 
@@ -94,52 +117,40 @@ export default function HealthSection({ chicken, updateChicken }: any) {
 </button>
 
       <div className="flex flex-col gap-2">
-        {logs
-  .filter((log: any) => {
-    if (!showActiveOnly) return true;
-
-    return log.status === "Ongoing" || log.status === "Monitoring";
-  })
-  .map((log: any, index: number) => (
-          <div
-  key={index}
-  onClick={() => toggleStatus(log.id)}
-  className={`p-3 rounded-lg cursor-pointer ${
-  log.status === "Ongoing"
-    ? "bg-red-50"
-    : log.status === "Monitoring"
-    ? "bg-yellow-50"
-    : "bg-green-50"
-}`}
->
-
-  <div className="text-xs text-gray-500 mb-1">
+        {filteredLogs.map((log: any) => (
+  <div
+    key={log.id}
+    onClick={() => toggleStatus(log.id)}
+    className={`p-3 rounded-lg cursor-pointer ${
+      log.status === "Ongoing"
+        ? "bg-red-50"
+        : log.status === "Monitoring"
+        ? "bg-yellow-50"
+        : "bg-green-50"
+    }`}
+  >
     <div className="text-xs text-gray-500 mb-1 flex items-center gap-2">
-  <span>
-    {
-  log.status === "Ongoing"
-    ? "🔴"
-    : log.status === "Monitoring"
-    ? "🟡"
-    : "🟢"
-}
-  </span>
-  <span>
-    {new Date(log.date).toLocaleDateString()} • {log.status}
-  </span>
-</div>
-  </div>
+      <span>
+        {log.status === "Ongoing"
+          ? "🔴"
+          : log.status === "Monitoring"
+          ? "🟡"
+          : "🟢"}
+      </span>
+      <span>
+        {new Date(log.date).toLocaleDateString()} • {log.status}
+      </span>
+    </div>
 
-  <div className="text-sm font-semibold">
-    {log.symptom}
-  </div>
+    <div className="text-sm font-semibold">
+      {log.symptom}
+    </div>
 
-  <div className="text-sm text-gray-700">
-    {log.treatment}
+    <div className="text-sm text-gray-700">
+      {log.treatment}
+    </div>
   </div>
-
-</div>
-        ))}
+))}
       </div>
 
     </div>
