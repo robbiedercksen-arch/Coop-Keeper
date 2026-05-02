@@ -1029,8 +1029,8 @@ return (
   </div>
 )}
 
-      </div>   {/* inner layout */}
-    </div>     {/* main container */}
+      </div>  
+    </div>     
   </>
 );
 }
