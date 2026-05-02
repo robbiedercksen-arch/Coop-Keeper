@@ -617,6 +617,7 @@ return (
     </button>
   </div>
 )}
+</div>
 {/* HEALTH LOGS */}
 <div style={card}>
   <div style={sectionTitle}>🩺 Health Logs</div>
