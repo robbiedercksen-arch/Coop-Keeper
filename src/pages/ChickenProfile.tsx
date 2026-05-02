@@ -1017,14 +1017,21 @@ return (
             🗑 Delete
           </button>
 
-          <button
-            style={{ ...btn, background: "#6b7280", color: "#fff" }}
-            onClick={() => setViewLog(null)}
-          >
-            Close
-          </button>
-                  </>
+                      <button
+              style={{ ...btn, background: "#6b7280", color: "#fff" }}
+              onClick={() => setViewLog(null)}
+            >
+              Close
+            </button>
+
+          </div>
+        </>
       )}
+
+    </div>   {/* closes popup card */}
+  </div>     {/* closes overlay */}
+)}
+
       </div>   {/* closes inner layout */}
     </div>     {/* closes main container */}
   </>
