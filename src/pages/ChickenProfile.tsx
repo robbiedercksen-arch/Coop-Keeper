@@ -808,20 +808,23 @@ return (
   )}
 
   {healthLogs.map((log: any) => (
-    <div
-      key={log.id}
-      style={{
-        padding: 14,
-        borderRadius: 14,
-        background: "#ffffff",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-      }}
-    >
+  <div
+    key={log.id}
+    style={{
+      padding: 16,
+      borderRadius: 16,
+      background: "#ffffff",
+      boxShadow: "0 8px 18px rgba(0,0,0,0.08)",
+      display: "flex",
+      flexDirection: "column",
+      gap: 10,
+      borderLeft: `6px solid ${getColor(log.status)}`,
+    }}
+  >
 
-      {/* STATUS ROW */}
+    {/* TOP ROW */}
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div
           style={{
@@ -831,17 +834,24 @@ return (
             background: getColor(log.status),
           }}
         />
-        <b>{log.status}</b>
+        <b style={{ fontSize: 15 }}>{log.status}</b>
       </div>
 
-      {/* SYMPTOMS */}
-      <div style={{ fontSize: 14, color: "#555" }}>
-        {log.symptoms || "No symptoms recorded"}
-      </div>
+      <span style={{ fontSize: 12, color: "#6b7280" }}>
+        {log.date || ""}
+      </span>
+    </div>
 
-      {/* ACTION BUTTON */}
+    {/* SYMPTOMS */}
+    <div style={{ fontSize: 14, color: "#555" }}>
+      {log.symptoms || "No symptoms recorded"}
+    </div>
+
+    {/* ACTIONS */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+
       <button
-        style={{ ...btn, background: "#3b82f6", color: "#fff" }}
+        style={{ ...btn, background: "#3b82f6", color: "#fff", borderRadius: 10 }}
         onClick={(e) => {
           e.stopPropagation();
           setViewLog(log);
@@ -850,7 +860,6 @@ return (
         View Details
       </button>
 
-      {/* RESOLVED */}
       <label style={{ fontSize: 13 }}>
         <input
           type="checkbox"
@@ -870,7 +879,9 @@ return (
       </label>
 
     </div>
-  ))}
+
+  </div>
+))}
 
 </div>
 {viewLog && (
