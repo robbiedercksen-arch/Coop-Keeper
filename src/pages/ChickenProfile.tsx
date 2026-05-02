@@ -1054,6 +1054,12 @@ return (
             </button>
 
           </div>
+                  </>
+      )}
+
+    </div>   // closes popup card
+  </div>     // closes overlay
+)}
         </>
  )}
       </div>   {/* closes inner layout */}
