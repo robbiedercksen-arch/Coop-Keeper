@@ -294,63 +294,84 @@ return (
     padding: 16,
     minHeight: "100vh"
   }}>
-      {/* PROFILE */}
-      <div style={card}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <h2 style={{ margin: 0 }}>🐔 Chicken Profile</h2>
+  {/* HEADER */}
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <h2 style={{ margin: 0 }}>🐔 Chicken Profile</h2>
 
-          {!editingChicken && (
-            <button
-              onClick={() => setEditingChicken(true)}
-              style={{ ...btn, background: "#6366f1", color: "#fff" }}
-            >
-              ✏ Edit Info
-            </button>
-          )}
-        </div>
+    {!editingChicken && (
+      <button
+        onClick={() => setEditingChicken(true)}
+        style={{
+          ...btn,
+          background: "#6366f1",
+          color: "#fff",
+          width: "auto",
+          padding: "8px 12px"
+        }}
+      >
+        ✏ Edit
+      </button>
+    )}
+  </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 15 }}>
+  {/* IMAGE */}
+  {chicken.image && (
+    <img
+      src={chicken.image}
+      style={{
+        width: "100%",
+        maxWidth: 240,
+        borderRadius: 16,
+        alignSelf: "center",
+        boxShadow: "0 6px 16px rgba(0,0,0,0.15)"
+      }}
+    />
+  )}
 
-          {chicken.image && (
-            <img
-              src={chicken.image}
-              style={{
-                width: "100%",
-                maxWidth: 220,
-                borderRadius: 16,
-                alignSelf: "center"
-              }}
-            />
-          )}
+  {/* CONTENT */}
+  {editingChicken ? (
+    <>
+      <input style={input} value={editForm.name} onChange={(e)=>setEditForm({...editForm,name:e.target.value})} />
+      <input style={input} value={editForm.idTag} onChange={(e)=>setEditForm({...editForm,idTag:e.target.value})} />
+      <input style={input} value={editForm.breed} onChange={(e)=>setEditForm({...editForm,breed:e.target.value})} />
 
-          {editingChicken ? (
-            <>
-              <input style={input} value={editForm.name} onChange={(e)=>setEditForm({...editForm,name:e.target.value})} />
-              <input style={input} value={editForm.idTag} onChange={(e)=>setEditForm({...editForm,idTag:e.target.value})} />
-              <input style={input} value={editForm.breed} onChange={(e)=>setEditForm({...editForm,breed:e.target.value})} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <button style={{ ...btn, background: "#22c55e", color: "#fff" }} onClick={saveChickenInfo}>
+          ✔ Save
+        </button>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <button style={{ ...btn, background: "#22c55e", color: "#fff" }} onClick={saveChickenInfo}>
-                  ✔ Update Info
-                </button>
-
-                <button style={{ ...btn, background: "#9ca3af", color: "#fff" }} onClick={() => setEditingChicken(false)}>
-                  Cancel
-                </button>
-              </div>
-            </>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <h1>{chicken.name}</h1>
-              <div><strong>ID:</strong> {chicken.idTag}</div>
-              <div><strong>Breed:</strong> {chicken.breed}</div>
-              <div><strong>Sex:</strong> {chicken.sex}</div>
-              <div><strong>Age:</strong> {chicken.ageGroup}</div>
-            </div>
-          )}
-        </div>
+        <button style={{ ...btn, background: "#9ca3af", color: "#fff" }} onClick={() => setEditingChicken(false)}>
+          Cancel
+        </button>
       </div>
+    </>
+  ) : (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+
+      <h1 style={{ margin: 0 }}>{chicken.name}</h1>
+
+      <div style={{ fontSize: 14, color: "#6b7280" }}>
+        ID: {chicken.idTag}
+      </div>
+
+      <div style={{ fontSize: 14 }}>
+        <strong>Breed:</strong> {chicken.breed}
+      </div>
+
+      <div style={{ fontSize: 14 }}>
+        <strong>Sex:</strong> {chicken.sex}
+      </div>
+
+      <div style={{ fontSize: 14 }}>
+        <strong>Age:</strong> {chicken.ageGroup}
+      </div>
+
+    </div>
+  )}
+
+</div>
 
       <NotesSection />
       {/* NOTE VIEW POPUP */}
