@@ -1,20 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 
-// ==========================
-// SECTION 1: COMPONENT SETUP & PROPS
-// ==========================
 export default function ChickenProfile({
   selectedChicken,
   setChickens,
   setSelectedChicken,
   navigate,
-  saveChickenToDB, 
+  saveChickenToDB,
 }: any) {
 
-  // ==========================
-  // SECTION 2: SAFETY CHECK (LOADING STATE)
-  // ==========================
   if (!selectedChicken || !selectedChicken.id) {
     return (
       <div style={{ padding: 20 }}>
@@ -26,16 +19,11 @@ export default function ChickenProfile({
     );
   }
 
-  // ==========================
-  // SECTION 3: CORE STATE (CHICKEN DATA)
-  // ==========================
   const [chicken, setChicken] = useState(selectedChicken);
 
-  // ==========================
-  // SECTION 4: IMAGE VIEWER STATE + NAVIGATION
-  // ==========================
+  // ================= IMAGE VIEWER =================
   const [activeImage, setActiveImage] = useState<string | null>(null);
-  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const nextImage = () => {
     const album = chicken.album || [];
@@ -55,9 +43,6 @@ export default function ChickenProfile({
     }
   };
 
-  // ==========================
-  // SECTION 5: SWIPE DETECTION
-  // ==========================
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
@@ -67,32 +52,20 @@ export default function ChickenProfile({
 
   const handleTouchEnd = (e: any) => {
     touchEndX.current = e.changedTouches[0].screenX;
-    handleSwipe();
-  };
-
-  const handleSwipe = () => {
     const diff = touchStartX.current - touchEndX.current;
     if (diff > 50) nextImage();
     if (diff < -50) prevImage();
   };
 
-  // ==========================
-  // SECTION 6: SYNC SELECTED CHICKEN
-  // ==========================
   useEffect(() => setChicken(selectedChicken), [selectedChicken]);
 
-  // ==========================
-  // SECTION 7: GLOBAL UI STATE
-  // ==========================
+  // ================= STATE =================
   const [viewNote, setViewNote] = useState<any>(null);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [showHealthForm, setShowHealthForm] = useState(false);
   const [viewLog, setViewLog] = useState<any>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  // ==========================
-  // SECTION 8: FORM STATES
-  // ==========================
   const [healthForm, setHealthForm] = useState({
     date: "",
     status: "Healthy",
@@ -109,25 +82,6 @@ export default function ChickenProfile({
     ageGroup: chicken.ageGroup || "",
   });
 
-  // ==========================
-  // SECTION 9: HEALTH LOG SORTING
-  // ==========================
-  const getPriority = (log: any) => {
-    if (log.resolved) return 99;
-    if (log.status === "Sick") return 1;
-    if (log.status === "Recovering") return 2;
-    return 3;
-  };
-
-  const healthLogs = (chicken.healthLogs || []).sort((a: any, b: any) => {
-    const priorityDiff = getPriority(a) - getPriority(b);
-    if (priorityDiff !== 0) return priorityDiff;
-    return b.id - a.id;
-  });
-
-  // ==========================
-  // SECTION 10: UPDATE FUNCTIONS
-  // ==========================
   const updateChicken = (updated: any) => {
     setChicken(updated);
     setChickens((prev: any[]) =>
@@ -137,85 +91,146 @@ export default function ChickenProfile({
     saveChickenToDB(updated);
   };
 
-  const saveChickenInfo = () => {
-    updateChicken({ ...chicken, ...editForm });
-    setEditingChicken(false);
-  };
-
   const saveHealth = () => {
     if (!healthForm.date) return;
 
-    if (editingId) {
-      updateChicken({
-        ...chicken,
-        healthLogs: healthLogs.map((l: any) =>
-          l.id === editingId ? { ...l, ...healthForm } : l
-        ),
-      });
-    } else {
-      updateChicken({
-        ...chicken,
-        healthLogs: [
-          ...healthLogs,
-          { id: Date.now(), ...healthForm, resolved: false },
-        ],
-      });
-    }
+    updateChicken({
+      ...chicken,
+      healthLogs: [
+        ...(chicken.healthLogs || []),
+        { id: Date.now(), ...healthForm, resolved: false },
+      ],
+    });
 
     setHealthForm({ date: "", status: "Healthy", symptoms: "" });
     setShowHealthForm(false);
-    setEditingId(null);
-    setViewLog(null);
   };
 
-  // ==========================
-  // SECTION 11: UI HELPERS
-  // ==========================
-  const getColor = (status: string) => {
-    if (status === "Healthy") return "#22c55e";
-    if (status === "Sick") return "#ef4444";
-    return "#eab308";
-  };
+  const card = { padding: 16, borderRadius: 16, marginBottom: 16 };
+  const btn = { width: "100%", padding: 10, marginTop: 6 };
+  const input = { width: "100%", padding: 8, marginBottom: 8 };
 
-  // ==========================
-  // SECTION 12: STYLES
-  // ==========================
-  const card = { padding: 16, borderRadius: 16 };
-  const btn = { width: "100%" };
-  const input = { width: "100%" };
-  const sectionTitle = { fontWeight: 700 };
-
-  // ==========================
-  // SECTION 13: NOTES COMPONENT (FIXED)
-  // ==========================
-  const NotesSection = () => {
-    return (
-      <div style={card}>
-        <div style={sectionTitle}>Notes Section Placeholder</div>
-      </div>
-    );
-  };
-
-  // ==========================
-  // SECTION 14: MAIN UI
-  // ==========================
   return (
-    <div style={{
-      maxWidth: 480,
-      margin: "0 auto",
-      padding: 16,
-      minHeight: "100vh"
-    }}>
-      
-      {/* SECTION 15: PROFILE */}
-      {/* SECTION 16: NOTES */}
-      {/* SECTION 17: PHOTO GRID */}
-      {/* SECTION 18: IMAGE VIEWER */}
-      {/* SECTION 19: HEALTH LOGS */}
-      {/* SECTION 20: HEALTH POPUP */}
+    <div style={{ maxWidth: 480, margin: "0 auto", padding: 16 }}>
 
-      <NotesSection />
+      {/* ================= PROFILE ================= */}
+      <div style={card}>
+        <h2>🐔 {chicken.name}</h2>
+        <div>ID: {chicken.idTag}</div>
+        <div>Breed: {chicken.breed}</div>
+      </div>
 
+      {/* ================= NOTES ================= */}
+      <div style={card}>
+        <h3>📝 Notes</h3>
+
+        {(chicken.notes || []).map((n: any) => (
+          <div key={n.id}>{n.description}</div>
+        ))}
+      </div>
+
+      {/* ================= PHOTO GRID ================= */}
+      <div style={card}>
+        <h3>📸 Photos</h3>
+
+        <input
+          type="file"
+          multiple
+          onChange={(e: any) => {
+            const files = Array.from(e.target.files);
+            Promise.all(
+              files.map(
+                (file: any) =>
+                  new Promise((res) => {
+                    const r = new FileReader();
+                    r.onloadend = () => res(r.result);
+                    r.readAsDataURL(file);
+                  })
+              )
+            ).then((images: any) => {
+              updateChicken({
+                ...chicken,
+                album: [...(chicken.album || []), ...images],
+              });
+            });
+          }}
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
+          {(chicken.album || []).map((img: any, i: number) => (
+            <img
+              key={i}
+              src={img}
+              onClick={() => {
+                setActiveIndex(i);
+                setActiveImage(img);
+              }}
+              style={{ width: "100%", cursor: "pointer" }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ================= IMAGE VIEWER ================= */}
+      {activeImage && (
+        <div
+          onClick={() => setActiveImage(null)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "black",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <img
+            src={activeImage}
+            style={{ maxWidth: "90%", maxHeight: "90%" }}
+          />
+        </div>
+      )}
+
+      {/* ================= HEALTH ================= */}
+      <div style={card}>
+        <h3>🩺 Health Logs</h3>
+
+        <button style={btn} onClick={() => setShowHealthForm(!showHealthForm)}>
+          + Add
+        </button>
+
+        {showHealthForm && (
+          <>
+            <input
+              type="date"
+              style={input}
+              value={healthForm.date}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, date: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="Symptoms"
+              style={input}
+              value={healthForm.symptoms}
+              onChange={(e) =>
+                setHealthForm({ ...healthForm, symptoms: e.target.value })
+              }
+            />
+
+            <button style={btn} onClick={saveHealth}>
+              Save
+            </button>
+          </>
+        )}
+
+        {(chicken.healthLogs || []).map((log: any) => (
+          <div key={log.id}>{log.symptoms}</div>
+        ))}
+      </div>
     </div>
   );
 }
