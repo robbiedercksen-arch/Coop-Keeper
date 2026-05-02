@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import ProfileSection from "../components/ProfileSection";
 import PhotoSection from "../components/PhotoSection";
+import NotesSection from "../components/NotesSection";
+import HealthSection from "../components/HealthSection";
 
 export default function ChickenProfile({
   selectedChicken,
@@ -92,11 +94,25 @@ return (
 
         </div>
       </ProfileSection>
-
+      
      <ProfileSection title="Photos">
   <PhotoSection 
     chicken={chicken} 
     updateChicken={updateChicken} 
+  />
+</ProfileSection>
+
+<ProfileSection title="Notes">
+  <NotesSection 
+    chicken={chicken}
+    updateChicken={updateChicken}
+  />
+</ProfileSection>
+
+<ProfileSection title="Health">
+  <HealthSection 
+    chicken={chicken}
+    updateChicken={updateChicken}
   />
 </ProfileSection>
 

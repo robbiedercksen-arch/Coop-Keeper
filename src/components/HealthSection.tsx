@@ -1,0 +1,147 @@
+import { useState } from "react";
+
+export default function HealthSection({ chicken, updateChicken }: any) {
+  const [symptom, setSymptom] = useState("");
+  const [treatment, setTreatment] = useState("");
+  const [status, setStatus] = useState("Ongoing");
+  const [showActiveOnly, setShowActiveOnly] = useState(false);
+
+  const logs = chicken.healthLogs || [];
+
+  const handleAdd = () => {
+    if (!symptom.trim()) return;
+
+    const newEntry = {
+      id: Date.now(),
+      date: new Date().toISOString(),
+      symptom,
+      treatment,
+      status,
+    };
+    
+
+    updateChicken({
+      ...chicken,
+      healthLogs: [...logs, newEntry],
+    });
+
+    setSymptom("");
+    setTreatment("");
+    setStatus("Ongoing");
+  };
+
+  const toggleStatus = (id: number) => {
+  const updatedLogs = logs.map((log: any) =>
+    log.id === id
+      ? {
+          ...log,
+          status:
+            log.status === "Ongoing"
+              ? "Monitoring"
+              : log.status === "Monitoring"
+              ? "Resolved"
+              : "Ongoing",
+        }
+      : log
+  );
+
+  updateChicken({
+    ...chicken,
+    healthLogs: updatedLogs,
+  });
+};
+
+  return (
+    <div className="flex flex-col gap-3">
+
+      <input
+        value={symptom}
+        onChange={(e) => setSymptom(e.target.value)}
+        placeholder="Symptom..."
+        className="border rounded-lg px-3 py-2 text-sm"
+      />
+
+      <input
+        value={treatment}
+        onChange={(e) => setTreatment(e.target.value)}
+        placeholder="Treatment..."
+        className="border rounded-lg px-3 py-2 text-sm"
+      />
+
+      <select
+        value={status}
+        onChange={(e) => setStatus(e.target.value)}
+        className="border rounded-lg px-3 py-2 text-sm"
+      >
+        <option>Ongoing</option>
+<option>Monitoring</option>
+<option>Resolved</option>
+      </select>
+
+      <button
+        onClick={handleAdd}
+        className="bg-red-500 text-white px-3 py-2 rounded-lg text-sm"
+      >
+        + Add Health Log
+      </button>
+      <button
+  onClick={() => setShowActiveOnly(!showActiveOnly)}
+  className={`px-3 py-2 rounded-lg text-sm ${
+    showActiveOnly ? "bg-blue-500 text-white" : "bg-gray-200"
+  }`}
+>
+  {showActiveOnly ? "Showing Active (Tap for All)" : "Show Active Only"}
+</button>
+
+      <div className="flex flex-col gap-2">
+        {logs
+  .filter((log: any) => {
+    if (!showActiveOnly) return true;
+
+    return log.status === "Ongoing" || log.status === "Monitoring";
+  })
+  .map((log: any, index: number) => (
+          <div
+  key={index}
+  onClick={() => toggleStatus(log.id)}
+  className={`p-3 rounded-lg cursor-pointer ${
+  log.status === "Ongoing"
+    ? "bg-red-50"
+    : log.status === "Monitoring"
+    ? "bg-yellow-50"
+    : "bg-green-50"
+}`}
+>
+
+  <div className="text-xs text-gray-500 mb-1">
+    <div className="text-xs text-gray-500 mb-1 flex items-center gap-2">
+  <span>
+    {
+  log.status === "Ongoing"
+    ? "🔴"
+    : log.status === "Monitoring"
+    ? "🟡"
+    : "🟢"
+}
+  </span>
+  <span>
+    {new Date(log.date).toLocaleDateString()} • {log.status}
+  </span>
+</div>
+  </div>
+
+  <div className="text-sm font-semibold">
+    {log.symptom}
+  </div>
+
+  <div className="text-sm text-gray-700">
+    {log.treatment}
+  </div>
+
+</div>
+        ))}
+      </div>
+
+    </div>
+  );
+}
