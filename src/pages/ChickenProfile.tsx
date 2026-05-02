@@ -24,23 +24,7 @@ export default function ChickenProfile({
 
 const [activeImage, setActiveImage] = useState<string | null>(null);
 const [activeIndex, setActiveIndex] = useState<number>(0);
-const nextImage = () => {
-  const album = chicken.album || [];
-  if (activeIndex < album.length - 1) {
-    const next = activeIndex + 1;
-    setActiveIndex(next);
-    setActiveImage(album[next]);
-  }
-};
 
-const prevImage = () => {
-  const album = chicken.album || [];
-  if (activeIndex > 0) {
-    const prev = activeIndex - 1;
-    setActiveIndex(prev);
-    setActiveImage(album[prev]);
-  }
-};
 
 // 👇 PASTE HERE
 const touchStartX = useRef(0);
@@ -517,7 +501,24 @@ return (
   gap: 8,
   marginTop: 10
 }}>
-
+{/* IMAGE VIEWER */}
+{activeImage && (
+  <div
+    onClick={() => setActiveImage(null)}
+    onTouchStart={handleTouchStart}
+    onTouchEnd={handleTouchEnd}
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      background: "rgba(0,0,0,0.95)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 999999,
+    }}
   >
     <img
       src={activeImage}
