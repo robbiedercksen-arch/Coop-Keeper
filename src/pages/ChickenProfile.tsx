@@ -900,3 +900,132 @@ return (
 ))}
 
 </div>
+{viewLog && (
+  <div
+    onClick={() => {
+      setViewLog(null);
+      setEditingId(null);
+    }}
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.6)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 2000,
+      padding: 16,
+    }}
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        background: "#fff",
+        padding: 20,
+        borderRadius: 16,
+        width: "90%",
+        maxWidth: 420,
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+      }}
+    >
+
+      {/* STATUS */}
+      <div style={{ fontWeight: 700 }}>
+        {viewLog.status}
+      </div>
+
+      {/* CONTENT */}
+      {editingId === viewLog.id ? (
+        <>
+          <input
+            type="date"
+            style={input}
+            value={healthForm.date}
+            onChange={(e) =>
+              setHealthForm({ ...healthForm, date: e.target.value })
+            }
+          />
+
+          <select
+            style={input}
+            value={healthForm.status}
+            onChange={(e) =>
+              setHealthForm({ ...healthForm, status: e.target.value })
+            }
+          >
+            <option>Healthy</option>
+            <option>Sick</option>
+            <option>Recovering</option>
+          </select>
+
+          <input
+            style={input}
+            value={healthForm.symptoms}
+            onChange={(e) =>
+              setHealthForm({ ...healthForm, symptoms: e.target.value })
+            }
+          />
+
+          <button
+            style={{ ...btn, background: "#22c55e", color: "#fff" }}
+            onClick={saveHealth}
+          >
+            ✔ Save
+          </button>
+
+          <button
+            style={{ ...btn, background: "#9ca3af", color: "#fff" }}
+            onClick={() => {
+              setEditingId(null);
+              setViewLog(null);
+            }}
+          >
+            Cancel
+          </button>
+        </>
+      ) : (
+        <>
+          <div style={{ padding: 10, background: "#f3f4f6", borderRadius: 10 }}>
+            {viewLog.symptoms || "No symptoms"}
+          </div>
+
+          <button
+            style={{ ...btn, background: "#f59e0b", color: "#fff" }}
+            onClick={() => {
+              setHealthForm(viewLog);
+              setEditingId(viewLog.id);
+            }}
+          >
+            ✏ Edit
+          </button>
+
+          <button
+            style={{ ...btn, background: "#ef4444", color: "#fff" }}
+            onClick={() => {
+              updateChicken({
+                ...chicken,
+                healthLogs: healthLogs.filter((l: any) => l.id !== viewLog.id),
+              });
+              setViewLog(null);
+            }}
+          >
+            🗑 Delete
+          </button>
+
+          <button
+            style={{ ...btn, background: "#6b7280", color: "#fff" }}
+            onClick={() => setViewLog(null)}
+          >
+            Close
+          </button>
+        </>
+      )}
+
+    </div>
+  </div>
+)}
