@@ -921,7 +921,6 @@ return (
       padding: 16,
     }}
   >
-  
     <div
       onClick={(e) => e.stopPropagation()}
       style={{
@@ -936,12 +935,10 @@ return (
       }}
     >
 
-      {/* STATUS */}
       <div style={{ fontWeight: 700 }}>
         {viewLog.status}
       </div>
 
-      {/* CONTENT */}
       {editingId === viewLog.id ? (
         <>
           <input
@@ -1028,8 +1025,8 @@ return (
         </>
       )}
 
-    </div>   {/* popup card */}
-  </div>     {/* overlay */}
+    </div>
+  </div>
 )}
 
       </div>   {/* inner layout */}
