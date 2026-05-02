@@ -1043,6 +1043,7 @@ return (
                 setViewLog(null);
               }}
             >
+                          >
               🗑 Delete
             </button>
 
@@ -1054,7 +1055,6 @@ return (
             </button>
 
           </div>
-                  </>
       )}
 
     </div>   // closes popup card
@@ -1063,5 +1063,6 @@ return (
         
       </div>   {/* closes inner layout */}
     </div>     {/* closes main container */}
-  );
+  </>
+);
 }
