@@ -1063,6 +1063,5 @@ return (
         
       </div>   {/* closes inner layout */}
     </div>     {/* closes main container */}
-  </>
-);
+  );
 }
