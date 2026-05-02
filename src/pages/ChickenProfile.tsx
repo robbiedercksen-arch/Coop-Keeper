@@ -520,7 +520,7 @@ return (
                 });
                 setViewNote(null);
               }}
-            >
+            
               🗑 Delete
             </button>
 
