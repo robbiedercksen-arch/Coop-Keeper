@@ -1012,7 +1012,7 @@ return (
               });
               setViewLog(null);
             }}
-          >
+          
             🗑 Delete
           </button>
 
