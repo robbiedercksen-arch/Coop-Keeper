@@ -1024,10 +1024,4 @@ return (
             Close
           </button>
         </>
-      )}
-        
-      </div>   {/* closes inner layout */}
-    </div>     {/* closes main container */}
-  </>
-);
-}
+ 
