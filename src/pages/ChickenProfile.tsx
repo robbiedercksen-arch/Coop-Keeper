@@ -414,11 +414,16 @@ return (
     <div
       onClick={(e) => e.stopPropagation()}
       style={{
-        background: "#fff",
+        background: "rgba(255,255,255,0.95)",
+        backdropFilter: "blur(10px)",
         padding: 20,
-        borderRadius: 16,
+        borderRadius: 20,
         width: "90%",
-        maxWidth: 400,
+        maxWidth: 420,
+        boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
       }}
     >
 
@@ -434,7 +439,7 @@ return (
           />
 
           <button
-            style={{ ...btn, background: "#22c55e", color: "#fff" }}
+            style={{ ...btn, background: "#22c55e", color: "#fff", borderRadius: 10 }}
             onClick={() => {
               updateChicken({
                 ...chicken,
@@ -450,7 +455,7 @@ return (
           </button>
 
           <button
-            style={{ ...btn, background: "#9ca3af", color: "#fff" }}
+            style={{ ...btn, background: "#9ca3af", color: "#fff", borderRadius: 10 }}
             onClick={() => {
               setEditingNoteId(null);
               setViewNote(null);
@@ -461,6 +466,62 @@ return (
         </>
       ) : (
 
+        /* VIEW MODE */
+        <>
+          <div style={{ fontWeight: 700 }}>
+            {viewNote.type}
+          </div>
+
+          <div
+            style={{
+              background: "#f3f4f6",
+              padding: 12,
+              borderRadius: 12,
+            }}
+          >
+            {viewNote.description || "No description"}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            
+            <button
+              style={{ ...btn, background: "#f59e0b", color: "#fff", borderRadius: 10 }}
+              onClick={() => {
+                setEditingNoteId(viewNote.id);
+              }}
+            >
+              ✏ Edit
+            </button>
+
+            <button
+              style={{ ...btn, background: "#ef4444", color: "#fff", borderRadius: 10 }}
+              onClick={() => {
+                updateChicken({
+                  ...chicken,
+                  notes: (chicken.notes || []).filter(
+                    (n: any) => n.id !== viewNote.id
+                  ),
+                });
+                setViewNote(null);
+              }}
+            >
+              🗑 Delete
+            </button>
+
+            <button
+              style={{ ...btn, background: "#6b7280", color: "#fff", borderRadius: 10 }}
+              onClick={() => setViewNote(null)}
+            >
+              Close
+            </button>
+
+          </div>
+        </>
+      )}
+
+    </div>
+  </div>
+)}
         /* VIEW MODE */
         <>
           <div style={{ fontWeight: 700, marginBottom: 10 }}>
