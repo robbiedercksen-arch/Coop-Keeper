@@ -235,8 +235,9 @@ export default function ChickenProfile({
       margin: "0 auto",
       padding: 16,
       minHeight: "100vh"
-}}>
-  {/* ========================== */}
+    }}>
+      
+      {/* ==========================
           SECTION 15: PROFILE CARD
       ========================== */}
       
