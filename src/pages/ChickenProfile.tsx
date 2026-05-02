@@ -508,6 +508,7 @@ return (
             >
               ✏ Edit
             </button>
+            
             <button
   style={{ ...btn, background: "#ef4444", color: "#fff", borderRadius: 10 }}
   onClick={() => {
