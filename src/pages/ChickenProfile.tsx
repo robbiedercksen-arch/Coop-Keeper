@@ -597,7 +597,7 @@ return (
     cursor: "pointer",
     zIndex: 1000000,
   }}
->
+
   ×
 </button>
   </div>
