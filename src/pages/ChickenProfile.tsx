@@ -604,10 +604,10 @@ return (
 {activeImage && (
   <div
     onClick={(e) => {
-  if (touchStartX.current === touchEndX.current) {
-    setActiveImage(null);
-  }
-}}
+      if (touchStartX.current === touchEndX.current) {
+        setActiveImage(null);
+      }
+    }}
     onTouchStart={handleTouchStart}
     onTouchEnd={handleTouchEnd}
     style={{
@@ -623,35 +623,86 @@ return (
       zIndex: 999999,
     }}
   >
+
+    {/* IMAGE */}
     <img
       src={activeImage}
       onClick={(e) => e.stopPropagation()}
       style={{
-        maxWidth: "90vw",
-        maxHeight: "90vh",
+        maxWidth: "92vw",
+        maxHeight: "85vh",
         objectFit: "contain",
+        borderRadius: 12,
       }}
     />
 
+    {/* CLOSE BUTTON */}
     <button
       onClick={() => setActiveImage(null)}
       style={{
         position: "fixed",
         top: 20,
         right: 20,
-        background: "#ef4444",
+        background: "rgba(255,255,255,0.2)",
+        backdropFilter: "blur(8px)",
         color: "#fff",
         border: "none",
         borderRadius: "50%",
-        width: 44,
-        height: 44,
-        fontSize: 22,
+        width: 42,
+        height: 42,
+        fontSize: 20,
         cursor: "pointer",
-        zIndex: 1000000,
       }}
     >
       ×
     </button>
+
+    {/* LEFT NAV */}
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        prevImage();
+      }}
+      style={{
+        position: "fixed",
+        left: 10,
+        top: "50%",
+        transform: "translateY(-50%)",
+        background: "rgba(255,255,255,0.15)",
+        border: "none",
+        color: "#fff",
+        fontSize: 24,
+        borderRadius: 12,
+        padding: "8px 12px",
+        cursor: "pointer",
+      }}
+    >
+      ‹
+    </button>
+
+    {/* RIGHT NAV */}
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        nextImage();
+      }}
+      style={{
+        position: "fixed",
+        right: 10,
+        top: "50%",
+        transform: "translateY(-50%)",
+        background: "rgba(255,255,255,0.15)",
+        border: "none",
+        color: "#fff",
+        fontSize: 24,
+        borderRadius: 12,
+        padding: "8px 12px",
+        cursor: "pointer",
+      }}
+    >
+      ›
+    </button>
+
   </div>
 )}
 </div>
