@@ -7,20 +7,26 @@ import Dashboard from "./components/Dashboard";
 export default function App() {
   const [page, setPage] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const [chickens, setChickens] = useState<any[]>([]);
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
 
   // 🔥 MOBILE DETECTION
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+useEffect(() => {
+  const checkMobile = () => {
+    setIsMobile(window.innerWidth < 768);
+  };
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  checkMobile();
+
+  window.addEventListener("resize", checkMobile);
+
+  return () => {
+    window.removeEventListener("resize", checkMobile);
+  };
+}, []);
 
   // 🔥 LOAD DATA
   const loadChickens = async () => {
@@ -135,21 +141,126 @@ export default function App() {
         </div>
       )}
 
+{/* 📱 MOBILE MENU */}
+{isMobile && showMobileMenu && (
+  <>
+    {/* OVERLAY */}
+    <div
+      onClick={() => setShowMobileMenu(false)}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.45)",
+        zIndex: 998,
+      }}
+    />
+
+    {/* MENU PANEL */}
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: 250,
+        height: "100vh",
+        background: "#111827",
+        color: "#fff",
+        padding: 20,
+        zIndex: 999,
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+      }}
+    >
+      <button
+        onClick={() => setShowMobileMenu(false)}
+        style={{
+          alignSelf: "flex-end",
+          background: "transparent",
+          border: "none",
+          color: "#fff",
+          fontSize: 22,
+          cursor: "pointer",
+        }}
+      >
+        ✕
+      </button>
+
+      <button
+        onClick={() => {
+          navigate("dashboard");
+          setShowMobileMenu(false);
+        }}
+        style={menuBtn(page === "dashboard", false)}
+      >
+        🏠 Dashboard
+      </button>
+
+      <button
+        onClick={() => {
+          navigate("registry");
+          setShowMobileMenu(false);
+        }}
+        style={menuBtn(page === "registry", false)}
+      >
+        🐔 Registry
+      </button>
+    </div>
+  </>
+)}
       {/* 🔥 MAIN AREA */}
       <div style={{ flex: 1 }}>
+      {/* 📱 MOBILE TOP BAR */}
+{isMobile && (
+  <div
+    style={{
+      background: "#111827",
+      color: "#fff",
+      padding: "12px 16px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+    }}
+  >
+    <button
+      onClick={() => setShowMobileMenu(true)}
+      style={{
+        background: "#1f2937",
+        border: "none",
+        color: "#fff",
+        padding: "8px 14px",
+        borderRadius: 10,
+        fontSize: 14,
+        fontWeight: 600,
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}
+    >
+      ☰ MENU
+    </button>
+
+    <div style={{ fontWeight: 700 }}>
+      🐔 Coop Keeper
+    </div>
+  </div>
+)}
         {/* HEADER */}
-        <div
-          style={{
-            background: "#fff",
-            padding: "14px 20px",
-            borderBottom: "1px solid #e5e7eb",
-            fontWeight: 600,
-          }}
-        >
-          {page === "dashboard" && "Dashboard"}
-          {page === "registry" && "Chicken Registry"}
-          {page === "profile" && "Chicken Profile"}
-        </div>
+{!isMobile && (
+  <div
+    style={{
+      background: "#fff",
+      padding: "14px 20px",
+      borderBottom: "1px solid #e5e7eb",
+      fontWeight: 600,
+    }}
+  >
+    {page === "dashboard" && "Dashboard"}
+    {page === "registry" && "Chicken Registry"}
+    {page === "profile" && "Chicken Profile"}
+  </div>
+)}
 
         {/* CONTENT */}
         <div style={{ padding: 20 }}>
@@ -189,13 +300,14 @@ const menuBtn = (active: boolean, collapsed: boolean) => ({
   border: "none",
   padding: collapsed ? "10px" : "10px 12px",
   borderRadius: 10,
-  textAlign: "left",
+  textAlign: "left" as const,
   fontWeight: active ? 700 : 500,
   transition: "all 0.2s ease",
   display: "flex",
   alignItems: "center",
   gap: 10,
   cursor: "pointer",
+  width: "100%",
 });
 
 const collapseBtn = {
