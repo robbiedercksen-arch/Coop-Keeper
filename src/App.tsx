@@ -7,67 +7,73 @@ import Dashboard from "./components/Dashboard";
 export default function App() {
   const [page, setPage] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const [chickens, setChickens] = useState<any[]>([]);
-
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
-const loadChickens = async () => {
-  const { data, error } = await supabase
-    .from("chickens")
-    .select("*");
 
-  console.log("LOADED FROM DB:", data); // 👈 HERE
+  // 🔥 MOBILE DETECTION
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
 
-  if (error) {
-  console.error("Load error:", error);
-} else {
-  if (!data) {
-    setChickens([]);
-    return;
-  }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  const formatted = data.map((row: any) => ({
-    ...row.data,
-  }));
+  // 🔥 LOAD DATA
+  const loadChickens = async () => {
+    const { data, error } = await supabase.from("chickens").select("*");
 
-  setChickens(formatted);
-}
-};
+    if (error) {
+      console.error("Load error:", error);
+    } else {
+      if (!data) {
+        setChickens([]);
+        return;
+      }
 
-const saveChickenToDB = async (chicken: any) => {
-  console.log("SAVING:", chicken);
+      const formatted = data.map((row: any) => ({
+        ...row.data,
+      }));
 
-  const { data, error } = await supabase
-    .from("chickens")
-    .upsert({
-      id: chicken.id,
-      name: chicken.name,
-      idTag: chicken.idTag,
-      breed: chicken.breed,
-      sex: chicken.sex,
-      data: chicken
-    }, {
-      onConflict: "id"
-    })
-    .select();
+      setChickens(formatted);
+    }
+  };
 
-  console.log("SAVE RESULT:", data, error);
+  // 🔥 SAVE DATA
+  const saveChickenToDB = async (chicken: any) => {
+    const { error } = await supabase
+      .from("chickens")
+      .upsert(
+        {
+          id: chicken.id,
+          name: chicken.name,
+          idTag: chicken.idTag,
+          breed: chicken.breed,
+          sex: chicken.sex,
+          data: chicken,
+        },
+        { onConflict: "id" }
+      );
 
-  if (error) {
-    console.error("Save error:", error);
-  } else {
-    await loadChickens(); // 🔥 VERY IMPORTANT
-  }
-};
+    if (error) {
+      console.error("Save error:", error);
+    } else {
+      await loadChickens();
+    }
+  };
 
-useEffect(() => {
-  loadChickens();
-}, []);
-  
+  // 🔥 INITIAL LOAD
+  useEffect(() => {
+    loadChickens();
+  }, []);
 
+  // 🔥 KEEP SELECTED IN SYNC
   useEffect(() => {
     if (selectedChicken) {
-      const updated = chickens.find(c => c.id === selectedChicken.id);
+      const updated = chickens.find((c) => c.id === selectedChicken.id);
       if (updated) setSelectedChicken(updated);
     }
   }, [chickens]);
@@ -78,64 +84,68 @@ useEffect(() => {
 
   return (
     <div style={{ display: "flex", background: "#f3f4f6" }}>
-
+      
       {/* 🔥 SIDEBAR */}
-      <div style={{
-        width: collapsed ? 70 : 230,
-        background: "#111827",
-        color: "#fff",
-        minHeight: "100vh",
-        padding: 15,
-        transition: "all 0.25s ease"
-      }}>
-        
-        {/* LOGO */}
-        <div style={{
-          display: "flex",
-          justifyContent: collapsed ? "center" : "space-between",
-          alignItems: "center",
-          marginBottom: 20
-        }}>
-          {!collapsed && <h2>🐔 Coop</h2>}
-
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            style={collapseBtn}
+      {!isMobile && (
+        <div
+          style={{
+            width: collapsed ? 70 : 230,
+            background: "#111827",
+            color: "#fff",
+            minHeight: "100vh",
+            padding: 15,
+            transition: "all 0.25s ease",
+          }}
+        >
+          {/* LOGO */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: collapsed ? "center" : "space-between",
+              alignItems: "center",
+              marginBottom: 20,
+            }}
           >
-            {collapsed ? "➡" : "⬅"}
-          </button>
+            {!collapsed && <h2>🐔 Coop</h2>}
+
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              style={collapseBtn}
+            >
+              {collapsed ? "➡" : "⬅"}
+            </button>
+          </div>
+
+          {/* MENU */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button
+              onClick={() => navigate("dashboard")}
+              style={menuBtn(page === "dashboard", collapsed)}
+            >
+              🏠 {!collapsed && "Dashboard"}
+            </button>
+
+            <button
+              onClick={() => navigate("registry")}
+              style={menuBtn(page === "registry", collapsed)}
+            >
+              🐔 {!collapsed && "Registry"}
+            </button>
+          </div>
         </div>
-
-        {/* MENU */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-
-          <button
-            onClick={() => navigate("dashboard")}
-            style={menuBtn(page === "dashboard", collapsed)}
-          >
-            🏠 {!collapsed && "Dashboard"}
-          </button>
-
-          <button
-            onClick={() => navigate("registry")}
-            style={menuBtn(page === "registry", collapsed)}
-          >
-            🐔 {!collapsed && "Registry"}
-          </button>
-
-        </div>
-      </div>
+      )}
 
       {/* 🔥 MAIN AREA */}
       <div style={{ flex: 1 }}>
-
         {/* HEADER */}
-        <div style={{
-          background: "#fff",
-          padding: "14px 20px",
-          borderBottom: "1px solid #e5e7eb",
-          fontWeight: 600,
-        }}>
+        <div
+          style={{
+            background: "#fff",
+            padding: "14px 20px",
+            borderBottom: "1px solid #e5e7eb",
+            fontWeight: 600,
+          }}
+        >
           {page === "dashboard" && "Dashboard"}
           {page === "registry" && "Chicken Registry"}
           {page === "profile" && "Chicken Profile"}
@@ -143,10 +153,7 @@ useEffect(() => {
 
         {/* CONTENT */}
         <div style={{ padding: 20 }}>
-
-          {page === "dashboard" && (
-            <Dashboard chickens={chickens} />
-          )}
+          {page === "dashboard" && <Dashboard chickens={chickens} />}
 
           {page === "registry" && (
             <ChickenRegistry
@@ -169,7 +176,6 @@ useEffect(() => {
               navigate={navigate}
             />
           )}
-
         </div>
       </div>
     </div>
@@ -177,21 +183,19 @@ useEffect(() => {
 }
 
 // 🔥 BUTTON STYLES
-
 const menuBtn = (active: boolean, collapsed: boolean) => ({
-  background: active ? "#2563eb" : "#1f2937",
+  background: active ? "#2563eb" : "transparent",
   color: "#fff",
   border: "none",
   padding: collapsed ? "10px" : "10px 12px",
   borderRadius: 10,
-  cursor: "pointer",
-  textAlign: "left" as const,
+  textAlign: "left",
   fontWeight: active ? 700 : 500,
   transition: "all 0.2s ease",
   display: "flex",
   alignItems: "center",
-  justifyContent: collapsed ? "center" : "flex-start",
-  gap: 8,
+  gap: 10,
+  cursor: "pointer",
 });
 
 const collapseBtn = {

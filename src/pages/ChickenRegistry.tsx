@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import ProfileSection from "../components/ProfileSection";
 import Dashboard from "../components/Dashboard";  // 👈 ADD THIS
 import QuickActions from "../components/QuickActions";
 
@@ -12,6 +11,7 @@ export default function ChickenRegistry({
 }: any) {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [showMenu, setShowMenu] = useState(false);
 
   const [form, setForm] = useState({
     idTag: "",
@@ -52,7 +52,7 @@ export default function ChickenRegistry({
   };
 
   // ================= HEALTH STATUS =================
-  const getHealthStatus = (c: any) => {
+const getHealthStatus = (c: any) => {
   const logs = c.healthLogs || [];
 
   if (logs.some((l: any) => l.status === "Ongoing"))
@@ -63,6 +63,8 @@ export default function ChickenRegistry({
 
   return { color: "#22c55e", label: "Healthy" };
 };
+
+// ================= ATTENTION COUNT =================
 const getAttentionCount = () => {
   let count = 0;
 
@@ -77,9 +79,9 @@ const getAttentionCount = () => {
         (1000 * 60 * 60 * 24);
 
       return (
-        (log.status === "Ongoing" && daysOld > 2) ||
-        (log.status === "Monitoring" && daysOld > 5)
-      );
+  (log.status === "Ongoing" && daysOld > 2) ||
+  (log.status === "Monitoring" && daysOld > 5)
+);
     });
 
     if (needsAttention) count++;
@@ -87,6 +89,16 @@ const getAttentionCount = () => {
 
   return count;
 };
+
+// 👇 Keep this just before return
+const attentionCount = getAttentionCount();
+const pulseStyle = `
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
+}
+`;
   // ================= STYLES =================
   const container = {
     padding: 20,
@@ -99,7 +111,8 @@ const getAttentionCount = () => {
     borderRadius: 16,
     boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+gap: 10,
     alignItems: "center",
     marginBottom: 20,
   };
@@ -125,10 +138,88 @@ const getAttentionCount = () => {
     cursor: "pointer",
     fontWeight: 600,
   };
-const attentionCount = getAttentionCount();
 
   return (
   <div style={container}>
+
+{/* ✅ MOBILE HEADER */}
+<div style={{
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: 10,
+}}>
+  <button
+  onClick={() => setShowMenu(true)}
+  style={{
+    fontSize: 22,
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+  }}
+>
+  ☰
+</button>
+  <h2 style={{ margin: 0 }}>🐔 Chicken Registry</h2>
+</div>
+
+{/* ✅ OVERLAY */}
+{showMenu && (
+  <div
+    onClick={() => setShowMenu(false)}
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.4)",
+      zIndex: 999,
+    }}
+  />
+)}
+
+{/* ✅ SLIDE MENU */}
+<div
+  style={{
+    position: "fixed",
+    top: 0,
+    left: showMenu ? 0 : "-100%",
+    width: "80%",
+    height: "100%",
+    background: "#fff",
+    boxShadow: "2px 0 12px rgba(0,0,0,0.2)",
+    padding: 20,
+    zIndex: 1000,
+    transition: "left 0.3s ease",
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
+  }}
+>
+  <button
+  onClick={() => setShowMenu(false)}
+  style={{
+    alignSelf: "flex-end",
+    fontSize: 18,
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+  }}
+>
+  ✖
+</button>
+
+  <button onClick={() => navigate("registry")}>
+    🐔 Registry
+  </button>
+
+  <button onClick={() => navigate("profile")}>
+    📋 Profile
+  </button>
+</div>
+
+    <style>{pulseStyle}</style>
 
     <Dashboard chickens={chickens} />  
 
@@ -150,19 +241,7 @@ const attentionCount = getAttentionCount();
     {/* rest of your UI */}
 
       {/* HEADER */}
-      <div style={header}>
-        <div>
-          <h2 style={{ margin: 0 }}>🐔 Chicken Registry</h2>
-          <p style={{ margin: 0, fontSize: 13, color: "#666" }}>
-            Manage and track your chickens
-          </p>
-        </div>
-
-        <button onClick={() => setShowForm(!showForm)} style={button}>
-          {showForm ? "Cancel" : "+ Add Chicken"}
-        </button>
-      </div>
-
+      
       {/* FORM */}
       {showForm && (
         <div style={header}>
@@ -195,32 +274,114 @@ const attentionCount = getAttentionCount();
 
       {chickens
   .filter((c: any) => {
-  if (filter === "all") return true;
+    if (filter === "all") return true;
 
-  if (filter === "issues") {
-    return (c.healthLogs || []).some(
-      (log: any) =>
-        log.status === "Ongoing" || log.status === "Monitoring"
-    );
-  }
+    if (filter === "issues") {
+      return (c.healthLogs || []).some(
+        (log: any) =>
+          log.status === "Ongoing" || log.status === "Monitoring"
+      );
+    }
 
-  return true;
-})
+    return true;
+  })
+  .sort((a: any, b: any) => {
+    const getPriority = (c: any) => {
+      const logs = c.healthLogs || [];
+
+      if (logs.some((l: any) => l.status === "Ongoing")) return 1;
+      if (logs.some((l: any) => l.status === "Monitoring")) return 2;
+      return 3;
+    };
+
+    return getPriority(a) - getPriority(b);
+  })
   .map((c: any) => {
-        const status = getHealthStatus(c);
+    const logs = c.healthLogs || [];
 
-        return (
+const isCritical = logs.some((log: any) => {
+  if (!log.date) return false;
+
+  const daysOld =
+    (new Date().getTime() - new Date(log.date).getTime()) /
+    (1000 * 60 * 60 * 24);
+
+  return (
+    (log.status === "Ongoing" && daysOld > 2) ||
+    (log.status === "Monitoring" && daysOld > 5)
+  );
+});
+        const status = getHealthStatus(c);
+          const fixIssues = () => {
+  const prevLogs = c.healthLogs || [];
+
+  const updatedLogs = prevLogs.map((log: any) =>
+  log.status === "Ongoing" || log.status === "Monitoring"
+    ? { ...log, status: "Resolved" }
+    : log
+);
+
+  const updatedChicken = {
+    ...c,
+    healthLogs: updatedLogs,
+    activity: [
+      ...(c.activity || []),
+      {
+        type: "fix",
+        text: "Issues marked as resolved",
+        time: Date.now(),
+      },
+    ],
+    _lastAction: {
+      type: "fix",
+      previousLogs: prevLogs,
+    },
+  };
+
+  setChickens((prev: any[]) =>
+    prev.map((ch) => (ch.id === c.id ? updatedChicken : ch))
+  );
+};
+
+  // 👇 ADD THIS RIGHT HERE
+  const undoFix = () => {
+  if (!c._lastAction) return;
+
+  const updatedChicken = {
+    ...c,
+    healthLogs: c._lastAction.previousLogs,
+    activity: [
+      ...(c.activity || []),
+      {
+        type: "undo",
+        text: "Fix was undone",
+        time: Date.now(),
+      },
+    ],
+    _lastAction: null,
+  };
+
+  setChickens((prev: any[]) =>
+    prev.map((ch) => (ch.id === c.id ? updatedChicken : ch))
+  );
+};
+
+  return (
           <div
             key={c.id}
-            style={card}
+            style={{
+  ...card,
+  border: isCritical ? "2px solid #ef4444" : "2px solid transparent",
+  background: isCritical ? "#fef2f2" : "#fff",
+}}
             onClick={() => {
-              setSelectedChicken({ ...c });
-              navigate("profile");
-            }}
+  setSelectedChicken({ ...c, goTo: "health" });
+  navigate("profile");
+}}
           >
             {/* IMAGE */}
             <img
-              src={c.image || ""}
+              src={c.image || "https://via.placeholder.com/80"}
               style={{
                 width: 80,
                 height: 80,
@@ -232,25 +393,98 @@ const attentionCount = getAttentionCount();
 
             {/* INFO */}
             <div style={{ flex: 1 }}>
-              <h3 style={{ margin: 0 }}>{c.name}</h3>
 
-              <div style={{ fontSize: 13, color: "#555" }}>
-                ID Tag: {c.idTag}
-              </div>
+  {/* NAME + URGENT */}
+  <div>
+    {isCritical && (
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: "bold",
+          color: "#fff",
+          background: "#ef4444",
+          padding: "2px 6px",
+          borderRadius: 6,
+          display: "inline-block",
+          marginBottom: 4,
+          animation: "pulse 1.5s infinite",
+        }}
+      >
+        URGENT
+      </div>
+    )}
 
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    background: status.color,
-                  }}
-                />
-                <span style={{ fontSize: 12 }}>{status.label}</span>
-              </div>
-            </div>
-          </div>
+    {/* ✅ MOVE YOUR H3 HERE */}
+    <h3 style={{ margin: 0 }}>{c.name}</h3>
+  </div>
+                            
+  {/* ID */}
+  <div style={{ fontSize: 13, color: "#555" }}>
+    ID Tag: {c.idTag}
+  </div>
+
+  {/* STATUS */}
+<div style={{
+  marginTop: 6,
+  display: "flex",
+  gap: 6,
+  alignItems: "center",
+}}>
+  {isCritical && (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        fixIssues();
+      }}
+      onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}   // 👈 ADD
+      onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}         // 👈 ADD
+      onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}      // 👈 ADD
+      style={{
+        fontSize: 12,
+        padding: "4px 10px",
+        background: "#22c55e",
+        color: "#fff",
+        border: "none",
+        borderRadius: 999,
+        cursor: "pointer",
+        transition: "all 0.15s ease",
+      }}
+    >
+      ✔ Fix
+    </button>
+  )}
+
+  {c._lastAction?.type === "fix" && (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        undoFix();
+      }}
+     onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}   // 👈 ADD
+     onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}         // 👈 ADD
+     onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}      // 👈 ADD
+      style={{
+        fontSize: 11,
+        padding: "4px 10px",
+        background: "#6b7280",
+        color: "#fff",
+        border: "none",
+        borderRadius: 999,
+        cursor: "pointer",
+        transition: "all 0.15s ease",
+      }}
+    >
+      ↩ Undo
+    </button>
+  )}
+</div>
+
+{/* ✅ BUTTON WRAPPER GOES HERE */}
+
+
+</div>
+
+</div>
         );
       })}
     </div>

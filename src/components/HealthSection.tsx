@@ -36,7 +36,7 @@ const filteredLogs = (showActiveOnly
 
     const newEntry = {
       id: Date.now(),
-      date: new Date().toISOString(),
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       symptom,
       treatment,
       status,
