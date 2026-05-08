@@ -154,5 +154,9 @@ const photos = chicken.photos || [];
       </button>
     )}
 
-  </div>
+    </div>
 )}
+
+    </div>
+  );
+}
