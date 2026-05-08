@@ -53,7 +53,9 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
     updateChicken(updated);
   };
 
-const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+const [touchStart, setTouchStart] = useState(0);
+const [touchEnd, setTouchEnd] = useState(0);
 const photos = chicken.photos || [];
   return (
     <div className="flex flex-col gap-3">
@@ -82,7 +84,7 @@ const photos = chicken.photos || [];
             <img
               src={photo}
               className="w-full h-24 object-cover rounded-lg"
-              onClick={() => setSelectedPhoto(photo)}
+              onClick={() => setSelectedIndex(index)}
             />
 
             {/* DELETE BUTTON */}
@@ -97,32 +99,60 @@ const photos = chicken.photos || [];
         ))}
       </div>
 
-      {/* 👇 ADD THIS BLOCK RIGHT HERE */}
-      {selectedPhoto && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+      {selectedIndex !== null && (
+  <div
+    className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
+    onTouchStart={(e) => setTouchStart(e.targetTouches[0].clientX)}
+    onTouchEnd={(e) => {
+      setTouchEnd(e.changedTouches[0].clientX);
 
-          {/* CLOSE BUTTON */}
-          <button
-            onClick={() => setSelectedPhoto(null)}
-            className="absolute top-4 right-4 text-white text-xl bg-black/60 px-3 py-1 rounded-full"
-          >
-            ✕
-          </button>
+      const distance = touchStart - e.changedTouches[0].clientX;
 
-          {/* IMAGE */}
-          <img
-            src={selectedPhoto}
-            className="max-w-full max-h-full"
-          />
+      // 👉 Swipe Left = Next
+      if (distance > 50 && selectedIndex < photos.length - 1) {
+        setSelectedIndex(selectedIndex + 1);
+      }
 
-          {/* OPTIONAL: still allow tap background to close */}
-          <div
-            className="absolute inset-0"
-            onClick={() => setSelectedPhoto(null)}
-          />
+      // 👈 Swipe Right = Previous
+      if (distance < -50 && selectedIndex > 0) {
+        setSelectedIndex(selectedIndex - 1);
+      }
+    }}
+  >
 
-        </div>
-      )}
-    </div>
-  );
-}
+    {/* CLOSE BUTTON */}
+    <button
+      onClick={() => setSelectedIndex(null)}
+      className="absolute top-4 right-4 text-white text-xl bg-black/60 px-3 py-1 rounded-full z-50"
+    >
+      ✕
+    </button>
+
+    {/* LEFT BUTTON */}
+    {selectedIndex > 0 && (
+      <button
+        onClick={() => setSelectedIndex(selectedIndex - 1)}
+        className="absolute left-4 text-white text-3xl z-50"
+      >
+        ←
+      </button>
+    )}
+
+    {/* IMAGE */}
+    <img
+      src={photos[selectedIndex]}
+      className="max-w-full max-h-full z-40"
+    />
+
+    {/* RIGHT BUTTON */}
+    {selectedIndex < photos.length - 1 && (
+      <button
+        onClick={() => setSelectedIndex(selectedIndex + 1)}
+        className="absolute right-4 text-white text-3xl z-50"
+      >
+        →
+      </button>
+    )}
+
+  </div>
+)}
