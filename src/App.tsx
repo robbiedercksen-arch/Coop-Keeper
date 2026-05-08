@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import ChickenRegistry from "./pages/ChickenRegistry";
 import ChickenProfile from "./pages/ChickenProfile";
 import Dashboard from "./components/Dashboard";
+import EggRegistry from "./pages/EggRegistry";
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -136,7 +137,14 @@ useEffect(() => {
               style={menuBtn(page === "registry", collapsed)}
             >
               🐔 {!collapsed && "Registry"}
+              
             </button>
+            <button
+  onClick={() => navigate("eggs")}
+  style={menuBtn(page === "eggs", collapsed)}
+>
+  🥚 {!collapsed && "Egg Registry"}
+</button>
           </div>
         </div>
       )}
@@ -205,6 +213,15 @@ useEffect(() => {
       >
         🐔 Registry
       </button>
+      <button
+  onClick={() => {
+    navigate("eggs");
+    setShowMobileMenu(false);
+  }}
+  style={menuBtn(page === "eggs", false)}
+>
+  🥚 Egg Registry
+</button>
     </div>
   </>
 )}
@@ -258,6 +275,7 @@ useEffect(() => {
   >
     {page === "dashboard" && "Dashboard"}
     {page === "registry" && "Chicken Registry"}
+    {page === "eggs" && "Egg Registry"}
     {page === "profile" && "Chicken Profile"}
   </div>
 )}
@@ -279,14 +297,19 @@ useEffect(() => {
           )}
 
           {page === "profile" && (
-            <ChickenProfile
-              selectedChicken={selectedChicken}
-              setChickens={setChickens}
-              saveChickenToDB={saveChickenToDB}
-              setSelectedChicken={setSelectedChicken}
-              navigate={navigate}
-            />
-          )}
+  <ChickenProfile
+    selectedChicken={selectedChicken}
+    setChickens={setChickens}
+    saveChickenToDB={saveChickenToDB}
+    setSelectedChicken={setSelectedChicken}
+    navigate={navigate}
+  />
+)}
+
+{page === "eggs" && (
+  <EggRegistry chickens={chickens} />
+)}
+          
         </div>
       </div>
     </div>

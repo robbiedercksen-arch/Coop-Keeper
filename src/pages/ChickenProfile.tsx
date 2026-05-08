@@ -13,8 +13,12 @@ export default function ChickenProfile({
 }: any) {
 
   const healthRef = useRef<HTMLDivElement | null>(null);
+  
 
   const [chicken, setChicken] = useState(selectedChicken);
+  const [editing, setEditing] = useState(false);
+  
+  
 
   useEffect(() => {
     setChicken(selectedChicken);
@@ -34,7 +38,7 @@ export default function ChickenProfile({
   const photos = chicken?.photos || [];
   const mainPhoto = selectedChicken?.image;
 
-  const updateChicken = async (updated: any) => {
+const updateChicken = async (updated: any) => {
   setChicken(updated);
 
   setChickens((prev: any[]) =>
@@ -46,45 +50,64 @@ export default function ChickenProfile({
   await saveChickenToDB(updated);
 };
 
+const saveEdits = async () => {
+  await updateChicken(chicken);
+  setEditing(false);
+};
+
   return (
     <div className="max-w-md mx-auto p-4 flex flex-col gap-4">
 
       {/* HEADER */}
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">🐔 Chicken Profile</h2>
 
-        <button
-          className="bg-gray-500 text-white px-3 py-1 rounded-lg"
-          onClick={() => navigate("registry")}
-        >
-          ← Back
-        </button>
-      </div>
+  <div className="flex items-center gap-2">
+    <h2 className="text-lg font-semibold">
+      🐔 Chicken Profile
+    </h2>
 
-      {/* PROFILE PHOTO */}
-      <div className="flex justify-center">
-        <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-200">
-          {mainPhoto ? (
-            <img
-              src={mainPhoto}
-              alt="Chicken"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-              No Photo
-            </div>
-          )}
-        </div>
-      </div>
+    {!editing ? (
+      <button
+        onClick={() => setEditing(true)}
+        className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm"
+      >
+        Edit
+      </button>
+    ) : (
+      <button
+        onClick={saveEdits}
+        className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm"
+      >
+        Save
+      </button>
+    )}
+  </div>
 
+  <button
+    className="bg-gray-500 text-white px-3 py-1 rounded-lg"
+    onClick={() => navigate("registry")}
+  >
+    ← Back
+  </button>
+
+</div>
       {/* INFO */}
       <ProfileSection title="Info">
         <div className="flex flex-col gap-3 text-sm">
 
           <div className="flex justify-between">
             <span className="text-gray-500">Name</span>
-            <span className="font-medium">{chicken.name}</span>
+            {editing ? (
+  <input
+    value={chicken.name || ""}
+    onChange={(e) =>
+      setChicken({ ...chicken, name: e.target.value })
+    }
+    className="border rounded px-2 py-1 text-sm"
+  />
+) : (
+  <span className="font-medium">{chicken.name}</span>
+)}
           </div>
 
           <div className="flex justify-between">
@@ -94,12 +117,36 @@ export default function ChickenProfile({
 
           <div className="flex justify-between">
             <span className="text-gray-500">Breed</span>
-            <span>{chicken.breed}</span>
+            {editing ? (
+  <input
+    value={chicken.breed || ""}
+    onChange={(e) =>
+      setChicken({ ...chicken, breed: e.target.value })
+    }
+    className="border rounded px-2 py-1 text-sm"
+  />
+) : (
+  <span>{chicken.breed}</span>
+)}
           </div>
 
           <div className="flex justify-between">
             <span className="text-gray-500">Sex</span>
-            <span>{chicken.sex}</span>
+            {editing ? (
+  <select
+    value={chicken.sex || ""}
+    onChange={(e) =>
+      setChicken({ ...chicken, sex: e.target.value })
+    }
+    className="border rounded px-2 py-1 text-sm"
+  >
+    <option value="Hen">Hen</option>
+    <option value="Rooster">Rooster</option>
+    <option value="Unknown">Unknown</option>
+  </select>
+) : (
+  <span>{chicken.sex}</span>
+)}
           </div>
 
           <div className="flex justify-between">
