@@ -142,27 +142,6 @@ gap: 10,
   return (
   <div style={container}>
 
-{/* ✅ MOBILE HEADER */}
-<div style={{
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  marginBottom: 10,
-}}>
-  <button
-  onClick={() => setShowMenu(true)}
-  style={{
-    fontSize: 22,
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-  }}
->
-  ☰
-</button>
-  <h2 style={{ margin: 0 }}>🐔 Chicken Registry</h2>
-</div>
-
 {/* ✅ OVERLAY */}
 {showMenu && (
   <div
