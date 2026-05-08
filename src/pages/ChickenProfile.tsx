@@ -9,6 +9,7 @@ export default function ChickenProfile({
   setChickens,
   setSelectedChicken,
   navigate,
+  saveChickenToDB,
 }: any) {
 
   const healthRef = useRef<HTMLDivElement | null>(null);
@@ -33,13 +34,17 @@ export default function ChickenProfile({
   const photos = chicken?.photos || [];
   const mainPhoto = selectedChicken?.image;
 
-  const updateChicken = (updated: any) => {
-    setChicken(updated);
-    setChickens((prev: any[]) =>
-      prev.map((c) => (c.id === updated.id ? updated : c))
-    );
-    setSelectedChicken(updated);
-  };
+  const updateChicken = async (updated: any) => {
+  setChicken(updated);
+
+  setChickens((prev: any[]) =>
+    prev.map((c) => (c.id === updated.id ? updated : c))
+  );
+
+  setSelectedChicken(updated);
+
+  await saveChickenToDB(updated);
+};
 
   return (
     <div className="max-w-md mx-auto p-4 flex flex-col gap-4">
