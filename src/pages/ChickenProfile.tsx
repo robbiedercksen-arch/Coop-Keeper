@@ -31,7 +31,7 @@ export default function ChickenProfile({
   }
 
   const photos = chicken?.photos || [];
-  const mainPhoto = chicken?.profilePhoto || photos[0];
+  const mainPhoto = selectedChicken?.image;
 
   const updateChicken = (updated: any) => {
     setChicken(updated);
