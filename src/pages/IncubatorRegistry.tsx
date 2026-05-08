@@ -17,6 +17,7 @@ export default function IncubatorRegistry() {
 };
   const [status, setStatus] = useState("Incubating");
   const [notes, setNotes] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   // LOAD BATCHES
   const fetchBatches = async () => {
@@ -43,31 +44,90 @@ const saveBatch = async () => {
     return;
   }
 
-  const { error } = await supabase
-    .from("incubator_batches")
-    .insert({
-      batchname: batchName,
-      breed,
-      eggcount: Number(eggCount),
-      startdate: startDate,
-      hatchdate: calculateHatchDate(startDate),
-      status,
-      notes,
-    });
+  let error;
+
+  if (editingId) {
+    // UPDATE
+    const response = await supabase
+      .from("incubator_batches")
+      .update({
+        batchname: batchName,
+        breed,
+        eggcount: Number(eggCount),
+        startdate: startDate,
+        hatchdate: calculateHatchDate(startDate),
+        status,
+        notes,
+      })
+      .eq("id", editingId);
+
+    error = response.error;
+  } else {
+    // INSERT
+    const response = await supabase
+      .from("incubator_batches")
+      .insert({
+        batchname: batchName,
+        breed,
+        eggcount: Number(eggCount),
+        startdate: startDate,
+        hatchdate: calculateHatchDate(startDate),
+        status,
+        notes,
+      });
+
+    error = response.error;
+  }
 
   if (error) {
     console.error("Save error:", error);
     alert("Failed to save batch.");
   } else {
+    // RESET FORM
     setBatchName("");
     setBreed("");
     setEggCount("");
     setStartDate("");
     setStatus("Incubating");
     setNotes("");
+    setEditingId(null);
 
     fetchBatches();
   }
+};
+
+const deleteBatch = async (id: number) => {
+  const confirmed = confirm("Delete this incubator batch?");
+
+  if (!confirmed) return;
+
+  const { error } = await supabase
+    .from("incubator_batches")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Delete error:", error);
+    alert("Failed to delete batch.");
+  } else {
+    fetchBatches();
+  }
+};
+
+const editBatch = (batch: any) => {
+  setBatchName(batch.batchname || "");
+  setBreed(batch.breed || "");
+  setEggCount(batch.eggcount?.toString() || "");
+  setStartDate(batch.startdate || "");
+  setStatus(batch.status || "Incubating");
+  setNotes(batch.notes || "");
+
+  setEditingId(batch.id);
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
 };
 
   // COUNTDOWN
@@ -191,7 +251,7 @@ const formatDate = (date: string) => {
               cursor: "pointer",
             }}
           >
-            Save Batch
+            {editingId ? "Update Batch" : "Save Batch"}
           </button>
         </div>
       </div>
@@ -267,7 +327,43 @@ const formatDate = (date: string) => {
             >
               ⏳ {getDaysRemaining(batch.hatchdate)} Days Remaining
             </div>
+<div
+  style={{
+    display: "flex",
+    gap: 10,
+    marginTop: 10,
+  }}
+>
+  <button
+    onClick={() => editBatch(batch)}
+    style={{
+      background: "#f59e0b",
+      color: "#fff",
+      border: "none",
+      padding: "10px 14px",
+      borderRadius: 10,
+      cursor: "pointer",
+      fontWeight: 700,
+    }}
+  >
+    ✏ Edit
+  </button>
 
+  <button
+    onClick={() => deleteBatch(batch.id)}
+    style={{
+      background: "#dc2626",
+      color: "#fff",
+      border: "none",
+      padding: "10px 14px",
+      borderRadius: 10,
+      cursor: "pointer",
+      fontWeight: 700,
+    }}
+  >
+    🗑 Delete
+  </button>
+</div>
             {batch.notes && (
               <div>
                 <strong>Notes:</strong> {batch.notes}
