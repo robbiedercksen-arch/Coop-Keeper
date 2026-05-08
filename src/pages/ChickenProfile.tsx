@@ -1,3 +1,4 @@
+import { supabase } from "../supabase";
 import { useState, useEffect, useRef } from "react";
 import ProfileSection from "../components/ProfileSection";
 import PhotoSection from "../components/PhotoSection";
@@ -17,6 +18,12 @@ export default function ChickenProfile({
 
   const [chicken, setChicken] = useState(selectedChicken);
   const [editing, setEditing] = useState(false);
+  const [eggStats, setEggStats] = useState({
+  week: 0,
+  month: 0,
+  lifetime: 0,
+  lastDate: "None",
+});
   
   
 
@@ -30,6 +37,64 @@ export default function ChickenProfile({
       healthRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [selectedChicken]);
+  useEffect(() => {
+  setChicken(selectedChicken);
+}, [selectedChicken]);
+
+useEffect(() => {
+  if (selectedChicken?.goTo === "health" && healthRef.current) {
+    healthRef.current.scrollIntoView({ behavior: "smooth" });
+  }
+}, [selectedChicken]);
+
+useEffect(() => {
+  loadEggStats();
+}, [selectedChicken]);
+
+const loadEggStats = async () => {
+  if (!selectedChicken) return;
+
+  const { data, error } = await supabase
+    .from("egg_logs")
+    .select("*")
+    .eq("henid", selectedChicken.id);
+
+  if (error || !data) return;
+
+  const now = new Date();
+
+  const weekAgo = new Date();
+  weekAgo.setDate(now.getDate() - 7);
+
+  const monthAgo = new Date();
+  monthAgo.setMonth(now.getMonth() - 1);
+
+  const weekEggs = data
+    .filter((log) => new Date(log.date) >= weekAgo)
+    .reduce((sum, log) => sum + log.eggs, 0);
+
+  const monthEggs = data
+    .filter((log) => new Date(log.date) >= monthAgo)
+    .reduce((sum, log) => sum + log.eggs, 0);
+
+  const lifetimeEggs = data.reduce(
+    (sum, log) => sum + log.eggs,
+    0
+  );
+
+  const lastDate =
+    data.length > 0
+      ? data[data.length - 1].date
+      : "None";
+
+  setEggStats({
+    week: weekEggs,
+    month: monthEggs,
+    lifetime: lifetimeEggs,
+    lastDate,
+  });
+};
+  
 
   if (!chicken) {
     return <div className="p-4">Loading...</div>;
@@ -57,6 +122,7 @@ const saveEdits = async () => {
 
   return (
     <div className="max-w-md mx-auto p-4 flex flex-col gap-4">
+      
 
       {/* HEADER */}
       <div className="flex justify-between items-center">
@@ -164,7 +230,56 @@ const saveEdits = async () => {
           updateChicken={updateChicken} 
         />
       </ProfileSection>
+{/* EGG PRODUCTION */}
+{chicken.sex?.toLowerCase() === "hen" && (
+  <ProfileSection title="🥚 Egg Production">
 
+    <div className="flex flex-col gap-3 text-sm">
+
+      <div className="flex justify-between">
+        <span className="text-gray-500">
+          Eggs This Week
+        </span>
+
+        <span className="font-medium">
+          {eggStats.week}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span className="text-gray-500">
+          Eggs This Month
+        </span>
+
+        <span className="font-medium">
+          {eggStats.month}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span className="text-gray-500">
+          Lifetime Eggs
+        </span>
+
+        <span className="font-medium">
+          {eggStats.lifetime}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span className="text-gray-500">
+          Last Egg Logged
+        </span>
+
+        <span className="font-medium">
+          {eggStats.lastDate}
+        </span>
+      </div>
+
+    </div>
+
+  </ProfileSection>
+)}
       {/* NOTES */}
       <ProfileSection title="Notes">
         <NotesSection 

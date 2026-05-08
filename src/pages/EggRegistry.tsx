@@ -77,24 +77,47 @@ if (error) {
       </div>
 
       {/* SUMMARY */}
-      <div className="grid grid-cols-3 gap-3">
+<div className="grid grid-cols-3 gap-3">
 
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-gray-500 text-sm">Total Eggs</div>
-          <div className="text-2xl font-bold">0</div>
-        </div>
+  {/* TOTAL EGGS */}
+  <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="text-gray-500 text-sm">
+      Total Eggs
+    </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-gray-500 text-sm">Days Logged</div>
-          <div className="text-2xl font-bold">0</div>
-        </div>
+    <div className="text-2xl font-bold">
+      {eggLogs.reduce((sum, log) => sum + log.eggs, 0)}
+    </div>
+  </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-gray-500 text-sm">Avg / Day</div>
-          <div className="text-2xl font-bold">0</div>
-        </div>
+  {/* DAYS LOGGED */}
+  <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="text-gray-500 text-sm">
+      Days Logged
+    </div>
 
-      </div>
+    <div className="text-2xl font-bold">
+      {new Set(eggLogs.map((log) => log.date)).size}
+    </div>
+  </div>
+
+  {/* AVG PER DAY */}
+  <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="text-gray-500 text-sm">
+      Avg / Day
+    </div>
+
+    <div className="text-2xl font-bold">
+      {eggLogs.length === 0
+        ? 0
+        : Math.round(
+            eggLogs.reduce((sum, log) => sum + log.eggs, 0) /
+            new Set(eggLogs.map((log) => log.date)).size
+          )}
+    </div>
+  </div>
+
+</div>
 
       {/* LOG FORM */}
       <div className="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-3">
