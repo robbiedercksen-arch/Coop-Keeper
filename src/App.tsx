@@ -4,6 +4,7 @@ import ChickenRegistry from "./pages/ChickenRegistry";
 import ChickenProfile from "./pages/ChickenProfile";
 import Dashboard from "./components/Dashboard";
 import EggRegistry from "./pages/EggRegistry";
+import IncubatorRegistry from "./pages/IncubatorRegistry";
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -133,13 +134,20 @@ useEffect(() => {
             </button>
 
             <button
-              onClick={() => navigate("registry")}
-              style={menuBtn(page === "registry", collapsed)}
-            >
-              🐔 {!collapsed && "Registry"}
-              
-            </button>
-            <button
+  onClick={() => navigate("registry")}
+  style={menuBtn(page === "registry", collapsed)}
+>
+  🐔 {!collapsed && "Registry"}
+</button>
+
+<button
+  onClick={() => navigate("incubator")}
+  style={menuBtn(page === "incubator", collapsed)}
+>
+  🐣 {!collapsed && "Incubators"}
+</button>
+
+<button
   onClick={() => navigate("eggs")}
   style={menuBtn(page === "eggs", collapsed)}
 >
@@ -205,15 +213,26 @@ useEffect(() => {
       </button>
 
       <button
-        onClick={() => {
-          navigate("registry");
-          setShowMobileMenu(false);
-        }}
-        style={menuBtn(page === "registry", false)}
-      >
-        🐔 Registry
-      </button>
-      <button
+  onClick={() => {
+    navigate("registry");
+    setShowMobileMenu(false);
+  }}
+  style={menuBtn(page === "registry", false)}
+>
+  🐔 Registry
+</button>
+
+<button
+  onClick={() => {
+    navigate("incubator");
+    setShowMobileMenu(false);
+  }}
+  style={menuBtn(page === "incubator", false)}
+>
+  🐣 Incubators
+</button>
+
+<button
   onClick={() => {
     navigate("eggs");
     setShowMobileMenu(false);
@@ -277,6 +296,7 @@ useEffect(() => {
     {page === "registry" && "Chicken Registry"}
     {page === "eggs" && "Egg Registry"}
     {page === "profile" && "Chicken Profile"}
+    {page === "incubator" && "Incubator Registry"}
   </div>
 )}
 
@@ -309,7 +329,9 @@ useEffect(() => {
 {page === "eggs" && (
   <EggRegistry chickens={chickens} />
 )}
-          
+      {page === "incubator" && (
+  <IncubatorRegistry />
+)}    
         </div>
       </div>
     </div>
