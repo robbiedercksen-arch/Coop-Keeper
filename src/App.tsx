@@ -89,7 +89,7 @@ useEffect(() => {
   };
 
   return (
-    <div style={{ display: "flex", background: "#f3f4f6" }}>
+    <div style={{ display: "flex", background: "#eef2f7" }}>
       
       {/* 🔥 SIDEBAR */}
       {!isMobile && (
@@ -263,7 +263,7 @@ useEffect(() => {
 )}
 
         {/* CONTENT */}
-        <div style={{ padding: 20 }}>
+        <div style={{ padding: 16 }}>
           {page === "dashboard" && <Dashboard chickens={chickens} />}
 
           {page === "registry" && (
@@ -314,7 +314,7 @@ const collapseBtn = {
   background: "#1f2937",
   color: "#fff",
   border: "none",
-  borderRadius: 8,
-  padding: "4px 8px",
+  borderRadius: 14,
+  padding: "10px 16px",
   cursor: "pointer",
 };
