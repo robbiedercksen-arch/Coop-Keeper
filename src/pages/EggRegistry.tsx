@@ -1,8 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "../supabase";
 
 export default function EggRegistry({ chickens }: any) {
 
   const [eggLogs, setEggLogs] = useState<any[]>([]);
+  useEffect(() => {
+  loadEggLogs();
+}, []);
+
+const loadEggLogs = async () => {
+  const { data, error } = await supabase
+    .from("egg_logs")
+    .select("*")
+    .order("id", { ascending: false });
+
+  if (error) {
+    console.error(error);
+  } else {
+    setEggLogs(data || []);
+  }
+};
 
 const [date, setDate] = useState("");
 const [selectedHen, setSelectedHen] = useState("");
@@ -15,24 +32,31 @@ const sex = c.sex?.toLowerCase();
   return sex === "hen" || sex === "female";
 });
 
-const handleLogEggs = () => {
+const handleLogEggs = async () => {
   if (!eggCount) return;
 
   const selectedChicken = chickens.find(
-    (c: any) => c.id === selectedHen
-  );
+  (c: any) => String(c.id) === String(selectedHen)
+);
 
   const newLog = {
-    id: Date.now(),
-    date,
-    henId: selectedHen,
-    henName: selectedChicken?.name || "Unknown Hen",
-    eggs: Number(eggCount),
-    purpose,
-    notes,
-  };
+  date,
+  henid: selectedHen,
+henname: selectedChicken?.name || "Unknown Hen",
+  eggs: Number(eggCount),
+  purpose,
+  notes,
+};
 
-  setEggLogs((prev) => [newLog, ...prev]);
+  const { error } = await supabase
+  .from("egg_logs")
+  .insert([newLog]);
+
+if (error) {
+  console.error(error);
+} else {
+  await loadEggLogs();
+}
 
   // RESET FORM
   setDate("");
@@ -91,7 +115,7 @@ const handleLogEggs = () => {
   onChange={(e) => setSelectedHen(e.target.value)}
   className="border rounded-lg p-2"
 >
-  <option>Unknown Hen</option>
+  <option value="">Unknown Hen</option>
 
   {hens.map((hen: any) => (
     <option key={hen.id} value={hen.id}>
@@ -150,9 +174,32 @@ const handleLogEggs = () => {
             No egg collections logged yet
           </div>
         ) : (
-          <div>
-            History Here
-          </div>
+          <div className="flex flex-col gap-2">
+  {eggLogs.map((log: any) => (
+    <div
+      key={log.id}
+      className="border rounded-lg p-3 flex justify-between items-center"
+    >
+      <div>
+        <div className="font-medium">
+          {log.henname}
+        </div>
+
+        <div className="text-sm text-gray-500">
+          {log.date}
+        </div>
+
+        <div className="text-sm">
+          {log.purpose}
+        </div>
+      </div>
+
+      <div className="text-2xl font-bold">
+        🥚 {log.eggs}
+      </div>
+    </div>
+  ))}
+</div>
         )}
 
       </div>
