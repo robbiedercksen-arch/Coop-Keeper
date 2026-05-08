@@ -4,20 +4,22 @@ import { supabase } from "../supabase";
 export default function IncubatorRegistry() {
   const [batches, setBatches] = useState<any[]>([]);
 
-  const [batchName, setBatchName] = useState("");
-  const [breed, setBreed] = useState("");
-  const [eggCount, setEggCount] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const calculateHatchDate = (start: string) => {
+const [batchName, setBatchName] = useState("");
+const [breed, setBreed] = useState("");
+const [eggCount, setEggCount] = useState("");
+const [startDate, setStartDate] = useState("");
+const [status, setStatus] = useState("Incubating");
+const [notes, setNotes] = useState("");
+const [editingId, setEditingId] = useState<number | null>(null);
+
+// CALCULATE HATCH DATE
+const calculateHatchDate = (start: string) => {
   const date = new Date(start);
 
   date.setDate(date.getDate() + 21);
 
   return date.toISOString().split("T")[0];
 };
-  const [status, setStatus] = useState("Incubating");
-  const [notes, setNotes] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
 
   // LOAD BATCHES
   const fetchBatches = async () => {
@@ -129,7 +131,31 @@ const editBatch = (batch: any) => {
     behavior: "smooth",
   });
 };
+const completeHatch = async (batch: any) => {
+  const hatched = prompt("How many chicks hatched?");
 
+  if (hatched === null) return;
+
+  const survived = prompt("How many chicks survived?");
+
+  if (survived === null) return;
+
+  const { error } = await supabase
+    .from("incubator_batches")
+    .update({
+      status: "Hatched",
+      chicks_hatched: Number(hatched),
+      chicks_survived: Number(survived),
+    })
+    .eq("id", batch.id);
+
+  if (error) {
+    console.error("Hatch completion error:", error);
+    alert("Failed to complete hatch.");
+  } else {
+    fetchBatches();
+  }
+};
   // COUNTDOWN
 const getDaysRemaining = (date: string) => {
   const today = new Date();
@@ -138,6 +164,11 @@ const getDaysRemaining = (date: string) => {
   const diff = hatch.getTime() - today.getTime();
 
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
+};
+
+// LOCKDOWN CHECK
+const isLockdown = (date: string) => {
+  return getDaysRemaining(date) <= 3;
 };
 
 // FORMAT DATE
@@ -318,15 +349,32 @@ const formatDate = (date: string) => {
             </div>
 
             <div
-              style={{
-                background: "#eff6ff",
-                padding: 12,
-                borderRadius: 12,
-                fontWeight: 700,
-              }}
-            >
-              ⏳ {getDaysRemaining(batch.hatchdate)} Days Remaining
-            </div>
+  style={{
+    background: isLockdown(batch.hatchdate)
+      ? "#fff7ed"
+      : "#eff6ff",
+
+    border: isLockdown(batch.hatchdate)
+      ? "2px solid #f59e0b"
+      : "none",
+
+    padding: 12,
+    borderRadius: 12,
+    fontWeight: 700,
+  }}
+>
+  {isLockdown(batch.hatchdate) ? (
+    <>
+      ⚠ LOCKDOWN ACTIVE —{" "}
+      {getDaysRemaining(batch.hatchdate)} Days Remaining
+    </>
+  ) : (
+    <>
+      ⏳ {getDaysRemaining(batch.hatchdate)} Days Remaining
+    </>
+  )}
+</div>
+            
 <div
   style={{
     display: "flex",
@@ -364,11 +412,46 @@ const formatDate = (date: string) => {
     🗑 Delete
   </button>
 </div>
-            {batch.notes && (
-              <div>
-                <strong>Notes:</strong> {batch.notes}
-              </div>
-            )}
+
+{batch.status !== "Hatched" && (
+  <button
+  
+    onClick={() => completeHatch(batch)}
+    style={{
+      background: "#16a34a",
+      color: "#fff",
+      border: "none",
+      padding: "10px 14px",
+      borderRadius: 10,
+      cursor: "pointer",
+      fontWeight: 700,
+      marginTop: 10,
+alignSelf: "flex-start",
+    }}
+
+    
+  >
+        🐣 Complete Hatch
+  </button>
+)}
+
+{batch.chicks_hatched && (
+  <div>
+    <strong>Chicks Hatched:</strong> {batch.chicks_hatched}
+  </div>
+)}
+
+{batch.chicks_survived && (
+  <div>
+    <strong>Chicks Survived:</strong> {batch.chicks_survived}
+  </div>
+)}
+
+{batch.notes && (
+  <div>
+    <strong>Notes:</strong> {batch.notes}
+  </div>
+)}
           </div>
         ))}
       </div>
