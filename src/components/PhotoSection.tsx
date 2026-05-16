@@ -59,7 +59,7 @@ const [touchEnd, setTouchEnd] = useState(0);
 const photos = chicken.photos || [];
   return (
     <div className="flex flex-col gap-3">
-
+      
       <button
         onClick={handleUploadClick}
         className="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm"

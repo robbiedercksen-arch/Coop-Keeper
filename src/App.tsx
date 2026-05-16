@@ -5,6 +5,7 @@ import ChickenProfile from "./pages/ChickenProfile";
 import Dashboard from "./components/Dashboard";
 import EggRegistry from "./pages/EggRegistry";
 import IncubatorRegistry from "./pages/IncubatorRegistry";
+import FarmPlanner from "./pages/FarmPlanner";
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -153,6 +154,13 @@ useEffect(() => {
 >
   🥚 {!collapsed && "Egg Registry"}
 </button>
+
+<button
+  onClick={() => navigate("planner")}
+  style={menuBtn(page === "planner", collapsed)}
+>
+  📋 {!collapsed && "Farm Planner"}
+</button>
           </div>
         </div>
       )}
@@ -241,6 +249,15 @@ useEffect(() => {
 >
   🥚 Egg Registry
 </button>
+<button
+  onClick={() => {
+    navigate("planner");
+    setShowMobileMenu(false);
+  }}
+  style={menuBtn(page === "planner", false)}
+>
+  📋 Farm Planner
+</button>
     </div>
   </>
 )}
@@ -297,6 +314,7 @@ useEffect(() => {
     {page === "eggs" && "Egg Registry"}
     {page === "profile" && "Chicken Profile"}
     {page === "incubator" && "Incubator Registry"}
+    {page === "planner" && "Farm Planner"}
   </div>
 )}
 
@@ -332,6 +350,9 @@ useEffect(() => {
       {page === "incubator" && (
   <IncubatorRegistry />
 )}    
+{page === "planner" && (
+  <FarmPlanner />
+)}
         </div>
       </div>
     </div>
