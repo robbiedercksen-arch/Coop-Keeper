@@ -5,7 +5,8 @@ import ChickenProfile from "./pages/ChickenProfile";
 import Dashboard from "./components/Dashboard";
 import EggRegistry from "./pages/EggRegistry";
 import IncubatorRegistry from "./pages/IncubatorRegistry";
-import FarmPlanner from "./pages/FarmPlanner";
+import DailyChores from "./pages/DailyChores";
+import FarmPlanning from "./pages/FarmPlanning";
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -159,11 +160,19 @@ useEffect(() => {
   onClick={() => navigate("planner")}
   style={menuBtn(page === "planner", collapsed)}
 >
-  📋 {!collapsed && "Farm Planner"}
+  ✅ {!collapsed && "Daily Chores"}
+</button>
+
+<button
+  onClick={() => navigate("planning")}
+  style={menuBtn(page === "planning", collapsed)}
+>
+  📋 {!collapsed && "Farm Planning"}
 </button>
           </div>
         </div>
       )}
+      
 
 {/* 📱 MOBILE MENU */}
 {isMobile && showMobileMenu && (
@@ -256,7 +265,17 @@ useEffect(() => {
   }}
   style={menuBtn(page === "planner", false)}
 >
-  📋 Farm Planner
+  ✅ Daily Chores
+</button>
+
+<button
+  onClick={() => {
+    navigate("planning");
+    setShowMobileMenu(false);
+  }}
+  style={menuBtn(page === "planning", false)}
+>
+  📋 Farm Planning
 </button>
     </div>
   </>
@@ -314,7 +333,8 @@ useEffect(() => {
     {page === "eggs" && "Egg Registry"}
     {page === "profile" && "Chicken Profile"}
     {page === "incubator" && "Incubator Registry"}
-    {page === "planner" && "Farm Planner"}
+    {page === "planner" && "Daily Chores"}
+    {page === "planning" && "Farm Planning"}
   </div>
 )}
 
@@ -351,7 +371,11 @@ useEffect(() => {
   <IncubatorRegistry />
 )}    
 {page === "planner" && (
-  <FarmPlanner />
+  <DailyChores />
+)}
+
+{page === "planning" && (
+  <FarmPlanning />
 )}
         </div>
       </div>
