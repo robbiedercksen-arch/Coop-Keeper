@@ -1,3 +1,4 @@
+import PageBanner from "../components/PageBanner";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
@@ -201,16 +202,24 @@ const formatDate = (date: string) => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      
-      {/* FORM */}
-      <div
-        style={{
-          background: "#fff",
-          padding: 20,
-          borderRadius: 16,
-        }}
-      >
+  <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+    <PageBanner
+  eyebrow="HATCHERY"
+  title="Incubator Registry"
+  subtitle="Track incubators, hatching cycles and fertility."
+  stat="0"
+  statLabel="ACTIVE"
+/>
+
+    {/* FORM */}
+    <div
+      style={{
+        background: "#fff",
+        padding: 20,
+        borderRadius: 16,
+      }}
+    >
         <h2 style={{ marginBottom: 20 }}>
           🐣 New Incubator Batch
         </h2>

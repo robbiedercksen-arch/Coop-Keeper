@@ -1,3 +1,4 @@
+import PageBanner from "../components/PageBanner";
 import { useState, useEffect } from "react";
 import Dashboard from "../components/Dashboard";  // 👈 ADD THIS
 import QuickActions from "../components/QuickActions";
@@ -142,6 +143,14 @@ gap: 10,
   return (
   <div style={container}>
 
+    <PageBanner
+      eyebrow="FLOCK"
+      title="Chicken Registry"
+      subtitle="Manage your chickens, breeding stock and profiles."
+      stat={chickens.length}
+      statLabel="ACTIVE"
+    />
+
 {/* ✅ OVERLAY */}
 {showMenu && (
   <div
@@ -200,7 +209,6 @@ gap: 10,
 
     <style>{pulseStyle}</style>
 
-    <Dashboard chickens={chickens} />  
 
 {attentionCount > 0 && (
   <div style={{

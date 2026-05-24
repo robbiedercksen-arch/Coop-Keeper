@@ -1,3 +1,4 @@
+import PageBanner from "./PageBanner";
 export default function Dashboard({ chickens }: any) {
   const total = chickens.length;
 
@@ -17,6 +18,16 @@ export default function Dashboard({ chickens }: any) {
   });
 
   return (
+  <div>
+
+    <PageBanner
+      eyebrow="WELCOME"
+      title="Dashboard"
+      subtitle="Your flock at a glance."
+      stat={total}
+      statLabel="CHICKENS"
+    />
+
     <div className="grid grid-cols-2 gap-3 mb-4">
 
       <div className="bg-white p-3 rounded-xl shadow text-center">
@@ -39,6 +50,8 @@ export default function Dashboard({ chickens }: any) {
         <div className="text-xl font-bold">🟢 {healthy}</div>
       </div>
 
-    </div>
-  );
+        </div>
+
+  </div>
+);
 }

@@ -319,24 +319,6 @@ useEffect(() => {
   </div>
 )}
         {/* HEADER */}
-{!isMobile && (
-  <div
-    style={{
-      background: "#fff",
-      padding: "14px 20px",
-      borderBottom: "1px solid #e5e7eb",
-      fontWeight: 600,
-    }}
-  >
-    {page === "dashboard" && "Dashboard"}
-    {page === "registry" && "Chicken Registry"}
-    {page === "eggs" && "Egg Registry"}
-    {page === "profile" && "Chicken Profile"}
-    {page === "incubator" && "Incubator Registry"}
-    {page === "planner" && "Daily Chores"}
-    {page === "planning" && "Farm Planning"}
-  </div>
-)}
 
         {/* CONTENT */}
         <div style={{ padding: 16 }}>

@@ -1,3 +1,4 @@
+import PageBanner from "../components/PageBanner";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
@@ -155,18 +156,18 @@ setPlanDueDate(plan.due_date || "");
   });
 };
 
-  return (
-    <div className="max-w-3xl mx-auto p-4">
+return (
+  <div className="max-w-3xl mx-auto p-4">
 
-      <h1 className="text-3xl font-bold mb-2">
-        📋 Farm Planning
-      </h1>
+    <PageBanner
+      eyebrow="FARM MANAGEMENT"
+      title="Farm Planning"
+      subtitle="Organize future upgrades, projects and farming goals."
+      stat={plans.filter((p) => !p.completed).length}
+      statLabel="ACTIVE"
+    />
 
-      <p className="text-gray-500 mb-6">
-        Future farming plans, upgrades and ideas.
-      </p>
-
-      {/* TITLE */}
+            {/* TITLE */}
       <input
         type="text"
         placeholder="Plan title..."

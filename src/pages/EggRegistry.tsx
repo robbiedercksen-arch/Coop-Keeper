@@ -1,3 +1,4 @@
+import PageBanner from "../components/PageBanner";
 import { useState, useEffect } from "react";
 import { supabase } from "../supabase";
 
@@ -67,16 +68,17 @@ if (error) {
 };
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col gap-4">
+  <div className="max-w-5xl mx-auto flex flex-col gap-4">
 
-      {/* PAGE HEADER */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">
-          🥚 Egg Registry
-        </h1>
-      </div>
+    <PageBanner
+      eyebrow="PRODUCTION"
+      title="Egg Registry"
+      subtitle="Track egg production, laying performance and flock output."
+      stat="0"
+      statLabel="TODAY"
+    />
 
-      {/* SUMMARY */}
+       {/* SUMMARY */}
 <div className="grid grid-cols-3 gap-3">
 
   {/* TOTAL EGGS */}

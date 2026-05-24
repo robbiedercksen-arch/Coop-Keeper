@@ -1,3 +1,4 @@
+import PageBanner from "../components/PageBanner";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
@@ -94,6 +95,14 @@ const deleteChore = async (id: number) => {
         gap: 20,
       }}
     >
+
+    <PageBanner
+      eyebrow="TASK MANAGER"
+      title="Daily Chores"
+      subtitle="Track recurring farm tasks and stay on top of daily routines."
+      stat={chores.length}
+      statLabel="TASKS"
+    />
 
       {/* ADD CARD */}
       <div
