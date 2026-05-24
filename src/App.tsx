@@ -1,3 +1,4 @@
+import Expenses from "./pages/Expenses";
 import { supabase } from "./supabase";
 import { useState, useEffect } from "react";
 import ChickenRegistry from "./pages/ChickenRegistry";
@@ -169,6 +170,13 @@ useEffect(() => {
 >
   📋 {!collapsed && "Farm Planning"}
 </button>
+
+<button
+  onClick={() => navigate("expenses")}
+  style={menuBtn(page === "expenses", collapsed)}
+>
+  💰 {!collapsed && "Expenses"}
+</button>
           </div>
         </div>
       )}
@@ -277,6 +285,15 @@ useEffect(() => {
 >
   📋 Farm Planning
 </button>
+<button
+  onClick={() => {
+    navigate("expenses");
+    setShowMobileMenu(false);
+  }}
+  style={menuBtn(page === "expenses", false)}
+>
+  💰 Expenses
+</button>
     </div>
   </>
 )}
@@ -349,9 +366,11 @@ useEffect(() => {
 {page === "eggs" && (
   <EggRegistry chickens={chickens} />
 )}
-      {page === "incubator" && (
+
+{page === "incubator" && (
   <IncubatorRegistry />
-)}    
+)}
+
 {page === "planner" && (
   <DailyChores />
 )}
@@ -359,7 +378,12 @@ useEffect(() => {
 {page === "planning" && (
   <FarmPlanning />
 )}
-        </div>
+
+{page === "expenses" && (
+  <Expenses />
+)}
+  
+          </div>
       </div>
     </div>
   );
