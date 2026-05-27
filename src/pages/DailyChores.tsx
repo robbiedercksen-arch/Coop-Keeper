@@ -23,7 +23,28 @@ const loadChores = async () => {
     return;
   }
 
-  setChores(data || []);
+  const today =
+    new Date()
+      .toISOString()
+      .split("T")[0];
+
+  const normalizedChores =
+    (data || []).map((chore) => {
+
+      if (
+        chore.repeat_daily &&
+        chore.last_completed_date !== today
+      ) {
+        return {
+          ...chore,
+          completed: false,
+        };
+      }
+
+      return chore;
+    });
+
+  setChores(normalizedChores);
 };
 
     // ADD CHORE
@@ -32,13 +53,15 @@ const loadChores = async () => {
   if (!choreText.trim()) return;
 
   const { error } = await supabase
-    .from("daily_chores")
-    .insert([
-      {
-        title: choreText,
-        completed: false,
-      },
-    ]);
+  .from("daily_chores")
+  .insert([
+    {
+      title: choreText,
+      completed: false,
+      repeat_daily: true,
+      last_completed_date: null,
+    },
+  ]);
 
   if (error) {
     console.error(error);

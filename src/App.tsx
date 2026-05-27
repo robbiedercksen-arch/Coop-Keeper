@@ -1,3 +1,4 @@
+import Wishlist from "./pages/Wishlist";
 import Expenses from "./pages/Expenses";
 import { supabase } from "./supabase";
 import { useState, useEffect } from "react";
@@ -177,6 +178,12 @@ useEffect(() => {
 >
   💰 {!collapsed && "Expenses"}
 </button>
+<button
+  onClick={() => navigate("wishlist")}
+  style={menuBtn(page === "wishlist", collapsed)}
+>
+  🛒 {!collapsed && "Wishlist"}
+</button>
           </div>
         </div>
       )}
@@ -294,6 +301,15 @@ useEffect(() => {
 >
   💰 Expenses
 </button>
+<button
+  onClick={() => {
+    navigate("wishlist");
+    setShowMobileMenu(false);
+  }}
+  style={menuBtn(page === "wishlist", false)}
+>
+  🛒 Wishlist
+</button>
     </div>
   </>
 )}
@@ -381,6 +397,9 @@ useEffect(() => {
 
 {page === "expenses" && (
   <Expenses />
+)}
+{page === "wishlist" && (
+  <Wishlist />
 )}
   
           </div>
