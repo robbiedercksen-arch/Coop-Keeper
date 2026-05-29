@@ -262,6 +262,22 @@ export default function Expenses() {
       0
     );
 
+  const selectedCategoryTotals: any = {};
+
+  filteredExpenses.forEach((expense: any) => {
+    if (!selectedCategoryTotals[expense.category]) {
+      selectedCategoryTotals[expense.category] = 0;
+    }
+
+    selectedCategoryTotals[expense.category] +=
+      Number(expense.amount);
+  });
+
+  const selectedCategorySummary =
+    Object.entries(selectedCategoryTotals).sort(
+      (a: any, b: any) => b[1] - a[1]
+    );
+
   const formatMonthLabel = (monthKey: string) => {
     const [year, month] = monthKey.split("-");
 
@@ -306,15 +322,6 @@ export default function Expenses() {
 
       return expenseMonthKey === monthKey;
     });
-  };
-
-  const getExpensesForYear = (year: string) => {
-    return expenses.filter(
-      (expense: any) =>
-        new Date(expense.expense_date)
-          .getFullYear()
-          .toString() === year
-    );
   };
 
   const imageToDataUrl = async (url: string) => {
@@ -706,6 +713,50 @@ export default function Expenses() {
               {year} History
             </button>
           ))}
+
+        </div>
+
+        {/* CATEGORY SUMMARY */}
+        <div className="bg-green-50 border border-green-100 rounded-2xl p-4 mb-4">
+
+          <div className="font-semibold mb-3">
+            📊 Category Summary
+          </div>
+
+          {selectedCategorySummary.length === 0 ? (
+            <div className="text-sm text-gray-400">
+              No category expenses for this period.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {selectedCategorySummary.map(
+                ([category, amount]: any) => (
+                  <div
+                    key={category}
+                    className="
+                      flex
+                      justify-between
+                      items-center
+                      bg-white
+                      rounded-xl
+                      px-3
+                      py-2
+                      text-sm
+                      border
+                    "
+                  >
+                    <div className="font-medium">
+                      {category}
+                    </div>
+
+                    <div className="font-bold text-green-700">
+                      R {Number(amount).toFixed(2)}
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
 
         </div>
 
