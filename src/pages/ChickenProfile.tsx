@@ -15,8 +15,13 @@ export default function ChickenProfile({
 
   const healthRef = useRef<HTMLDivElement | null>(null);
 
-  const [chicken, setChicken] = useState(selectedChicken);
-  const [editing, setEditing] = useState(false);
+const [chicken, setChicken] = useState(selectedChicken);
+const [editing, setEditing] = useState(false);
+
+const [newWeight, setNewWeight] = useState("");
+const [newWeightDate, setNewWeightDate] = useState(
+  new Date().toISOString().split("T")[0]
+);
 
   const [eggStats, setEggStats] = useState({
     week: 0,
@@ -104,11 +109,36 @@ export default function ChickenProfile({
   };
 
   const saveEdits = async () => {
-    await updateChicken(chicken);
-    setEditing(false);
+  await updateChicken(chicken);
+  setEditing(false);
+};
+
+const addWeightEntry = async () => {
+
+  if (!newWeight) return;
+
+  const updated = {
+    ...chicken,
+    weightKg: newWeight,
+    weightHistory: [
+      ...(chicken.weightHistory || []),
+      {
+        date: newWeightDate,
+        weightKg: newWeight,
+      },
+    ],
   };
 
-  return (
+  await updateChicken(updated);
+
+  setNewWeight("");
+
+  setNewWeightDate(
+    new Date().toISOString().split("T")[0]
+  );
+};
+
+return (
     <div className="max-w-md mx-auto p-4 flex flex-col gap-4">
 
       {/* HEADER */}
@@ -325,9 +355,119 @@ export default function ChickenProfile({
             <span>{chicken.ageGroup}</span>
           </div>
 
+          <div className="flex justify-between">
+  <span className="text-gray-500">
+    Weight (KG)
+  </span>
+
+  {editing ? (
+    <input
+      type="number"
+      step="0.01"
+      value={chicken.weightKg || ""}
+      onChange={(e) =>
+        setChicken({
+          ...chicken,
+          weightKg: e.target.value,
+        })
+      }
+      className="
+        border
+        rounded
+        px-2
+        py-1
+        text-sm
+        w-24
+      "
+    />
+  ) : (
+    <span>
+      {chicken.weightKg
+        ? `${chicken.weightKg} kg`
+        : "Not Recorded"}
+    </span>
+  )}
+</div>
+
         </div>
 
       </ProfileSection>
+
+      {/* WEIGHT HISTORY */}
+<ProfileSection title="⚖️ Weight History">
+
+  <div className="flex flex-col gap-3 text-sm">
+
+    <div className="flex gap-2">
+
+      <input
+        type="date"
+        value={newWeightDate}
+        onChange={(e) =>
+          setNewWeightDate(e.target.value)
+        }
+        className="border rounded-xl p-2 flex-1"
+      />
+
+      <input
+        type="number"
+        step="0.01"
+        placeholder="KG"
+        value={newWeight}
+        onChange={(e) =>
+          setNewWeight(e.target.value)
+        }
+        className="border rounded-xl p-2 w-24"
+      />
+
+    </div>
+
+    <button
+      onClick={addWeightEntry}
+      className="
+        bg-green-600
+        text-white
+        rounded-xl
+        p-3
+        font-semibold
+      "
+    >
+      + Add Weight
+    </button>
+
+    {(chicken.weightHistory || []).length === 0 && (
+      <div className="text-gray-400">
+        No weight records yet.
+      </div>
+    )}
+
+    {(chicken.weightHistory || [])
+      .slice()
+      .reverse()
+      .map((entry: any, index: number) => (
+
+        <div
+          key={index}
+          className="
+            bg-gray-50
+            rounded-xl
+            p-3
+            flex
+            justify-between
+          "
+        >
+          <span>{entry.date}</span>
+
+          <span className="font-semibold">
+            {entry.weightKg} kg
+          </span>
+        </div>
+
+      ))}
+
+  </div>
+
+</ProfileSection>
 
       {/* PHOTOS */}
       <ProfileSection title="Photos">

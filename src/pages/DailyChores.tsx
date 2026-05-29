@@ -28,23 +28,32 @@ const loadChores = async () => {
       .toISOString()
       .split("T")[0];
 
-  const normalizedChores =
-    (data || []).map((chore) => {
+  const choresToReset =
+  (data || []).filter(
+    (chore) =>
+      chore.completed &&
+      chore.last_completed_date &&
+      chore.last_completed_date !== today
+  );
 
-      if (
-        chore.repeat_daily &&
-        chore.last_completed_date !== today
-      ) {
-        return {
-          ...chore,
-          completed: false,
-        };
-      }
+  for (const chore of choresToReset) {
 
-      return chore;
-    });
+    await supabase
+      .from("daily_chores")
+      .update({
+        completed: false,
+      })
+      .eq("id", chore.id);
 
-  setChores(normalizedChores);
+  }
+
+  const { data: refreshedData } =
+    await supabase
+      .from("daily_chores")
+      .select("*")
+      .order("id", { ascending: false });
+
+  setChores(refreshedData || []);
 };
 
     // ADD CHORE
@@ -56,11 +65,10 @@ const loadChores = async () => {
   .from("daily_chores")
   .insert([
     {
-      title: choreText,
-      completed: false,
-      repeat_daily: true,
-      last_completed_date: null,
-    },
+  title: choreText,
+  completed: false,
+  last_completed_date: null,
+},
   ]);
 
   if (error) {
@@ -76,13 +84,20 @@ const loadChores = async () => {
       // TOGGLE COMPLETE
 const toggleComplete = async (chore: any) => {
 
+  const newCompletedState =
+    !chore.completed;
+
   const { error } = await supabase
     .from("daily_chores")
     .update({
-      completed: !chore.completed,
-      last_completed_date: new Date()
-        .toISOString()
-        .split("T")[0],
+      completed: newCompletedState,
+
+      last_completed_date:
+        newCompletedState
+          ? new Date()
+              .toISOString()
+              .split("T")[0]
+          : null,
     })
     .eq("id", chore.id);
 

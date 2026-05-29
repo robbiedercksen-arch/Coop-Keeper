@@ -4,6 +4,8 @@ import { supabase } from "../supabase";
 
 export default function IncubatorRegistry() {
   const [batches, setBatches] = useState<any[]>([]);
+  const [incubatorFilter, setIncubatorFilter] =
+  useState("active");
 
 const [batchName, setBatchName] = useState("");
 const [breed, setBreed] = useState("");
@@ -22,7 +24,15 @@ const calculateHatchDate = (start: string) => {
   return date.toISOString().split("T")[0];
 };
 
-  // LOAD BATCHES
+const filteredBatches =
+  incubatorFilter === "active"
+    ? batches.filter(
+        (batch: any) =>
+          batch.status === "Incubating"
+      )
+    : batches;
+
+// LOAD BATCHES
   const fetchBatches = async () => {
     const { data, error } = await supabase
       .from("incubator_batches")
@@ -211,6 +221,43 @@ const formatDate = (date: string) => {
   stat="0"
   statLabel="ACTIVE"
 />
+<div className="flex gap-3 mb-4">
+
+  <button
+    onClick={() => setIncubatorFilter("active")}
+    className={`
+      flex-1
+      p-3
+      rounded-xl
+      font-semibold
+      ${
+        incubatorFilter === "active"
+          ? "bg-green-600 text-white"
+          : "bg-gray-200 text-gray-700"
+      }
+    `}
+  >
+    Active Incubations
+  </button>
+
+  <button
+    onClick={() => setIncubatorFilter("history")}
+    className={`
+      flex-1
+      p-3
+      rounded-xl
+      font-semibold
+      ${
+        incubatorFilter === "history"
+          ? "bg-blue-600 text-white"
+          : "bg-gray-200 text-gray-700"
+      }
+    `}
+  >
+    Incubation History
+  </button>
+
+</div>
 
     {/* FORM */}
     <div
@@ -304,7 +351,7 @@ const formatDate = (date: string) => {
           gap: 16,
         }}
       >
-        {batches.map((batch) => (
+        {filteredBatches.map((batch) => (
           <div
             key={batch.id}
             style={{
