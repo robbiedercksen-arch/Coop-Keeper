@@ -3,123 +3,210 @@ import { useState, useEffect } from "react";
 import { supabase } from "../supabase";
 
 export default function EggRegistry({ chickens }: any) {
-
   const [eggLogs, setEggLogs] = useState<any[]>([]);
+
+  const [date, setDate] = useState("");
+  const [selectedHen, setSelectedHen] = useState("");
+  const [eggCount, setEggCount] = useState("");
+  const [purpose, setPurpose] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const [selectedEggView, setSelectedEggView] =
+    useState("");
+
   useEffect(() => {
-  loadEggLogs();
-}, []);
+    loadEggLogs();
+  }, []);
 
-const loadEggLogs = async () => {
-  const { data, error } = await supabase
-    .from("egg_logs")
-    .select("*")
-    .order("id", { ascending: false });
+  const loadEggLogs = async () => {
+    const { data, error } = await supabase
+      .from("egg_logs")
+      .select("*")
+      .order("date", { ascending: false });
 
-  if (error) {
-    console.error(error);
-  } else {
-    setEggLogs(data || []);
-  }
-};
+    if (error) {
+      console.error(error);
+    } else {
+      setEggLogs(data || []);
+    }
+  };
 
-const [date, setDate] = useState("");
-const [selectedHen, setSelectedHen] = useState("");
-const [eggCount, setEggCount] = useState("");
-const [purpose, setPurpose] = useState("");
-const [notes, setNotes] = useState("");
-const hens = chickens.filter((c: any) => {
-const sex = c.sex?.toLowerCase();
+  const hens = chickens.filter((c: any) => {
+    const sex = c.sex?.toLowerCase();
+    return sex === "hen" || sex === "female";
+  });
 
-  return sex === "hen" || sex === "female";
-});
+  const currentYear =
+    new Date().getFullYear();
 
-const handleLogEggs = async () => {
-  if (!eggCount) return;
+  const eggMonths =
+    Array.from(
+      new Set(
+        eggLogs
+          .filter(
+            (log: any) =>
+              new Date(log.date).getFullYear() ===
+              currentYear
+          )
+          .map((log: any) => {
+            const logDate = new Date(log.date);
 
-  const selectedChicken = chickens.find(
-  (c: any) => String(c.id) === String(selectedHen)
-);
+            return `${logDate.getFullYear()}-${String(
+              logDate.getMonth() + 1
+            ).padStart(2, "0")}`;
+          })
+      )
+    ).sort().reverse();
 
-  const newLog = {
-  date,
-  henid: selectedHen,
-henname: selectedChicken?.name || "Unknown Hen",
-  eggs: Number(eggCount),
-  purpose,
-  notes,
-};
+  const eggYears =
+    Array.from(
+      new Set(
+        eggLogs
+          .filter(
+            (log: any) =>
+              new Date(log.date).getFullYear() <
+              currentYear
+          )
+          .map((log: any) =>
+            new Date(log.date).getFullYear()
+          )
+      )
+    ).sort((a: any, b: any) => b - a);
 
-  const { error } = await supabase
-  .from("egg_logs")
-  .insert([newLog]);
+  const activeEggView =
+    selectedEggView ||
+    eggMonths[0] ||
+    `${currentYear}`;
 
-if (error) {
-  console.error(error);
-} else {
-  await loadEggLogs();
-}
+  const filteredEggLogs =
+    eggLogs.filter((log: any) => {
+      const logDate = new Date(log.date);
 
-  // RESET FORM
-  setDate("");
-  setSelectedHen("");
-  setEggCount("");
-  setPurpose("");
-  setNotes("");
-};
+      const monthKey =
+        `${logDate.getFullYear()}-${String(
+          logDate.getMonth() + 1
+        ).padStart(2, "0")}`;
+
+      if (activeEggView.includes("-")) {
+        return monthKey === activeEggView;
+      }
+
+      return (
+        logDate.getFullYear().toString() ===
+        activeEggView
+      );
+    });
+
+  const formatMonthLabel = (monthKey: string) => {
+    const [year, month] = monthKey.split("-");
+
+    return new Date(
+      Number(year),
+      Number(month) - 1
+    ).toLocaleString("default", {
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const handleLogEggs = async () => {
+    if (!eggCount) return;
+
+    const selectedChicken = chickens.find(
+      (c: any) =>
+        String(c.id) === String(selectedHen)
+    );
+
+    const newLog = {
+      date,
+      henid: selectedHen,
+      henname:
+        selectedChicken?.name || "Unknown Hen",
+      eggs: Number(eggCount),
+      purpose,
+      notes,
+    };
+
+    const { error } = await supabase
+      .from("egg_logs")
+      .insert([newLog]);
+
+    if (error) {
+      console.error(error);
+    } else {
+      await loadEggLogs();
+    }
+
+    setDate("");
+    setSelectedHen("");
+    setEggCount("");
+    setPurpose("");
+    setNotes("");
+  };
 
   return (
-  <div className="max-w-5xl mx-auto flex flex-col gap-4">
+    <div className="max-w-5xl mx-auto flex flex-col gap-4">
 
-    <PageBanner
-      eyebrow="PRODUCTION"
-      title="Egg Registry"
-      subtitle="Track egg production, laying performance and flock output."
-      stat="0"
-      statLabel="TODAY"
-    />
+      <PageBanner
+        eyebrow="PRODUCTION"
+        title="Egg Registry"
+        subtitle="Track egg production, laying performance and flock output."
+        stat={eggLogs.reduce(
+          (sum, log) => sum + log.eggs,
+          0
+        )}
+        statLabel="TOTAL EGGS"
+      />
 
-       {/* SUMMARY */}
-<div className="grid grid-cols-3 gap-3">
+      {/* SUMMARY */}
+      <div className="grid grid-cols-3 gap-3">
 
-  {/* TOTAL EGGS */}
-  <div className="bg-white rounded-xl p-4 shadow-sm">
-    <div className="text-gray-500 text-sm">
-      Total Eggs
-    </div>
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="text-gray-500 text-sm">
+            Total Eggs
+          </div>
 
-    <div className="text-2xl font-bold">
-      {eggLogs.reduce((sum, log) => sum + log.eggs, 0)}
-    </div>
-  </div>
+          <div className="text-2xl font-bold">
+            {eggLogs.reduce(
+              (sum, log) => sum + log.eggs,
+              0
+            )}
+          </div>
+        </div>
 
-  {/* DAYS LOGGED */}
-  <div className="bg-white rounded-xl p-4 shadow-sm">
-    <div className="text-gray-500 text-sm">
-      Days Logged
-    </div>
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="text-gray-500 text-sm">
+            Days Logged
+          </div>
 
-    <div className="text-2xl font-bold">
-      {new Set(eggLogs.map((log) => log.date)).size}
-    </div>
-  </div>
+          <div className="text-2xl font-bold">
+            {new Set(
+              eggLogs.map((log) => log.date)
+            ).size}
+          </div>
+        </div>
 
-  {/* AVG PER DAY */}
-  <div className="bg-white rounded-xl p-4 shadow-sm">
-    <div className="text-gray-500 text-sm">
-      Avg / Day
-    </div>
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="text-gray-500 text-sm">
+            Avg / Day
+          </div>
 
-    <div className="text-2xl font-bold">
-      {eggLogs.length === 0
-        ? 0
-        : Math.round(
-            eggLogs.reduce((sum, log) => sum + log.eggs, 0) /
-            new Set(eggLogs.map((log) => log.date)).size
-          )}
-    </div>
-  </div>
+          <div className="text-2xl font-bold">
+            {eggLogs.length === 0
+              ? 0
+              : Math.round(
+                  eggLogs.reduce(
+                    (sum, log) => sum + log.eggs,
+                    0
+                  ) /
+                    new Set(
+                      eggLogs.map((log) => log.date)
+                    ).size
+                )}
+          </div>
+        </div>
 
-</div>
+      </div>
 
       {/* LOG FORM */}
       <div className="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-3">
@@ -129,59 +216,69 @@ if (error) {
         </h2>
 
         <input
-  type="date"
-  value={date}
-  onChange={(e) => setDate(e.target.value)}
-  className="border rounded-lg p-2"
-/>
-
-<select
-  value={selectedHen}
-  onChange={(e) => setSelectedHen(e.target.value)}
-  className="border rounded-lg p-2"
->
-  <option value="">Unknown Hen</option>
-
-  {hens.map((hen: any) => (
-    <option key={hen.id} value={hen.id}>
-      {hen.name}
-    </option>
-  ))}
-</select>
-
-        <input
-  type="number"
-  placeholder="Number of Eggs"
-  value={eggCount}
-  onChange={(e) => setEggCount(e.target.value)}
-  className="border rounded-lg p-2"
-/>
+          type="date"
+          value={date}
+          onChange={(e) =>
+            setDate(e.target.value)
+          }
+          className="border rounded-lg p-2"
+        />
 
         <select
-  value={purpose}
-  onChange={(e) => setPurpose(e.target.value)}
-  className="border rounded-lg p-2"
->
-  <option>Purpose</option>
-  <option>Personal Use</option>
-  <option>Sell (Eating)</option>
-  <option>Sell (Fertilized)</option>
-  <option>Incubator</option>
-  <option>Natural Hatch</option>
-</select>
+          value={selectedHen}
+          onChange={(e) =>
+            setSelectedHen(e.target.value)
+          }
+          className="border rounded-lg p-2"
+        >
+          <option value="">Unknown Hen</option>
+
+          {hens.map((hen: any) => (
+            <option key={hen.id} value={hen.id}>
+              {hen.name}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="number"
+          placeholder="Number of Eggs"
+          value={eggCount}
+          onChange={(e) =>
+            setEggCount(e.target.value)
+          }
+          className="border rounded-lg p-2"
+        />
+
+        <select
+          value={purpose}
+          onChange={(e) =>
+            setPurpose(e.target.value)
+          }
+          className="border rounded-lg p-2"
+        >
+          <option>Purpose</option>
+          <option>Personal Use</option>
+          <option>Sell (Eating)</option>
+          <option>Sell (Fertilized)</option>
+          <option>Incubator</option>
+          <option>Natural Hatch</option>
+        </select>
 
         <textarea
-  placeholder="Optional Notes"
-  value={notes}
-  onChange={(e) => setNotes(e.target.value)}
-  className="border rounded-lg p-2"
-  rows={3}
-/>
+          placeholder="Optional Notes"
+          value={notes}
+          onChange={(e) =>
+            setNotes(e.target.value)
+          }
+          className="border rounded-lg p-2"
+          rows={3}
+        />
 
         <button
-  onClick={handleLogEggs}
-  className="bg-blue-500 text-white rounded-lg py-2 font-medium"
->
+          onClick={handleLogEggs}
+          className="bg-blue-500 text-white rounded-lg py-2 font-medium"
+        >
           + Log Eggs
         </button>
 
@@ -194,37 +291,90 @@ if (error) {
           📜 Collection History
         </h2>
 
-        {eggLogs.length === 0 ? (
+        {/* MONTH / YEAR TABS */}
+        <div className="flex gap-2 overflow-x-auto pb-3 mb-3">
+
+          {eggMonths.map((monthKey) => (
+            <button
+              key={monthKey}
+              onClick={() =>
+                setSelectedEggView(monthKey)
+              }
+              className={`
+                whitespace-nowrap
+                rounded-xl
+                px-4
+                py-2
+                font-semibold
+                ${
+                  activeEggView === monthKey
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-100 text-gray-600"
+                }
+              `}
+            >
+              {formatMonthLabel(monthKey)}
+            </button>
+          ))}
+
+          {eggYears.map((year: any) => (
+            <button
+              key={year}
+              onClick={() =>
+                setSelectedEggView(String(year))
+              }
+              className={`
+                whitespace-nowrap
+                rounded-xl
+                px-4
+                py-2
+                font-semibold
+                ${
+                  activeEggView === String(year)
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-600"
+                }
+              `}
+            >
+              {year} History
+            </button>
+          ))}
+
+        </div>
+
+        {filteredEggLogs.length === 0 ? (
           <div className="text-gray-400 text-sm">
-            No egg collections logged yet
+            No egg collections logged for this period.
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-  {eggLogs.map((log: any) => (
-    <div
-      key={log.id}
-      className="border rounded-lg p-3 flex justify-between items-center"
-    >
-      <div>
-        <div className="font-medium">
-          {log.henname}
-        </div>
 
-        <div className="text-sm text-gray-500">
-          {log.date}
-        </div>
+            {filteredEggLogs.map((log: any) => (
+              <div
+                key={log.id}
+                className="border rounded-lg p-3 flex justify-between items-center"
+              >
+                <div>
+                  <div className="font-medium">
+                    {log.henname}
+                  </div>
 
-        <div className="text-sm">
-          {log.purpose}
-        </div>
-      </div>
+                  <div className="text-sm text-gray-500">
+                    {log.date}
+                  </div>
 
-      <div className="text-2xl font-bold">
-        🥚 {log.eggs}
-      </div>
-    </div>
-  ))}
-</div>
+                  <div className="text-sm">
+                    {log.purpose}
+                  </div>
+                </div>
+
+                <div className="text-2xl font-bold">
+                  🥚 {log.eggs}
+                </div>
+              </div>
+            ))}
+
+          </div>
         )}
 
       </div>
