@@ -3,74 +3,66 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
 export default function Wishlist() {
+  const [itemCategory, setItemCategory] = useState("Equipment");
+  const [itemName, setItemName] = useState("");
+  const [qty, setQty] = useState("1");
+  const [unitPrice, setUnitPrice] = useState("");
+  const [itemDetails, setItemDetails] = useState("");
+  const [productUrl, setProductUrl] = useState("");
+  const [productImages, setProductImages] = useState<File[]>([]);
 
-  const [itemCategory, setItemCategory] =
-    useState("Equipment");
-
-  const [itemName, setItemName] =
-    useState("");
-
-  const [qty, setQty] =
-    useState("1");
-
-  const [unitPrice, setUnitPrice] =
-    useState("");
-
-  const [itemDetails, setItemDetails] =
-    useState("");
-
-  const [productUrl, setProductUrl] =
-    useState("");
-
-  const [productImages, setProductImages] =
-    useState<File[]>([]);
-
-  const [wishlistItems, setWishlistItems] =
-    useState<any[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
 
   const [selectedProductImages, setSelectedProductImages] =
     useState<string[]>([]);
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const [showImageViewer, setShowImageViewer] =
-    useState(false);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [purchaseItem, setPurchaseItem] = useState<any>(null);
+  const [purchaseCategory, setPurchaseCategory] = useState("Equipment");
+  const [purchaseDate, setPurchaseDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [purchaseSlipFiles, setPurchaseSlipFiles] = useState<File[]>([]);
 
-  const [activeImageIndex, setActiveImageIndex] =
-    useState(0);
-
-  const totalCost =
-    Number(qty || 0) *
-    Number(unitPrice || 0);
+  const totalCost = Number(qty || 0) * Number(unitPrice || 0);
 
   useEffect(() => {
     loadWishlistItems();
   }, []);
 
   const loadWishlistItems = async () => {
-
     const { data, error } = await supabase
       .from("wishlist")
       .select("*")
       .order("id", { ascending: false });
 
     if (error) {
-      console.error(error);
+      console.error("Load Wishlist Error:", error);
+      alert("Could not load wishlist items.");
       return;
     }
 
     setWishlistItems(data || []);
   };
 
-  const addWishlistItem = async () => {
+  const activeWishlistItems =
+    wishlistItems.filter((item) => !item.purchased);
 
-    if (!itemName || totalCost <= 0)
-      return;
+  const totalWishlistCost =
+    activeWishlistItems.reduce(
+      (sum, item) => sum + Number(item.total_cost),
+      0
+    );
+
+  const addWishlistItem = async () => {
+    if (!itemName || totalCost <= 0) return;
 
     const uploadedImageUrls: string[] = [];
 
     for (const file of productImages) {
-
-      const fileName =
-        `${Date.now()}-${file.name}`;
+      const fileName = `${Date.now()}-${file.name}`;
 
       const { error: uploadError } =
         await supabase.storage
@@ -78,7 +70,7 @@ export default function Wishlist() {
           .upload(fileName, file);
 
       if (uploadError) {
-        console.error(uploadError);
+        console.error("Wishlist Image Upload Error:", uploadError);
         continue;
       }
 
@@ -87,9 +79,7 @@ export default function Wishlist() {
         .from("wishlist-images")
         .getPublicUrl(fileName);
 
-      uploadedImageUrls.push(
-        data.publicUrl
-      );
+      uploadedImageUrls.push(data.publicUrl);
     }
 
     const { error } = await supabase
@@ -104,11 +94,14 @@ export default function Wishlist() {
           item_details: itemDetails,
           product_url: productUrl,
           product_images: uploadedImageUrls,
+          purchased: false,
+          purchased_date: null,
         },
       ]);
 
     if (error) {
-      console.error(error);
+      console.error("Add Wishlist Error:", error);
+      alert("Could not add wishlist item.");
       return;
     }
 
@@ -120,32 +113,118 @@ export default function Wishlist() {
     setProductUrl("");
     setProductImages([]);
 
-    loadWishlistItems();
+    await loadWishlistItems();
   };
 
-  const deleteWishlistItem = async (
-    id: number
-  ) => {
-
+  const deleteWishlistItem = async (id: number) => {
     const { error } = await supabase
       .from("wishlist")
       .delete()
       .eq("id", id);
 
     if (error) {
-      console.error(error);
+      console.error("Delete Wishlist Error:", error);
+      alert("Could not delete wishlist item.");
       return;
     }
 
-    loadWishlistItems();
+    prev.filter(
+  (item) => item.id !== id
+);
   };
 
-  const totalWishlistCost =
-    wishlistItems.reduce(
-      (sum, item) =>
-        sum + Number(item.total_cost),
-      0
+  const openPurchaseModal = (item: any) => {
+    setPurchaseItem(item);
+    setPurchaseCategory("Equipment");
+    setPurchaseDate(new Date().toISOString().split("T")[0]);
+    setPurchaseSlipFiles([]);
+    setShowPurchaseModal(true);
+  };
+
+  const completePurchase = async () => {
+    if (!purchaseItem || !purchaseDate) {
+      alert("Please select a purchase date.");
+      return;
+    }
+
+    const uploadedSlipUrls: string[] = [];
+
+    for (const file of purchaseSlipFiles) {
+      const fileName = `${Date.now()}-${file.name}`;
+
+      const { error: uploadError } =
+        await supabase.storage
+          .from("expense-slips")
+          .upload(fileName, file);
+
+      if (uploadError) {
+        console.error("Slip Upload Error:", uploadError);
+        alert("Slip upload failed. Check console.");
+        return;
+      }
+
+      const { data } = supabase
+        .storage
+        .from("expense-slips")
+        .getPublicUrl(fileName);
+
+      uploadedSlipUrls.push(data.publicUrl);
+    }
+
+    const { error: expenseError } =
+      await supabase
+        .from("expenses")
+        .insert([
+          {
+            title: purchaseItem.item_name,
+            amount: Number(purchaseItem.total_cost),
+            category: purchaseCategory,
+            expense_date: purchaseDate,
+            notes:
+              purchaseItem.item_details ||
+              "Purchased from Wishlist",
+            recurring: false,
+            feed_product: "",
+            bag_size: "",
+            qty: Number(purchaseItem.qty),
+            unit_price: Number(purchaseItem.unit_price),
+            slip_images: uploadedSlipUrls,
+          },
+        ]);
+
+    if (expenseError) {
+      console.error("Expense Insert Error:", expenseError);
+      alert("Could not move item to Expenses. Check console.");
+      return;
+    }
+
+    const { error: updateError } =
+  await supabase
+    .from("wishlist")
+    .update({
+      purchased: true,
+      purchased_date: purchaseDate,
+    })
+    .eq("id", purchaseItem.id);
+
+if (updateError) {
+  console.error("Wishlist Update Error:", updateError);
+  alert(JSON.stringify(updateError));
+  return;
+}
+
+    setWishlistItems((prev) =>
+      prev.filter(
+  (item) => item.id !== purchaseItem.id
+)
     );
+
+    setShowPurchaseModal(false);
+    setPurchaseItem(null);
+    setPurchaseSlipFiles([]);
+
+    alert("Item moved to Expenses successfully.");
+  };
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-4">
@@ -155,7 +234,7 @@ export default function Wishlist() {
         title="Wishlist"
         subtitle="Track future farm purchases, upgrades and planned items."
         stat={`R ${totalWishlistCost.toFixed(2)}`}
-        statLabel="TOTAL"
+        statLabel="ACTIVE TOTAL"
       />
 
       {/* FORM */}
@@ -167,9 +246,7 @@ export default function Wishlist() {
 
         <select
           value={itemCategory}
-          onChange={(e) =>
-            setItemCategory(e.target.value)
-          }
+          onChange={(e) => setItemCategory(e.target.value)}
           className="border rounded-2xl p-3"
         >
           <option>Minerals & Vitamins</option>
@@ -187,9 +264,7 @@ export default function Wishlist() {
         <input
           placeholder="Item Name"
           value={itemName}
-          onChange={(e) =>
-            setItemName(e.target.value)
-          }
+          onChange={(e) => setItemName(e.target.value)}
           className="border rounded-2xl p-3"
         />
 
@@ -197,9 +272,7 @@ export default function Wishlist() {
           type="number"
           placeholder="Quantity"
           value={qty}
-          onChange={(e) =>
-            setQty(e.target.value)
-          }
+          onChange={(e) => setQty(e.target.value)}
           className="border rounded-2xl p-3"
         />
 
@@ -207,14 +280,11 @@ export default function Wishlist() {
           type="number"
           placeholder="Unit Price"
           value={unitPrice}
-          onChange={(e) =>
-            setUnitPrice(e.target.value)
-          }
+          onChange={(e) => setUnitPrice(e.target.value)}
           className="border rounded-2xl p-3"
         />
 
         <div className="bg-green-50 border border-green-200 rounded-3xl p-4">
-
           <div className="text-sm text-gray-500">
             Estimated Total Cost
           </div>
@@ -222,15 +292,12 @@ export default function Wishlist() {
           <div className="text-3xl font-bold text-green-700">
             R {totalCost.toFixed(2)}
           </div>
-
         </div>
 
         <textarea
           placeholder="Item Details"
           value={itemDetails}
-          onChange={(e) =>
-            setItemDetails(e.target.value)
-          }
+          onChange={(e) => setItemDetails(e.target.value)}
           className="border rounded-2xl p-3"
         />
 
@@ -238,14 +305,11 @@ export default function Wishlist() {
           type="url"
           placeholder="Product URL"
           value={productUrl}
-          onChange={(e) =>
-            setProductUrl(e.target.value)
-          }
+          onChange={(e) => setProductUrl(e.target.value)}
           className="border rounded-2xl p-3"
         />
 
         <div className="flex flex-col gap-2">
-
           <div className="font-semibold text-sm">
             📸 Product Images
           </div>
@@ -257,22 +321,17 @@ export default function Wishlist() {
             capture="environment"
             onChange={(e) =>
               setProductImages(
-                Array.from(
-                  e.target.files || []
-                )
+                Array.from(e.target.files || [])
               )
             }
             className="border rounded-2xl p-3"
           />
 
           {productImages.length > 0 && (
-
             <div className="text-sm text-gray-500">
               {productImages.length} image(s) selected
             </div>
-
           )}
-
         </div>
 
         <button
@@ -287,20 +346,23 @@ export default function Wishlist() {
         >
           + Add Wishlist Item
         </button>
-
       </div>
 
       {/* WISHLIST ITEMS */}
       <div className="bg-white rounded-3xl p-4 shadow-sm">
 
         <h2 className="text-xl font-semibold mb-4">
-          🛒 Wishlist Items
+          🛒 Active Wishlist Items
         </h2>
 
+        {activeWishlistItems.length === 0 && (
+          <div className="text-sm text-gray-400">
+            No active wishlist items.
+          </div>
+        )}
+
         <div className="flex flex-col gap-4">
-
-          {wishlistItems.map((item) => (
-
+          {activeWishlistItems.map((item) => (
             <div
               key={item.id}
               className="
@@ -312,11 +374,9 @@ export default function Wishlist() {
                 gap-4
               "
             >
-
               <div className="flex justify-between items-start gap-4">
 
                 <div className="flex-1">
-
                   <div className="font-bold text-xl">
                     {item.item_name}
                   </div>
@@ -324,17 +384,13 @@ export default function Wishlist() {
                   <div className="text-sm text-gray-500">
                     {item.item_category}
                   </div>
-
                 </div>
 
                 <div className="text-right">
-
                   <div className="font-bold text-2xl text-green-700">
                     R {Number(item.total_cost).toFixed(2)}
                   </div>
-
                 </div>
-
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -358,64 +414,48 @@ export default function Wishlist() {
                     R {Number(item.unit_price).toFixed(2)}
                   </div>
                 </div>
-
               </div>
 
               {item.item_details && (
-
                 <div className="bg-gray-50 rounded-2xl p-3 text-sm">
                   <span className="font-semibold">
                     Details:
                   </span>{" "}
                   {item.item_details}
                 </div>
-
               )}
 
               {item.product_images &&
                 item.product_images.length > 0 && (
-
-                <div className="flex gap-2 flex-wrap">
-
-                  {item.product_images.map(
-                    (
-                      image: string,
-                      index: number
-                    ) => (
-
-                      <img
-                        key={index}
-                        src={image}
-                        alt="Product"
-                        onClick={() => {
-
-                          setSelectedProductImages(
-                            item.product_images
-                          );
-
-                          setActiveImageIndex(index);
-
-                          setShowImageViewer(true);
-                        }}
-                        className="
-                          w-24
-                          h-24
-                          object-cover
-                          rounded-2xl
-                          border
-                          cursor-pointer
-                        "
-                      />
-
-                    )
-                  )}
-
-                </div>
-
-              )}
+                  <div className="flex gap-2 flex-wrap">
+                    {item.product_images.map(
+                      (image: string, index: number) => (
+                        <img
+                          key={index}
+                          src={image}
+                          alt="Product"
+                          onClick={() => {
+                            setSelectedProductImages(
+                              item.product_images
+                            );
+                            setActiveImageIndex(index);
+                            setShowImageViewer(true);
+                          }}
+                          className="
+                            w-24
+                            h-24
+                            object-cover
+                            rounded-2xl
+                            border
+                            cursor-pointer
+                          "
+                        />
+                      )
+                    )}
+                  </div>
+                )}
 
               {item.product_url && (
-
                 <a
                   href={item.product_url}
                   target="_blank"
@@ -431,13 +471,25 @@ export default function Wishlist() {
                 >
                   🔗 Open Product
                 </a>
-
               )}
 
               <button
-                onClick={() =>
-                  deleteWishlistItem(item.id)
-                }
+                onClick={() => openPurchaseModal(item)}
+                className="
+                  bg-green-600
+                  text-white
+                  rounded-2xl
+                  p-4
+                  font-bold
+                  text-lg
+                  shadow-md
+                "
+              >
+                ✅ Item Purchased
+              </button>
+
+              <button
+                onClick={() => deleteWishlistItem(item.id)}
                 className="
                   bg-red-500
                   text-white
@@ -448,24 +500,124 @@ export default function Wishlist() {
               >
                 🗑 Delete Item
               </button>
+            </div>
+          ))}
+        </div>
+      </div>
 
+      {/* PURCHASE MODAL */}
+      {showPurchaseModal && purchaseItem && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md flex flex-col gap-4">
+
+            <h2 className="text-xl font-bold">
+              ✅ Mark Item as Purchased
+            </h2>
+
+            <div className="bg-green-50 border border-green-200 rounded-2xl p-3">
+              <div className="font-bold">
+                {purchaseItem.item_name}
+              </div>
+
+              <div className="text-sm text-gray-500">
+                R {Number(purchaseItem.total_cost).toFixed(2)}
+              </div>
             </div>
 
-          ))}
+            <select
+              value={purchaseCategory}
+              onChange={(e) =>
+                setPurchaseCategory(e.target.value)
+              }
+              className="border rounded-xl p-3"
+            >
+              <option>Feed</option>
+              <option>Medicine</option>
+              <option>Construction</option>
+              <option>Equipment</option>
+              <option>Utilities</option>
+              <option>Transport</option>
+              <option>Maintenance</option>
+              <option>Other</option>
+            </select>
 
+            <input
+              type="date"
+              value={purchaseDate}
+              onChange={(e) =>
+                setPurchaseDate(e.target.value)
+              }
+              className="border rounded-xl p-3"
+            />
+
+            <div className="flex flex-col gap-2">
+              <div className="font-semibold text-sm">
+                📸 Purchase Slip / Invoice
+              </div>
+
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                capture="environment"
+                onChange={(e) =>
+                  setPurchaseSlipFiles(
+                    Array.from(e.target.files || [])
+                  )
+                }
+                className="border rounded-xl p-3"
+              />
+
+              {purchaseSlipFiles.length > 0 && (
+                <div className="text-sm text-gray-500">
+                  {purchaseSlipFiles.length} slip(s) selected
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowPurchaseModal(false);
+                  setPurchaseItem(null);
+                  setPurchaseSlipFiles([]);
+                }}
+                className="
+                  flex-1
+                  bg-gray-200
+                  rounded-xl
+                  p-3
+                  font-semibold
+                "
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={completePurchase}
+                className="
+                  flex-1
+                  bg-green-600
+                  text-white
+                  rounded-xl
+                  p-3
+                  font-semibold
+                "
+              >
+                Save Purchase
+              </button>
+            </div>
+          </div>
         </div>
-
-      </div>
+      )}
 
       {/* IMAGE VIEWER */}
       {showImageViewer && (
-
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
 
           <button
-            onClick={() =>
-              setShowImageViewer(false)
-            }
+            onClick={() => setShowImageViewer(false)}
             className="
               absolute
               top-5
@@ -496,11 +648,7 @@ export default function Wishlist() {
           </button>
 
           <img
-            src={
-              selectedProductImages[
-                activeImageIndex
-              ]
-            }
+            src={selectedProductImages[activeImageIndex]}
             className="
               max-w-[90%]
               max-h-[85%]
@@ -511,8 +659,7 @@ export default function Wishlist() {
           <button
             onClick={() =>
               setActiveImageIndex((prev) =>
-                prev ===
-                selectedProductImages.length - 1
+                prev === selectedProductImages.length - 1
                   ? 0
                   : prev + 1
               )
@@ -526,11 +673,8 @@ export default function Wishlist() {
           >
             ›
           </button>
-
         </div>
-
       )}
-
     </div>
   );
 }
