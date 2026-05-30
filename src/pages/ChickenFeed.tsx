@@ -4,36 +4,27 @@ import { supabase } from "../supabase";
 
 export default function ChickenFeed() {
   const [feedProducts, setFeedProducts] = useState<any[]>([]);
+  const [selectedFeed, setSelectedFeed] = useState<any>(null);
+  const [editing, setEditing] = useState(false);
 
   const [newFeedBrand, setNewFeedBrand] = useState("");
   const [newFeedProduct, setNewFeedProduct] = useState("");
-
-  const [selectedFeedId, setSelectedFeedId] = useState("");
-  const [bagSize, setBagSize] = useState("");
-  const [feedCost, setFeedCost] = useState("");
-
-  const [ingredientName, setIngredientName] = useState("");
-  const [ingredientQty, setIngredientQty] = useState("");
-  const [ingredientUnit, setIngredientUnit] = useState("g/kg");
 
   useEffect(() => {
     loadFeedProducts();
   }, []);
 
-  const normalizeIngredients = (ingredients: any) => {
-    if (Array.isArray(ingredients)) return ingredients;
-
-    if (typeof ingredients === "string") {
-      try {
-        const parsed = JSON.parse(ingredients);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return [];
-      }
-    }
-
-    return [];
-  };
+  const nutritionFields = (feed: any) => [
+    ["Protein", feed.protein],
+    ["Fat / Oils", feed.fat_oils],
+    ["Fibre", feed.fibre],
+    ["Calcium", feed.calcium],
+    ["Phosphorus", feed.phosphorus],
+    ["Moisture", feed.moisture],
+    ["Lysine", feed.lysine],
+    ["Methionine", feed.methionine],
+    ["Salt / Sodium", feed.salt_sodium],
+  ].filter((field) => field[1]);
 
   const loadFeedProducts = async () => {
     const { data, error } = await supabase
@@ -51,8 +42,8 @@ export default function ChickenFeed() {
   };
 
   const addFeedProduct = async () => {
-    if (!newFeedBrand || !newFeedProduct) {
-      alert("Please add feed brand and product name.");
+    if (!newFeedBrand.trim() || !newFeedProduct.trim()) {
+      alert("Please enter brand and product name.");
       return;
     }
 
@@ -60,12 +51,9 @@ export default function ChickenFeed() {
       .from("feed_products")
       .insert([
         {
-          brand: newFeedBrand,
-          product_name: newFeedProduct,
+          brand: newFeedBrand.trim(),
+          product_name: newFeedProduct.trim(),
           category: "Chicken Feed",
-          bag_size: bagSize,
-          feed_cost: feedCost ? Number(feedCost) : null,
-          ingredients: [],
         },
       ]);
 
@@ -77,10 +65,54 @@ export default function ChickenFeed() {
 
     setNewFeedBrand("");
     setNewFeedProduct("");
-    setBagSize("");
-    setFeedCost("");
 
     await loadFeedProducts();
+  };
+
+  const saveFeed = async () => {
+    if (!selectedFeed) return;
+
+    const cleanedFeed = {
+      brand: selectedFeed.brand || "",
+      product_name: selectedFeed.product_name || "",
+      bag_size: selectedFeed.bag_size || null,
+      feed_cost:
+        selectedFeed.feed_cost !== "" &&
+        selectedFeed.feed_cost !== null &&
+        selectedFeed.feed_cost !== undefined
+          ? Number(selectedFeed.feed_cost)
+          : null,
+      protein: selectedFeed.protein || null,
+      fat_oils: selectedFeed.fat_oils || null,
+      fibre: selectedFeed.fibre || null,
+      calcium: selectedFeed.calcium || null,
+      phosphorus: selectedFeed.phosphorus || null,
+      moisture: selectedFeed.moisture || null,
+      lysine: selectedFeed.lysine || null,
+      methionine: selectedFeed.methionine || null,
+      salt_sodium: selectedFeed.salt_sodium || null,
+      best_for: selectedFeed.best_for || null,
+      notes: selectedFeed.notes || null,
+    };
+
+    const { data, error } = await supabase
+      .from("feed_products")
+      .update(cleanedFeed)
+      .eq("id", selectedFeed.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error(error);
+      alert("Could not save feed details.");
+      return;
+    }
+
+    setSelectedFeed(data);
+    setEditing(false);
+    await loadFeedProducts();
+
+    alert("Feed details saved.");
   };
 
   const deleteFeedProduct = async (id: number) => {
@@ -98,131 +130,207 @@ export default function ChickenFeed() {
       return;
     }
 
+    setSelectedFeed(null);
+    setEditing(false);
     await loadFeedProducts();
   };
 
-  const updateFeedDetails = async (feed: any) => {
-    const { error } = await supabase
-      .from("feed_products")
-      .update({
-        bag_size: feed.bag_size || null,
-        feed_cost: feed.feed_cost ? Number(feed.feed_cost) : null,
-        ingredients: normalizeIngredients(feed.ingredients),
-      })
-      .eq("id", feed.id);
+  const getCostPerKg = (feed: any) => {
+    if (!feed?.bag_size || !feed?.feed_cost) return null;
 
-    if (error) {
-      console.error(error);
-      alert("Could not update feed.");
-      return;
-    }
+    const kg = Number(String(feed.bag_size).replace(/[^0-9.]/g, ""));
 
-    await loadFeedProducts();
-    alert("Feed details saved.");
+    if (!kg || kg <= 0) return null;
+
+    return Number(feed.feed_cost) / kg;
   };
 
-  const addIngredient = async () => {
-    if (!selectedFeedId || !ingredientName || !ingredientQty) {
-      alert("Please select a feed and complete ingredient details.");
-      return;
-    }
-
-    const feed = feedProducts.find(
-      (item) => String(item.id) === String(selectedFeedId)
-    );
-
-    if (!feed) {
-      alert("Feed product not found.");
-      return;
-    }
-
-    const currentIngredients = normalizeIngredients(feed.ingredients);
-
-    const updatedIngredients = [
-      ...currentIngredients,
-      {
-        name: ingredientName,
-        qty: Number(ingredientQty),
-        unit: ingredientUnit,
-      },
-    ];
-
-    const { error } = await supabase
-      .from("feed_products")
-      .update({
-        ingredients: updatedIngredients,
-      })
-      .eq("id", feed.id);
-
-    if (error) {
-      console.error("Ingredient Save Error:", error);
-      alert(JSON.stringify(error));
-      return;
-    }
-
-    setIngredientName("");
-    setIngredientQty("");
-    setIngredientUnit("g/kg");
-
-    await loadFeedProducts();
-
-    alert("Ingredient added successfully.");
+  const updateField = (field: string, value: any) => {
+    setSelectedFeed({
+      ...selectedFeed,
+      [field]: value,
+    });
   };
-
-  const deleteIngredient = async (feed: any, index: number) => {
-    const updatedIngredients = normalizeIngredients(feed.ingredients);
-
-    updatedIngredients.splice(index, 1);
-
-    const { error } = await supabase
-      .from("feed_products")
-      .update({
-        ingredients: updatedIngredients,
-      })
-      .eq("id", feed.id);
-
-    if (error) {
-      console.error(error);
-      alert("Could not delete ingredient.");
-      return;
-    }
-
-    await loadFeedProducts();
-  };
-
-  const feedWithIngredients = feedProducts.filter(
-    (feed) => normalizeIngredients(feed.ingredients).length > 0
-  ).length;
-
-  const totalCost = feedProducts.reduce(
-    (sum, feed) => sum + Number(feed.feed_cost || 0),
-    0
-  );
 
   const averageCost =
-    feedProducts.length === 0 ? 0 : totalCost / feedProducts.length;
+    feedProducts.length === 0
+      ? 0
+      : feedProducts.reduce(
+          (sum, feed) => sum + Number(feed.feed_cost || 0),
+          0
+        ) / feedProducts.length;
+
+  const feedsWithDetails = feedProducts.filter(
+    (feed) => nutritionFields(feed).length > 0 || feed.best_for
+  ).length;
+
+  if (selectedFeed) {
+    const perKg = getCostPerKg(selectedFeed);
+
+    return (
+      <div className="max-w-5xl mx-auto flex flex-col gap-4">
+        <PageBanner
+          eyebrow="FEED PROFILE"
+          title={`${selectedFeed.brand || "Feed"} ${
+            selectedFeed.product_name || ""
+          }`}
+          subtitle="View and edit feed nutrition, cost and usage details."
+          stat={
+            selectedFeed.feed_cost
+              ? `R ${Number(selectedFeed.feed_cost).toFixed(2)}`
+              : "R 0.00"
+          }
+          statLabel="FEED COST"
+        />
+
+        <div className="bg-white rounded-3xl p-4 shadow-sm flex gap-2">
+          <button
+            onClick={() => {
+              setSelectedFeed(null);
+              setEditing(false);
+            }}
+            className="bg-gray-500 text-white rounded-xl px-4 py-2 font-semibold"
+          >
+            ← Back
+          </button>
+
+          {!editing ? (
+            <button
+              onClick={() => setEditing(true)}
+              className="bg-blue-600 text-white rounded-xl px-4 py-2 font-semibold"
+            >
+              ✏ Edit
+            </button>
+          ) : (
+            <button
+              onClick={saveFeed}
+              className="bg-green-600 text-white rounded-xl px-4 py-2 font-semibold"
+            >
+              Save
+            </button>
+          )}
+
+          <button
+            onClick={() => deleteFeedProduct(selectedFeed.id)}
+            className="bg-red-600 text-white rounded-xl px-4 py-2 font-semibold ml-auto"
+          >
+            🗑 Delete
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="text-gray-500 text-sm">Bag Size</div>
+            <div className="text-2xl font-bold">
+              {selectedFeed.bag_size || "-"}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="text-gray-500 text-sm">Feed Cost</div>
+            <div className="text-2xl font-bold">
+              R{" "}
+              {selectedFeed.feed_cost
+                ? Number(selectedFeed.feed_cost).toFixed(2)
+                : "0.00"}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="text-gray-500 text-sm">Cost / KG</div>
+            <div className="text-2xl font-bold">
+              {perKg ? `R ${perKg.toFixed(2)}` : "-"}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl p-4 shadow-sm flex flex-col gap-3">
+          <h2 className="text-xl font-semibold">Feed Information</h2>
+
+          <FeedInput label="Brand" value={selectedFeed.brand} editing={editing} onChange={(v: string) => updateField("brand", v)} />
+          <FeedInput label="Product Name" value={selectedFeed.product_name} editing={editing} onChange={(v: string) => updateField("product_name", v)} />
+          <FeedInput label="Bag Size" value={selectedFeed.bag_size} editing={editing} placeholder="40KG" onChange={(v: string) => updateField("bag_size", v)} />
+          <FeedInput label="Feed Cost" value={selectedFeed.feed_cost} editing={editing} type="number" placeholder="365" onChange={(v: string) => updateField("feed_cost", v)} />
+
+          <div className="flex justify-between items-center gap-3 border-b pb-2">
+            <span className="text-gray-500">Best For</span>
+
+            {editing ? (
+              <select
+                value={selectedFeed.best_for || ""}
+                onChange={(e) => updateField("best_for", e.target.value)}
+                className="border rounded-xl p-2 w-48"
+              >
+                <option value="">Select Purpose</option>
+                <option>Grower</option>
+                <option>Layer</option>
+                <option>Breeder</option>
+                <option>Chicks</option>
+                <option>Broiler</option>
+                <option>Moulting / Feather Recovery</option>
+                <option>General Maintenance</option>
+              </select>
+            ) : (
+              <span className="font-semibold">
+                {selectedFeed.best_for || "-"}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl p-4 shadow-sm flex flex-col gap-3">
+          <h2 className="text-xl font-semibold">Nutrition / Ingredients</h2>
+
+          <FeedInput label="Protein" value={selectedFeed.protein} editing={editing} placeholder="180 g/kg or 18%" onChange={(v: string) => updateField("protein", v)} />
+          <FeedInput label="Fat / Oils" value={selectedFeed.fat_oils} editing={editing} placeholder="25 g/kg" onChange={(v: string) => updateField("fat_oils", v)} />
+          <FeedInput label="Fibre" value={selectedFeed.fibre} editing={editing} placeholder="70 g/kg" onChange={(v: string) => updateField("fibre", v)} />
+          <FeedInput label="Calcium" value={selectedFeed.calcium} editing={editing} placeholder="40 g/kg" onChange={(v: string) => updateField("calcium", v)} />
+          <FeedInput label="Phosphorus" value={selectedFeed.phosphorus} editing={editing} placeholder="6 g/kg" onChange={(v: string) => updateField("phosphorus", v)} />
+          <FeedInput label="Moisture" value={selectedFeed.moisture} editing={editing} placeholder="120 g/kg" onChange={(v: string) => updateField("moisture", v)} />
+          <FeedInput label="Lysine" value={selectedFeed.lysine} editing={editing} placeholder="8 g/kg" onChange={(v: string) => updateField("lysine", v)} />
+          <FeedInput label="Methionine" value={selectedFeed.methionine} editing={editing} placeholder="3 g/kg" onChange={(v: string) => updateField("methionine", v)} />
+          <FeedInput label="Salt / Sodium" value={selectedFeed.salt_sodium} editing={editing} placeholder="3 g/kg" onChange={(v: string) => updateField("salt_sodium", v)} />
+        </div>
+
+        <div className="bg-white rounded-3xl p-4 shadow-sm flex flex-col gap-3">
+          <h2 className="text-xl font-semibold">Notes</h2>
+
+          {editing ? (
+            <textarea
+              value={selectedFeed.notes || ""}
+              onChange={(e) => updateField("notes", e.target.value)}
+              className="border rounded-2xl p-3 min-h-[120px]"
+              placeholder="Notes about this feed..."
+            />
+          ) : (
+            <div className="text-gray-600 whitespace-pre-wrap">
+              {selectedFeed.notes || "No notes added yet."}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-4">
-
       <PageBanner
         eyebrow="NUTRITION"
         title="Chicken Feed"
-        subtitle="Compare feed brands, ingredients, bag sizes and costs."
+        subtitle="Compare feed brands, nutrition, bag sizes and costs."
         stat={feedProducts.length}
         statLabel="FEEDS"
       />
 
       <div className="grid grid-cols-3 gap-3">
-
         <div className="bg-white rounded-2xl p-4 shadow-sm">
           <div className="text-gray-500 text-sm">Feed Products</div>
           <div className="text-3xl font-bold">{feedProducts.length}</div>
         </div>
 
         <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <div className="text-gray-500 text-sm">With Ingredients</div>
-          <div className="text-3xl font-bold">{feedWithIngredients}</div>
+          <div className="text-gray-500 text-sm">With Details</div>
+          <div className="text-3xl font-bold">{feedsWithDetails}</div>
         </div>
 
         <div className="bg-white rounded-2xl p-4 shadow-sm">
@@ -231,14 +339,10 @@ export default function ChickenFeed() {
             R {averageCost.toFixed(2)}
           </div>
         </div>
-
       </div>
 
       <div className="bg-white rounded-3xl p-4 shadow-sm flex flex-col gap-3">
-
-        <h2 className="text-xl font-semibold">
-          + Add Feed Brand
-        </h2>
+        <h2 className="text-xl font-semibold">+ Add Feed Brand</h2>
 
         <input
           placeholder="Feed Brand"
@@ -254,87 +358,15 @@ export default function ChickenFeed() {
           className="border rounded-2xl p-3"
         />
 
-        <input
-          placeholder="Feed Bag Size e.g. 40KG"
-          value={bagSize}
-          onChange={(e) => setBagSize(e.target.value)}
-          className="border rounded-2xl p-3"
-        />
-
-        <input
-          type="number"
-          placeholder="Feed Cost"
-          value={feedCost}
-          onChange={(e) => setFeedCost(e.target.value)}
-          className="border rounded-2xl p-3"
-        />
-
         <button
           onClick={addFeedProduct}
           className="bg-green-600 text-white rounded-2xl p-4 font-semibold"
         >
           + Add Feed Brand
         </button>
-
-      </div>
-
-      <div className="bg-white rounded-3xl p-4 shadow-sm flex flex-col gap-3">
-
-        <h2 className="text-xl font-semibold">
-          + Add Ingredient To Feed
-        </h2>
-
-        <select
-          value={selectedFeedId}
-          onChange={(e) => setSelectedFeedId(e.target.value)}
-          className="border rounded-2xl p-3"
-        >
-          <option value="">Select Feed Product</option>
-
-          {feedProducts.map((feed) => (
-            <option key={feed.id} value={feed.id}>
-              {feed.brand} - {feed.product_name}
-            </option>
-          ))}
-        </select>
-
-        <input
-          placeholder="Ingredient Name e.g. Protein"
-          value={ingredientName}
-          onChange={(e) => setIngredientName(e.target.value)}
-          className="border rounded-2xl p-3"
-        />
-
-        <input
-          type="number"
-          placeholder="Ingredient Quantity"
-          value={ingredientQty}
-          onChange={(e) => setIngredientQty(e.target.value)}
-          className="border rounded-2xl p-3"
-        />
-
-        <select
-          value={ingredientUnit}
-          onChange={(e) => setIngredientUnit(e.target.value)}
-          className="border rounded-2xl p-3"
-        >
-          <option>g/kg</option>
-          <option>%</option>
-          <option>mg/kg</option>
-          <option>IU/kg</option>
-        </select>
-
-        <button
-          onClick={addIngredient}
-          className="bg-blue-600 text-white rounded-2xl p-4 font-semibold"
-        >
-          + Add Ingredient
-        </button>
-
       </div>
 
       <div className="bg-white rounded-3xl p-4 shadow-sm">
-
         <h2 className="text-xl font-semibold mb-4">
           🌾 Feed Products
         </h2>
@@ -346,18 +378,17 @@ export default function ChickenFeed() {
         )}
 
         <div className="flex flex-col gap-4">
-
           {feedProducts.map((feed) => {
-            const ingredients = normalizeIngredients(feed.ingredients);
+            const perKg = getCostPerKg(feed);
+            const filledNutrition = nutritionFields(feed);
 
             return (
               <div
                 key={feed.id}
-                className="border rounded-3xl p-4 flex flex-col gap-4"
+                onClick={() => setSelectedFeed(feed)}
+                className="border rounded-3xl p-4 cursor-pointer hover:bg-gray-50 transition"
               >
-
-                <div className="flex justify-between gap-4">
-
+                <div className="flex justify-between items-start gap-4">
                   <div>
                     <div className="text-xl font-bold">
                       {feed.brand}
@@ -366,122 +397,76 @@ export default function ChickenFeed() {
                     <div className="text-gray-500">
                       {feed.product_name}
                     </div>
+
+                    <div className="text-sm text-gray-400 mt-1">
+                      {feed.best_for || "No purpose selected"}
+                    </div>
                   </div>
 
-                  <button
-                    onClick={() => deleteFeedProduct(feed.id)}
-                    className="bg-red-500 text-white rounded-xl px-4 py-2 font-semibold"
-                  >
-                    🗑 Delete
-                  </button>
-
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-
-                  <div className="bg-gray-50 rounded-2xl p-3">
-                    <div className="text-gray-500 text-sm">
-                      Bag Size
+                  <div className="text-right">
+                    <div className="font-bold text-green-700">
+                      {feed.feed_cost
+                        ? `R ${Number(feed.feed_cost).toFixed(2)}`
+                        : "No Cost"}
                     </div>
 
-                    <input
-                      value={feed.bag_size || ""}
-                      onChange={(e) => {
-                        const updated = feedProducts.map((item) =>
-                          item.id === feed.id
-                            ? { ...item, bag_size: e.target.value }
-                            : item
-                        );
-
-                        setFeedProducts(updated);
-                      }}
-                      className="border rounded-xl p-2 w-full mt-1"
-                      placeholder="40KG"
-                    />
-                  </div>
-
-                  <div className="bg-gray-50 rounded-2xl p-3">
-                    <div className="text-gray-500 text-sm">
-                      Feed Cost
-                    </div>
-
-                    <input
-                      type="number"
-                      value={feed.feed_cost || ""}
-                      onChange={(e) => {
-                        const updated = feedProducts.map((item) =>
-                          item.id === feed.id
-                            ? { ...item, feed_cost: e.target.value }
-                            : item
-                        );
-
-                        setFeedProducts(updated);
-                      }}
-                      className="border rounded-xl p-2 w-full mt-1"
-                      placeholder="365"
-                    />
-                  </div>
-
-                </div>
-
-                <button
-                  onClick={() => updateFeedDetails(feed)}
-                  className="bg-green-600 text-white rounded-2xl p-3 font-semibold"
-                >
-                  Save Feed Details
-                </button>
-
-                <div>
-                  <h3 className="font-semibold mb-2">
-                    Ingredients
-                  </h3>
-
-                  {ingredients.length === 0 && (
                     <div className="text-sm text-gray-400">
-                      No ingredients added yet.
+                      {feed.bag_size || "No Bag Size"}
                     </div>
-                  )}
 
-                  <div className="flex flex-col gap-2">
-
-                    {ingredients.map(
-                      (ingredient: any, index: number) => (
-                        <div
-                          key={index}
-                          className="bg-gray-50 rounded-2xl p-3 flex justify-between items-center"
-                        >
-                          <div>
-                            <div className="font-semibold">
-                              {ingredient.name}
-                            </div>
-
-                            <div className="text-sm text-gray-500">
-                              {ingredient.qty} {ingredient.unit}
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={() => deleteIngredient(feed, index)}
-                            className="bg-red-500 text-white rounded-xl px-3 py-2 text-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )
-                    )}
-
+                    <div className="text-xs text-gray-400">
+                      {perKg ? `R ${perKg.toFixed(2)} / kg` : ""}
+                    </div>
                   </div>
-
                 </div>
 
+                {filledNutrition.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-4 text-sm">
+                    {filledNutrition.map(([label, value]: any) => (
+                      <div
+                        key={label}
+                        className="bg-gray-50 rounded-xl p-2"
+                      >
+                        <div className="text-gray-400">{label}</div>
+                        <div className="font-semibold">{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
-
         </div>
-
       </div>
+    </div>
+  );
+}
 
+function FeedInput({
+  label,
+  value,
+  editing,
+  onChange,
+  placeholder = "",
+  type = "text",
+}: any) {
+  return (
+    <div className="flex justify-between items-center gap-3 border-b pb-2">
+      <span className="text-gray-500">{label}</span>
+
+      {editing ? (
+        <input
+          type={type}
+          value={value || ""}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          className="border rounded-xl p-2 w-48"
+        />
+      ) : (
+        <span className="font-semibold text-right">
+          {value || "-"}
+        </span>
+      )}
     </div>
   );
 }
