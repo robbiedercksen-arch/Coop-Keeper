@@ -9,6 +9,7 @@ import EggRegistry from "./pages/EggRegistry";
 import IncubatorRegistry from "./pages/IncubatorRegistry";
 import DailyChores from "./pages/DailyChores";
 import FarmPlanning from "./pages/FarmPlanning";
+import ChickenFeed from "./pages/ChickenFeed";
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -149,6 +150,13 @@ useEffect(() => {
   style={menuBtn(page === "incubator", collapsed)}
 >
   🐣 {!collapsed && "Incubators"}
+</button>
+
+<button
+  onClick={() => navigate("chicken-feed")}
+  style={menuBtn(page === "chicken-feed", collapsed)}
+>
+  🌾 {!collapsed && "Chicken Feed"}
 </button>
 
 <button
@@ -389,6 +397,10 @@ useEffect(() => {
 
 {page === "planner" && (
   <DailyChores />
+)}
+
+{page === "chicken-feed" && (
+  <ChickenFeed />
 )}
 
 {page === "planning" && (

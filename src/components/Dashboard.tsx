@@ -263,12 +263,10 @@ export default function Dashboard({ chickens }: any) {
     <div className="max-w-6xl mx-auto space-y-4 px-1">
 
       <PageBanner
-        eyebrow="WELCOME"
-        title="Dashboard"
-        subtitle="Your flock at a glance."
-        stat={total}
-        statLabel="CHICKENS"
-      />
+  eyebrow="WELCOME"
+  title="Dashboard"
+  subtitle="Your flock at a glance."
+/>
 
       {/* ATTENTION REQUIRED */}
       <div

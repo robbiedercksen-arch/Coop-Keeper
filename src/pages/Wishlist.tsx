@@ -10,7 +10,6 @@ export default function Wishlist() {
   const [itemDetails, setItemDetails] = useState("");
   const [productUrl, setProductUrl] = useState("");
   const [productImages, setProductImages] = useState<File[]>([]);
-
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
 
   const [selectedProductImages, setSelectedProductImages] =
@@ -47,14 +46,10 @@ export default function Wishlist() {
     setWishlistItems(data || []);
   };
 
-  const activeWishlistItems =
-    wishlistItems.filter((item) => !item.purchased);
-
-  const totalWishlistCost =
-    activeWishlistItems.reduce(
-      (sum, item) => sum + Number(item.total_cost),
-      0
-    );
+  const totalWishlistCost = wishlistItems.reduce(
+    (sum, item) => sum + Number(item.total_cost || 0),
+    0
+  );
 
   const addWishlistItem = async () => {
     if (!itemName || totalCost <= 0) return;
@@ -64,40 +59,34 @@ export default function Wishlist() {
     for (const file of productImages) {
       const fileName = `${Date.now()}-${file.name}`;
 
-      const { error: uploadError } =
-        await supabase.storage
-          .from("wishlist-images")
-          .upload(fileName, file);
+      const { error: uploadError } = await supabase.storage
+        .from("wishlist-images")
+        .upload(fileName, file);
 
       if (uploadError) {
         console.error("Wishlist Image Upload Error:", uploadError);
         continue;
       }
 
-      const { data } = supabase
-        .storage
+      const { data } = supabase.storage
         .from("wishlist-images")
         .getPublicUrl(fileName);
 
       uploadedImageUrls.push(data.publicUrl);
     }
 
-    const { error } = await supabase
-      .from("wishlist")
-      .insert([
-        {
-          item_category: itemCategory,
-          item_name: itemName,
-          qty: Number(qty),
-          unit_price: Number(unitPrice),
-          total_cost: totalCost,
-          item_details: itemDetails,
-          product_url: productUrl,
-          product_images: uploadedImageUrls,
-          purchased: false,
-          purchased_date: null,
-        },
-      ]);
+    const { error } = await supabase.from("wishlist").insert([
+      {
+        item_category: itemCategory,
+        item_name: itemName,
+        qty: Number(qty),
+        unit_price: Number(unitPrice),
+        total_cost: totalCost,
+        item_details: itemDetails,
+        product_url: productUrl,
+        product_images: uploadedImageUrls,
+      },
+    ]);
 
     if (error) {
       console.error("Add Wishlist Error:", error);
@@ -116,7 +105,7 @@ export default function Wishlist() {
     await loadWishlistItems();
   };
 
-  const deleteWishlistItem = async (id: number) => {
+  const deleteWishlistItem = async (id: string) => {
     const { error } = await supabase
       .from("wishlist")
       .delete()
@@ -124,13 +113,13 @@ export default function Wishlist() {
 
     if (error) {
       console.error("Delete Wishlist Error:", error);
-      alert("Could not delete wishlist item.");
+      alert(JSON.stringify(error));
       return;
     }
 
-    prev.filter(
-  (item) => item.id !== id
-);
+    setWishlistItems((prev) =>
+      prev.filter((item) => item.id !== id)
+    );
   };
 
   const openPurchaseModal = (item: any) => {
@@ -147,15 +136,16 @@ export default function Wishlist() {
       return;
     }
 
+    const wishlistId = String(purchaseItem.id);
+
     const uploadedSlipUrls: string[] = [];
 
     for (const file of purchaseSlipFiles) {
       const fileName = `${Date.now()}-${file.name}`;
 
-      const { error: uploadError } =
-        await supabase.storage
-          .from("expense-slips")
-          .upload(fileName, file);
+      const { error: uploadError } = await supabase.storage
+        .from("expense-slips")
+        .upload(fileName, file);
 
       if (uploadError) {
         console.error("Slip Upload Error:", uploadError);
@@ -163,72 +153,65 @@ export default function Wishlist() {
         return;
       }
 
-      const { data } = supabase
-        .storage
+      const { data } = supabase.storage
         .from("expense-slips")
         .getPublicUrl(fileName);
 
       uploadedSlipUrls.push(data.publicUrl);
     }
 
-    const { error: expenseError } =
-      await supabase
-        .from("expenses")
-        .insert([
-          {
-            title: purchaseItem.item_name,
-            amount: Number(purchaseItem.total_cost),
-            category: purchaseCategory,
-            expense_date: purchaseDate,
-            notes:
-              purchaseItem.item_details ||
-              "Purchased from Wishlist",
-            recurring: false,
-            feed_product: "",
-            bag_size: "",
-            qty: Number(purchaseItem.qty),
-            unit_price: Number(purchaseItem.unit_price),
-            slip_images: uploadedSlipUrls,
-          },
-        ]);
+    const { error: expenseError } = await supabase
+      .from("expenses")
+      .insert([
+        {
+          title: purchaseItem.item_name,
+          amount: Number(purchaseItem.total_cost),
+          category: purchaseCategory,
+          expense_date: purchaseDate,
+          notes:
+            purchaseItem.item_details ||
+            "Purchased from Wishlist",
+          recurring: false,
+          feed_product: "",
+          bag_size: "",
+          qty: Number(purchaseItem.qty),
+          unit_price: Number(purchaseItem.unit_price),
+          slip_images: uploadedSlipUrls,
+        },
+      ]);
 
     if (expenseError) {
       console.error("Expense Insert Error:", expenseError);
-      alert("Could not move item to Expenses. Check console.");
+      alert("Could not move item to Expenses.");
       return;
     }
 
-    const { error: updateError } =
-  await supabase
-    .from("wishlist")
-    .update({
-      purchased: true,
-      purchased_date: purchaseDate,
-    })
-    .eq("id", purchaseItem.id);
+    const { error: deleteError } = await supabase
+      .from("wishlist")
+      .delete()
+      .eq("id", wishlistId);
 
-if (updateError) {
-  console.error("Wishlist Update Error:", updateError);
-  alert(JSON.stringify(updateError));
-  return;
-}
+    if (deleteError) {
+      console.error("Wishlist Delete Error:", deleteError);
+      alert(JSON.stringify(deleteError));
+      return;
+    }
 
     setWishlistItems((prev) =>
-      prev.filter(
-  (item) => item.id !== purchaseItem.id
-)
+      prev.filter((item) => String(item.id) !== wishlistId)
     );
 
     setShowPurchaseModal(false);
     setPurchaseItem(null);
     setPurchaseSlipFiles([]);
 
-    alert("Item moved to Expenses successfully.");
+    await loadWishlistItems();
+
+    alert("Item moved to Expenses and deleted from Wishlist.");
   };
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-4">
-
       <PageBanner
         eyebrow="PLANNING"
         title="Wishlist"
@@ -237,12 +220,8 @@ if (updateError) {
         statLabel="ACTIVE TOTAL"
       />
 
-      {/* FORM */}
       <div className="bg-white rounded-3xl p-4 shadow-sm flex flex-col gap-4">
-
-        <h2 className="text-xl font-semibold">
-          🛒 Add Wishlist Item
-        </h2>
+        <h2 className="text-xl font-semibold">🛒 Add Wishlist Item</h2>
 
         <select
           value={itemCategory}
@@ -288,7 +267,6 @@ if (updateError) {
           <div className="text-sm text-gray-500">
             Estimated Total Cost
           </div>
-
           <div className="text-3xl font-bold text-green-700">
             R {totalCost.toFixed(2)}
           </div>
@@ -310,9 +288,7 @@ if (updateError) {
         />
 
         <div className="flex flex-col gap-2">
-          <div className="font-semibold text-sm">
-            📸 Product Images
-          </div>
+          <div className="font-semibold text-sm">📸 Product Images</div>
 
           <input
             type="file"
@@ -320,9 +296,7 @@ if (updateError) {
             multiple
             capture="environment"
             onChange={(e) =>
-              setProductImages(
-                Array.from(e.target.files || [])
-              )
+              setProductImages(Array.from(e.target.files || []))
             }
             className="border rounded-2xl p-3"
           />
@@ -336,51 +310,34 @@ if (updateError) {
 
         <button
           onClick={addWishlistItem}
-          className="
-            bg-green-600
-            text-white
-            rounded-2xl
-            p-4
-            font-semibold
-          "
+          className="bg-green-600 text-white rounded-2xl p-4 font-semibold"
         >
           + Add Wishlist Item
         </button>
       </div>
 
-      {/* WISHLIST ITEMS */}
       <div className="bg-white rounded-3xl p-4 shadow-sm">
-
         <h2 className="text-xl font-semibold mb-4">
           🛒 Active Wishlist Items
         </h2>
 
-        {activeWishlistItems.length === 0 && (
+        {wishlistItems.length === 0 && (
           <div className="text-sm text-gray-400">
             No active wishlist items.
           </div>
         )}
 
         <div className="flex flex-col gap-4">
-          {activeWishlistItems.map((item) => (
+          {wishlistItems.map((item) => (
             <div
               key={item.id}
-              className="
-                border
-                rounded-3xl
-                p-4
-                flex
-                flex-col
-                gap-4
-              "
+              className="border rounded-3xl p-4 flex flex-col gap-4"
             >
               <div className="flex justify-between items-start gap-4">
-
                 <div className="flex-1">
                   <div className="font-bold text-xl">
                     {item.item_name}
                   </div>
-
                   <div className="text-sm text-gray-500">
                     {item.item_category}
                   </div>
@@ -394,22 +351,13 @@ if (updateError) {
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
-
                 <div className="bg-gray-50 rounded-2xl p-3">
-                  <div className="text-gray-500">
-                    Quantity
-                  </div>
-
-                  <div className="font-bold">
-                    {item.qty}
-                  </div>
+                  <div className="text-gray-500">Quantity</div>
+                  <div className="font-bold">{item.qty}</div>
                 </div>
 
                 <div className="bg-gray-50 rounded-2xl p-3">
-                  <div className="text-gray-500">
-                    Unit Price
-                  </div>
-
+                  <div className="text-gray-500">Unit Price</div>
                   <div className="font-bold">
                     R {Number(item.unit_price).toFixed(2)}
                   </div>
@@ -418,9 +366,7 @@ if (updateError) {
 
               {item.item_details && (
                 <div className="bg-gray-50 rounded-2xl p-3 text-sm">
-                  <span className="font-semibold">
-                    Details:
-                  </span>{" "}
+                  <span className="font-semibold">Details:</span>{" "}
                   {item.item_details}
                 </div>
               )}
@@ -441,14 +387,7 @@ if (updateError) {
                             setActiveImageIndex(index);
                             setShowImageViewer(true);
                           }}
-                          className="
-                            w-24
-                            h-24
-                            object-cover
-                            rounded-2xl
-                            border
-                            cursor-pointer
-                          "
+                          className="w-24 h-24 object-cover rounded-2xl border cursor-pointer"
                         />
                       )
                     )}
@@ -460,14 +399,7 @@ if (updateError) {
                   href={item.product_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="
-                    bg-blue-500
-                    text-white
-                    rounded-2xl
-                    p-3
-                    text-center
-                    font-semibold
-                  "
+                  className="bg-blue-500 text-white rounded-2xl p-3 text-center font-semibold"
                 >
                   🔗 Open Product
                 </a>
@@ -475,28 +407,14 @@ if (updateError) {
 
               <button
                 onClick={() => openPurchaseModal(item)}
-                className="
-                  bg-green-600
-                  text-white
-                  rounded-2xl
-                  p-4
-                  font-bold
-                  text-lg
-                  shadow-md
-                "
+                className="bg-green-600 text-white rounded-2xl p-4 font-bold text-lg shadow-md"
               >
                 ✅ Item Purchased
               </button>
 
               <button
                 onClick={() => deleteWishlistItem(item.id)}
-                className="
-                  bg-red-500
-                  text-white
-                  rounded-2xl
-                  p-3
-                  font-semibold
-                "
+                className="bg-red-500 text-white rounded-2xl p-3 font-semibold"
               >
                 🗑 Delete Item
               </button>
@@ -505,12 +423,9 @@ if (updateError) {
         </div>
       </div>
 
-      {/* PURCHASE MODAL */}
       {showPurchaseModal && purchaseItem && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-
           <div className="bg-white rounded-3xl p-6 w-full max-w-md flex flex-col gap-4">
-
             <h2 className="text-xl font-bold">
               ✅ Mark Item as Purchased
             </h2>
@@ -519,7 +434,6 @@ if (updateError) {
               <div className="font-bold">
                 {purchaseItem.item_name}
               </div>
-
               <div className="text-sm text-gray-500">
                 R {Number(purchaseItem.total_cost).toFixed(2)}
               </div>
@@ -527,9 +441,7 @@ if (updateError) {
 
             <select
               value={purchaseCategory}
-              onChange={(e) =>
-                setPurchaseCategory(e.target.value)
-              }
+              onChange={(e) => setPurchaseCategory(e.target.value)}
               className="border rounded-xl p-3"
             >
               <option>Feed</option>
@@ -545,36 +457,20 @@ if (updateError) {
             <input
               type="date"
               value={purchaseDate}
-              onChange={(e) =>
-                setPurchaseDate(e.target.value)
-              }
+              onChange={(e) => setPurchaseDate(e.target.value)}
               className="border rounded-xl p-3"
             />
 
-            <div className="flex flex-col gap-2">
-              <div className="font-semibold text-sm">
-                📸 Purchase Slip / Invoice
-              </div>
-
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                capture="environment"
-                onChange={(e) =>
-                  setPurchaseSlipFiles(
-                    Array.from(e.target.files || [])
-                  )
-                }
-                className="border rounded-xl p-3"
-              />
-
-              {purchaseSlipFiles.length > 0 && (
-                <div className="text-sm text-gray-500">
-                  {purchaseSlipFiles.length} slip(s) selected
-                </div>
-              )}
-            </div>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              capture="environment"
+              onChange={(e) =>
+                setPurchaseSlipFiles(Array.from(e.target.files || []))
+              }
+              className="border rounded-xl p-3"
+            />
 
             <div className="flex gap-2">
               <button
@@ -583,27 +479,14 @@ if (updateError) {
                   setPurchaseItem(null);
                   setPurchaseSlipFiles([]);
                 }}
-                className="
-                  flex-1
-                  bg-gray-200
-                  rounded-xl
-                  p-3
-                  font-semibold
-                "
+                className="flex-1 bg-gray-200 rounded-xl p-3 font-semibold"
               >
                 Cancel
               </button>
 
               <button
                 onClick={completePurchase}
-                className="
-                  flex-1
-                  bg-green-600
-                  text-white
-                  rounded-xl
-                  p-3
-                  font-semibold
-                "
+                className="flex-1 bg-green-600 text-white rounded-xl p-3 font-semibold"
               >
                 Save Purchase
               </button>
@@ -612,67 +495,19 @@ if (updateError) {
         </div>
       )}
 
-      {/* IMAGE VIEWER */}
       {showImageViewer && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
-
           <button
             onClick={() => setShowImageViewer(false)}
-            className="
-              absolute
-              top-5
-              right-5
-              text-white
-              text-4xl
-            "
+            className="absolute top-5 right-5 text-white text-4xl"
           >
             ×
           </button>
 
-          <button
-            onClick={() =>
-              setActiveImageIndex((prev) =>
-                prev === 0
-                  ? selectedProductImages.length - 1
-                  : prev - 1
-              )
-            }
-            className="
-              absolute
-              left-4
-              text-white
-              text-5xl
-            "
-          >
-            ‹
-          </button>
-
           <img
             src={selectedProductImages[activeImageIndex]}
-            className="
-              max-w-[90%]
-              max-h-[85%]
-              rounded-3xl
-            "
+            className="max-w-[90%] max-h-[85%] rounded-3xl"
           />
-
-          <button
-            onClick={() =>
-              setActiveImageIndex((prev) =>
-                prev === selectedProductImages.length - 1
-                  ? 0
-                  : prev + 1
-              )
-            }
-            className="
-              absolute
-              right-4
-              text-white
-              text-5xl
-            "
-          >
-            ›
-          </button>
         </div>
       )}
     </div>

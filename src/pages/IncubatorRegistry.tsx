@@ -1,38 +1,42 @@
-import PageBanner from "../components/PageBanner";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
 export default function IncubatorRegistry() {
   const [batches, setBatches] = useState<any[]>([]);
   const [incubatorFilter, setIncubatorFilter] =
-  useState("active");
+    useState("active");
 
-const [batchName, setBatchName] = useState("");
-const [breed, setBreed] = useState("");
-const [eggCount, setEggCount] = useState("");
-const [startDate, setStartDate] = useState("");
-const [status, setStatus] = useState("Incubating");
-const [notes, setNotes] = useState("");
-const [editingId, setEditingId] = useState<number | null>(null);
+  const [batchName, setBatchName] = useState("");
+  const [breed, setBreed] = useState("");
+  const [eggCount, setEggCount] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [status, setStatus] = useState("Incubating");
+  const [notes, setNotes] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-// CALCULATE HATCH DATE
-const calculateHatchDate = (start: string) => {
-  const date = new Date(start);
+  const activeBatches = batches.filter(
+    (batch: any) =>
+      batch.status === "Incubating" ||
+      batch.status === "Locked Down"
+  );
 
-  date.setDate(date.getDate() + 21);
+  const completedBatches = batches.filter(
+    (batch: any) =>
+      batch.status === "Hatched" ||
+      batch.status === "Failed"
+  );
 
-  return date.toISOString().split("T")[0];
-};
-
-const filteredBatches =
+  const filteredBatches =
   incubatorFilter === "active"
-    ? batches.filter(
-        (batch: any) =>
-          batch.status === "Incubating"
-      )
-    : batches;
+    ? activeBatches
+    : completedBatches;
 
-// LOAD BATCHES
+  const calculateHatchDate = (start: string) => {
+    const date = new Date(start);
+    date.setDate(date.getDate() + 21);
+    return date.toISOString().split("T")[0];
+  };
+
   const fetchBatches = async () => {
     const { data, error } = await supabase
       .from("incubator_batches")
@@ -50,223 +54,275 @@ const filteredBatches =
     fetchBatches();
   }, []);
 
-  // SAVE BATCH
-const saveBatch = async () => {
-  if (!batchName || !eggCount || !startDate) {
-    alert("Please complete all required fields.");
-    return;
-  }
+  const saveBatch = async () => {
+    if (!batchName || !eggCount || !startDate) {
+      alert("Please complete all required fields.");
+      return;
+    }
 
-  let error;
+    let error;
 
-  if (editingId) {
-    // UPDATE
-    const response = await supabase
+    if (editingId) {
+      const response = await supabase
+        .from("incubator_batches")
+        .update({
+          batchname: batchName,
+          breed,
+          eggcount: Number(eggCount),
+          startdate: startDate,
+          hatchdate: calculateHatchDate(startDate),
+          status,
+          notes,
+        })
+        .eq("id", editingId);
+
+      error = response.error;
+    } else {
+      const response = await supabase
+        .from("incubator_batches")
+        .insert({
+          batchname: batchName,
+          breed,
+          eggcount: Number(eggCount),
+          startdate: startDate,
+          hatchdate: calculateHatchDate(startDate),
+          status,
+          notes,
+        });
+
+      error = response.error;
+    }
+
+    if (error) {
+      console.error("Save error:", error);
+      alert("Failed to save batch.");
+    } else {
+      setBatchName("");
+      setBreed("");
+      setEggCount("");
+      setStartDate("");
+      setStatus("Incubating");
+      setNotes("");
+      setEditingId(null);
+      fetchBatches();
+    }
+  };
+
+  const deleteBatch = async (id: number) => {
+    const confirmed = confirm("Delete this incubator batch?");
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from("incubator_batches")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Delete error:", error);
+      alert("Failed to delete batch.");
+    } else {
+      fetchBatches();
+    }
+  };
+
+  const editBatch = (batch: any) => {
+    setBatchName(batch.batchname || "");
+    setBreed(batch.breed || "");
+    setEggCount(batch.eggcount?.toString() || "");
+    setStartDate(batch.startdate || "");
+    setStatus(batch.status || "Incubating");
+    setNotes(batch.notes || "");
+    setEditingId(batch.id);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const completeHatch = async (batch: any) => {
+    const hatched = prompt("How many chicks hatched?");
+    if (hatched === null) return;
+
+    const survived = prompt("How many chicks survived?");
+    if (survived === null) return;
+
+    const { error } = await supabase
       .from("incubator_batches")
       .update({
-        batchname: batchName,
-        breed,
-        eggcount: Number(eggCount),
-        startdate: startDate,
-        hatchdate: calculateHatchDate(startDate),
-        status,
-        notes,
+        status: "Hatched",
+        chicks_hatched: Number(hatched),
+        chicks_survived: Number(survived),
       })
-      .eq("id", editingId);
+      .eq("id", batch.id);
 
-    error = response.error;
-  } else {
-    // INSERT
-    const response = await supabase
-      .from("incubator_batches")
-      .insert({
-        batchname: batchName,
-        breed,
-        eggcount: Number(eggCount),
-        startdate: startDate,
-        hatchdate: calculateHatchDate(startDate),
-        status,
-        notes,
-      });
+    if (error) {
+      console.error("Hatch completion error:", error);
+      alert("Failed to complete hatch.");
+    } else {
+      fetchBatches();
+    }
+  };
 
-    error = response.error;
-  }
+  const getDaysRemaining = (date: string) => {
+    const today = new Date();
+    const hatch = new Date(date);
+    const diff = hatch.getTime() - today.getTime();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  };
 
-  if (error) {
-    console.error("Save error:", error);
-    alert("Failed to save batch.");
-  } else {
-    // RESET FORM
-    setBatchName("");
-    setBreed("");
-    setEggCount("");
-    setStartDate("");
-    setStatus("Incubating");
-    setNotes("");
-    setEditingId(null);
+  const nextHatchBatch =
+    activeBatches
+      .filter((batch: any) => batch.hatchdate)
+      .sort(
+        (a: any, b: any) =>
+          getDaysRemaining(a.hatchdate) -
+          getDaysRemaining(b.hatchdate)
+      )[0] || null;
 
-    fetchBatches();
-  }
-};
+  const nextHatchDays = nextHatchBatch
+    ? getDaysRemaining(nextHatchBatch.hatchdate)
+    : "-";
 
-const deleteBatch = async (id: number) => {
-  const confirmed = confirm("Delete this incubator batch?");
+  const isLockdown = (date: string) => {
+    return getDaysRemaining(date) <= 3;
+  };
 
-  if (!confirmed) return;
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString("en-ZA", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
-  const { error } = await supabase
-    .from("incubator_batches")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    console.error("Delete error:", error);
-    alert("Failed to delete batch.");
-  } else {
-    fetchBatches();
-  }
-};
-
-const editBatch = (batch: any) => {
-  setBatchName(batch.batchname || "");
-  setBreed(batch.breed || "");
-  setEggCount(batch.eggcount?.toString() || "");
-  setStartDate(batch.startdate || "");
-  setStatus(batch.status || "Incubating");
-  setNotes(batch.notes || "");
-
-  setEditingId(batch.id);
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth",
-  });
-};
-const completeHatch = async (batch: any) => {
-  const hatched = prompt("How many chicks hatched?");
-
-  if (hatched === null) return;
-
-  const survived = prompt("How many chicks survived?");
-
-  if (survived === null) return;
-
-  const { error } = await supabase
-    .from("incubator_batches")
-    .update({
-      status: "Hatched",
-      chicks_hatched: Number(hatched),
-      chicks_survived: Number(survived),
-    })
-    .eq("id", batch.id);
-
-  if (error) {
-    console.error("Hatch completion error:", error);
-    alert("Failed to complete hatch.");
-  } else {
-    fetchBatches();
-  }
-};
-  // COUNTDOWN
-const getDaysRemaining = (date: string) => {
-  const today = new Date();
-  const hatch = new Date(date);
-
-  const diff = hatch.getTime() - today.getTime();
-
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
-};
-
-// LOCKDOWN CHECK
-const isLockdown = (date: string) => {
-  return getDaysRemaining(date) <= 3;
-};
-
-// FORMAT DATE
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString("en-ZA", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-};
-
-  // STATUS COLORS
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Incubating":
         return "#2563eb";
-
       case "Locked Down":
         return "#f59e0b";
-
       case "Hatched":
         return "#16a34a";
-
       case "Failed":
         return "#dc2626";
-
       default:
         return "#6b7280";
     }
   };
 
   return (
-  <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-    <PageBanner
-  eyebrow="HATCHERY"
-  title="Incubator Registry"
-  subtitle="Track incubators, hatching cycles and fertility."
-  stat="0"
-  statLabel="ACTIVE"
-/>
-<div className="flex gap-3 mb-4">
+      {/* CUSTOM BANNER */}
+      <div
+        className="
+          bg-gradient-to-r
+          from-green-700
+          to-green-400
+          rounded-3xl
+          p-8
+          text-white
+          shadow-lg
+          flex
+          justify-between
+          items-center
+          gap-6
+        "
+      >
+        <div>
+          <div className="text-xs tracking-[0.3em] font-bold mb-3">
+            HATCHERY
+          </div>
 
-  <button
-    onClick={() => setIncubatorFilter("active")}
-    className={`
-      flex-1
-      p-3
-      rounded-xl
-      font-semibold
-      ${
-        incubatorFilter === "active"
-          ? "bg-green-600 text-white"
-          : "bg-gray-200 text-gray-700"
-      }
-    `}
-  >
-    Active Incubations
-  </button>
+          <h1 className="text-4xl font-bold mb-2">
+            Incubator Registry
+          </h1>
 
-  <button
-    onClick={() => setIncubatorFilter("history")}
-    className={`
-      flex-1
-      p-3
-      rounded-xl
-      font-semibold
-      ${
-        incubatorFilter === "history"
-          ? "bg-blue-600 text-white"
-          : "bg-gray-200 text-gray-700"
-      }
-    `}
-  >
-    Incubation History
-  </button>
+          <div className="text-white/90">
+            Track incubators, hatching cycles and fertility.
+          </div>
+        </div>
 
-</div>
+        <div className="grid grid-cols-3 gap-3">
 
-    {/* FORM */}
-    <div
-      style={{
-        background: "#fff",
-        padding: 20,
-        borderRadius: 16,
-      }}
-    >
+          <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
+            <div className="text-3xl font-bold">
+              {activeBatches.length}
+            </div>
+
+            <div className="text-[10px] tracking-widest">
+              ACTIVE
+            </div>
+          </div>
+
+          <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
+            <div className="text-3xl font-bold">
+              {completedBatches.length}
+            </div>
+
+            <div className="text-[10px] tracking-widest">
+              COMPLETED
+            </div>
+          </div>
+
+          <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
+            <div className="text-3xl font-bold">
+              {nextHatchDays}
+            </div>
+
+            <div className="text-[10px] tracking-widest">
+              DAYS LEFT
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div className="flex gap-3 mb-4">
+        <button
+          onClick={() => setIncubatorFilter("active")}
+          className={`
+            flex-1
+            p-3
+            rounded-xl
+            font-semibold
+            ${
+              incubatorFilter === "active"
+                ? "bg-green-600 text-white"
+                : "bg-gray-200 text-gray-700"
+            }
+          `}
+        >
+          Active Incubations
+        </button>
+
+        <button
+          onClick={() => setIncubatorFilter("history")}
+          className={`
+            flex-1
+            p-3
+            rounded-xl
+            font-semibold
+            ${
+              incubatorFilter === "history"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700"
+            }
+          `}
+        >
+          Completed Incubations
+        </button>
+      </div>
+
+      {/* FORM */}
+      <div
+        style={{
+          background: "#fff",
+          padding: 20,
+          borderRadius: 16,
+        }}
+      >
         <h2 style={{ marginBottom: 20 }}>
           🐣 New Incubator Batch
         </h2>
@@ -307,7 +363,7 @@ const formatDate = (date: string) => {
             style={inputStyle}
           />
 
-                    <select
+          <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             style={inputStyle}
@@ -405,109 +461,104 @@ const formatDate = (date: string) => {
             </div>
 
             <div
-  style={{
-    background: isLockdown(batch.hatchdate)
-      ? "#fff7ed"
-      : "#eff6ff",
+              style={{
+                background: isLockdown(batch.hatchdate)
+                  ? "#fff7ed"
+                  : "#eff6ff",
+                border: isLockdown(batch.hatchdate)
+                  ? "2px solid #f59e0b"
+                  : "none",
+                padding: 12,
+                borderRadius: 12,
+                fontWeight: 700,
+              }}
+            >
+              {isLockdown(batch.hatchdate) ? (
+                <>
+                  ⚠ LOCKDOWN ACTIVE —{" "}
+                  {getDaysRemaining(batch.hatchdate)} Days Remaining
+                </>
+              ) : (
+                <>
+                  ⏳ {getDaysRemaining(batch.hatchdate)} Days Remaining
+                </>
+              )}
+            </div>
 
-    border: isLockdown(batch.hatchdate)
-      ? "2px solid #f59e0b"
-      : "none",
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                marginTop: 10,
+              }}
+            >
+              <button
+                onClick={() => editBatch(batch)}
+                style={{
+                  background: "#f59e0b",
+                  color: "#fff",
+                  border: "none",
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  cursor: "pointer",
+                  fontWeight: 700,
+                }}
+              >
+                ✏ Edit
+              </button>
 
-    padding: 12,
-    borderRadius: 12,
-    fontWeight: 700,
-  }}
->
-  {isLockdown(batch.hatchdate) ? (
-    <>
-      ⚠ LOCKDOWN ACTIVE —{" "}
-      {getDaysRemaining(batch.hatchdate)} Days Remaining
-    </>
-  ) : (
-    <>
-      ⏳ {getDaysRemaining(batch.hatchdate)} Days Remaining
-    </>
-  )}
-</div>
-            
-<div
-  style={{
-    display: "flex",
-    gap: 10,
-    marginTop: 10,
-  }}
->
-  <button
-    onClick={() => editBatch(batch)}
-    style={{
-      background: "#f59e0b",
-      color: "#fff",
-      border: "none",
-      padding: "10px 14px",
-      borderRadius: 10,
-      cursor: "pointer",
-      fontWeight: 700,
-    }}
-  >
-    ✏ Edit
-  </button>
+              <button
+                onClick={() => deleteBatch(batch.id)}
+                style={{
+                  background: "#dc2626",
+                  color: "#fff",
+                  border: "none",
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  cursor: "pointer",
+                  fontWeight: 700,
+                }}
+              >
+                🗑 Delete
+              </button>
+            </div>
 
-  <button
-    onClick={() => deleteBatch(batch.id)}
-    style={{
-      background: "#dc2626",
-      color: "#fff",
-      border: "none",
-      padding: "10px 14px",
-      borderRadius: 10,
-      cursor: "pointer",
-      fontWeight: 700,
-    }}
-  >
-    🗑 Delete
-  </button>
-</div>
+            {batch.status !== "Hatched" && (
+              <button
+                onClick={() => completeHatch(batch)}
+                style={{
+                  background: "#16a34a",
+                  color: "#fff",
+                  border: "none",
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  cursor: "pointer",
+                  fontWeight: 700,
+                  marginTop: 10,
+                  alignSelf: "flex-start",
+                }}
+              >
+                🐣 Complete Hatch
+              </button>
+            )}
 
-{batch.status !== "Hatched" && (
-  <button
-  
-    onClick={() => completeHatch(batch)}
-    style={{
-      background: "#16a34a",
-      color: "#fff",
-      border: "none",
-      padding: "10px 14px",
-      borderRadius: 10,
-      cursor: "pointer",
-      fontWeight: 700,
-      marginTop: 10,
-alignSelf: "flex-start",
-    }}
+            {batch.chicks_hatched && (
+              <div>
+                <strong>Chicks Hatched:</strong> {batch.chicks_hatched}
+              </div>
+            )}
 
-    
-  >
-        🐣 Complete Hatch
-  </button>
-)}
+            {batch.chicks_survived && (
+              <div>
+                <strong>Chicks Survived:</strong> {batch.chicks_survived}
+              </div>
+            )}
 
-{batch.chicks_hatched && (
-  <div>
-    <strong>Chicks Hatched:</strong> {batch.chicks_hatched}
-  </div>
-)}
-
-{batch.chicks_survived && (
-  <div>
-    <strong>Chicks Survived:</strong> {batch.chicks_survived}
-  </div>
-)}
-
-{batch.notes && (
-  <div>
-    <strong>Notes:</strong> {batch.notes}
-  </div>
-)}
+            {batch.notes && (
+              <div>
+                <strong>Notes:</strong> {batch.notes}
+              </div>
+            )}
           </div>
         ))}
       </div>

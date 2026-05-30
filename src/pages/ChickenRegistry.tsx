@@ -1,6 +1,5 @@
 import PageBanner from "../components/PageBanner";
-import { useState, useEffect } from "react";
-import Dashboard from "../components/Dashboard";  // 👈 ADD THIS
+import { useState } from "react";
 import QuickActions from "../components/QuickActions";
 
 export default function ChickenRegistry({
@@ -8,7 +7,7 @@ export default function ChickenRegistry({
   setChickens,
   setSelectedChicken,
   navigate,
-  saveChickenToDB, // 🔥 ADD THIS LINE
+  saveChickenToDB,
 }: any) {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("all");
@@ -23,19 +22,34 @@ export default function ChickenRegistry({
     image: "",
   });
 
-  // ================= IMAGE =================
+  const activeChickens = chickens.filter(
+    (c: any) => !c.archived
+  );
+
+  const activeHens = activeChickens.filter(
+    (c: any) => c.sex === "Hen"
+  ).length;
+
+  const activeRoosters = activeChickens.filter(
+    (c: any) => c.sex === "Rooster"
+  ).length;
+
   const handleImage = (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
+
     reader.onloadend = () => {
-      setForm({ ...form, image: reader.result as string });
+      setForm({
+        ...form,
+        image: reader.result as string,
+      });
     };
+
     reader.readAsDataURL(file);
   };
 
-  // ================= ADD =================
   const addChicken = () => {
     if (!form.name) return alert("Name required");
 
@@ -47,60 +61,86 @@ export default function ChickenRegistry({
       album: [],
     };
 
-    setChickens((prev: any[]) => [...prev, newChicken]);
+    setChickens((prev: any[]) => [
+      ...prev,
+      newChicken,
+    ]);
+
     saveChickenToDB(newChicken);
     setShowForm(false);
   };
 
-  // ================= HEALTH STATUS =================
-const getHealthStatus = (c: any) => {
-  const logs = c.healthLogs || [];
+  const getHealthStatus = (c: any) => {
+    const logs = c.healthLogs || [];
 
-  if (logs.some((l: any) => l.status === "Ongoing"))
-    return { color: "#ef4444", label: "Ongoing" };
+    if (
+      logs.some(
+        (l: any) => l.status === "Ongoing"
+      )
+    ) {
+      return {
+        color: "#ef4444",
+        label: "Ongoing",
+      };
+    }
 
-  if (logs.some((l: any) => l.status === "Monitoring"))
-    return { color: "#eab308", label: "Monitoring" };
+    if (
+      logs.some(
+        (l: any) => l.status === "Monitoring"
+      )
+    ) {
+      return {
+        color: "#eab308",
+        label: "Monitoring",
+      };
+    }
 
-  return { color: "#22c55e", label: "Healthy" };
-};
+    return {
+      color: "#22c55e",
+      label: "Healthy",
+    };
+  };
 
-// ================= ATTENTION COUNT =================
-const getAttentionCount = () => {
-  let count = 0;
+  const getAttentionCount = () => {
+    let count = 0;
 
-  chickens.forEach((chicken: any) => {
-    const logs = chicken.healthLogs || [];
+    activeChickens.forEach((chicken: any) => {
+      const logs = chicken.healthLogs || [];
 
-    const needsAttention = logs.some((log: any) => {
-      if (!log.date) return false;
+      const needsAttention = logs.some(
+        (log: any) => {
+          if (!log.date) return false;
 
-      const daysOld =
-        (new Date().getTime() - new Date(log.date).getTime()) /
-        (1000 * 60 * 60 * 24);
+          const daysOld =
+            (new Date().getTime() -
+              new Date(log.date).getTime()) /
+            (1000 * 60 * 60 * 24);
 
-      return (
-  (log.status === "Ongoing" && daysOld > 2) ||
-  (log.status === "Monitoring" && daysOld > 5)
-);
+          return (
+            (log.status === "Ongoing" &&
+              daysOld > 2) ||
+            (log.status === "Monitoring" &&
+              daysOld > 5)
+          );
+        }
+      );
+
+      if (needsAttention) count++;
     });
 
-    if (needsAttention) count++;
-  });
+    return count;
+  };
 
-  return count;
-};
+  const attentionCount = getAttentionCount();
 
-// 👇 Keep this just before return
-const attentionCount = getAttentionCount();
-const pulseStyle = `
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.85; }
-  100% { transform: scale(1); opacity: 1; }
-}
-`;
-  // ================= STYLES =================
+  const pulseStyle = `
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.85; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  `;
+
   const container = {
     padding: 20,
     maxWidth: 1100,
@@ -113,7 +153,7 @@ const pulseStyle = `
     boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
     display: "flex",
     justifyContent: "flex-start",
-gap: 10,
+    gap: 10,
     alignItems: "center",
     marginBottom: 20,
   };
@@ -130,350 +170,465 @@ gap: 10,
     cursor: "pointer",
   };
 
-  const button = {
-    padding: "10px 16px",
-    borderRadius: 10,
-    border: "none",
-    background: "#22c55e",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-  };
-
   return (
-  <div style={container}>
+    <div style={container}>
 
-    <PageBanner
-      eyebrow="FLOCK"
-      title="Chicken Registry"
-      subtitle="Manage your chickens, breeding stock and profiles."
-      stat={chickens.length}
-      statLabel="ACTIVE"
-    />
+      <div className="
+  bg-gradient-to-r
+  from-green-700
+  to-green-400
+  rounded-3xl
+  p-8
+  mb-6
+  text-white
+  shadow-lg
+  flex
+  justify-between
+  items-center
+  gap-6
+">
 
-{/* ✅ OVERLAY */}
-{showMenu && (
-  <div
-    onClick={() => setShowMenu(false)}
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      background: "rgba(0,0,0,0.4)",
-      zIndex: 999,
-    }}
-  />
-)}
+  <div>
+    <div className="text-xs tracking-[0.3em] font-bold mb-3">
+      FLOCK
+    </div>
 
-{/* ✅ SLIDE MENU */}
-<div
-  style={{
-    position: "fixed",
-    top: 0,
-    left: showMenu ? 0 : "-100%",
-    width: "80%",
-    height: "100%",
-    background: "#fff",
-    boxShadow: "2px 0 12px rgba(0,0,0,0.2)",
-    padding: 20,
-    zIndex: 1000,
-    transition: "left 0.3s ease",
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-  }}
->
-  <button
-  onClick={() => setShowMenu(false)}
-  style={{
-    alignSelf: "flex-end",
-    fontSize: 18,
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-  }}
->
-  ✖
-</button>
+    <h1 className="text-4xl font-bold mb-2">
+      Chicken Registry
+    </h1>
 
-  <button onClick={() => navigate("registry")}>
-    🐔 Registry
-  </button>
+    <div className="text-white/90">
+      Manage your chickens, breeding stock and profiles.
+    </div>
+  </div>
 
-  <button onClick={() => navigate("profile")}>
-    📋 Profile
-  </button>
+  <div className="grid grid-cols-3 gap-3">
+
+    <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
+      <div className="text-3xl font-bold">
+        {activeChickens.length}
+      </div>
+      <div className="text-[10px] tracking-widest">
+        ACTIVE
+      </div>
+    </div>
+
+    <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
+      <div className="text-3xl font-bold">
+        {activeHens}
+      </div>
+      <div className="text-[10px] tracking-widest">
+        HENS
+      </div>
+    </div>
+
+    <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
+      <div className="text-3xl font-bold">
+        {activeRoosters}
+      </div>
+      <div className="text-[10px] tracking-widest">
+        ROOSTERS
+      </div>
+    </div>
+
+  </div>
+
 </div>
 
-    <style>{pulseStyle}</style>
+      {showMenu && (
+        <div
+          onClick={() => setShowMenu(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "rgba(0,0,0,0.4)",
+            zIndex: 999,
+          }}
+        />
+      )}
 
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: showMenu ? 0 : "-100%",
+          width: "80%",
+          height: "100%",
+          background: "#fff",
+          boxShadow: "2px 0 12px rgba(0,0,0,0.2)",
+          padding: 20,
+          zIndex: 1000,
+          transition: "left 0.3s ease",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
+        <button
+          onClick={() => setShowMenu(false)}
+          style={{
+            alignSelf: "flex-end",
+            fontSize: 18,
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          ✖
+        </button>
 
-{attentionCount > 0 && (
-  <div style={{
-    background: "#fee2e2",
-    padding: "10px 14px",
-    borderRadius: 10,
-    marginBottom: 10,
-    fontSize: 13,
-    fontWeight: 600,
-  }}>
-    ⚠️ {attentionCount} chicken(s) need attention
-  </div>
-)}
+        <button onClick={() => navigate("registry")}>
+          🐔 Registry
+        </button>
 
-<QuickActions setShowForm={setShowForm} setFilter={setFilter} />
+        <button onClick={() => navigate("profile")}>
+          📋 Profile
+        </button>
+      </div>
 
-    {/* rest of your UI */}
+      <style>{pulseStyle}</style>
 
-      {/* HEADER */}
-      
-      {/* FORM */}
+      {attentionCount > 0 && (
+        <div
+          style={{
+            background: "#fee2e2",
+            padding: "10px 14px",
+            borderRadius: 10,
+            marginBottom: 10,
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          ⚠️ {attentionCount} chicken(s) need attention
+        </div>
+      )}
+
+      <QuickActions
+        setShowForm={setShowForm}
+        setFilter={setFilter}
+      />
+
       {showForm && (
         <div style={header}>
           <input
             placeholder="ID Tag"
             value={form.idTag}
-            onChange={(e) => setForm({ ...form, idTag: e.target.value })}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                idTag: e.target.value,
+              })
+            }
           />
 
           <input
             placeholder="Name"
             value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                name: e.target.value,
+              })
+            }
           />
 
           <input
             placeholder="Breed"
             value={form.breed}
-            onChange={(e) => setForm({ ...form, breed: e.target.value })}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                breed: e.target.value,
+              })
+            }
           />
 
-          <input type="file" onChange={handleImage} />
+          <input
+            type="file"
+            onChange={handleImage}
+          />
 
-          <button onClick={addChicken}>Save</button>
+          <button onClick={addChicken}>
+            Save
+          </button>
         </div>
       )}
 
-      {/* LIST */}
-      {chickens.length === 0 && <p>No chickens yet</p>}
+      {activeChickens.length === 0 && (
+        <p>No chickens yet</p>
+      )}
 
-      {chickens
-  .filter((c: any) => {
-    if (filter === "all") return true;
+      {activeChickens
+        .filter((c: any) => {
+          if (filter === "all") return true;
 
-    if (filter === "issues") {
-      return (c.healthLogs || []).some(
-        (log: any) =>
-          log.status === "Ongoing" || log.status === "Monitoring"
-      );
-    }
+          if (filter === "issues") {
+            return (c.healthLogs || []).some(
+              (log: any) =>
+                log.status === "Ongoing" ||
+                log.status === "Monitoring"
+            );
+          }
 
-    return true;
-  })
-  .sort((a: any, b: any) => {
-    const getPriority = (c: any) => {
-      const logs = c.healthLogs || [];
+          return true;
+        })
+        .sort((a: any, b: any) => {
+          const getPriority = (c: any) => {
+            const logs = c.healthLogs || [];
 
-      if (logs.some((l: any) => l.status === "Ongoing")) return 1;
-      if (logs.some((l: any) => l.status === "Monitoring")) return 2;
-      return 3;
-    };
+            if (
+              logs.some(
+                (l: any) =>
+                  l.status === "Ongoing"
+              )
+            ) {
+              return 1;
+            }
 
-    return getPriority(a) - getPriority(b);
-  })
-  .map((c: any) => {
-    const logs = c.healthLogs || [];
+            if (
+              logs.some(
+                (l: any) =>
+                  l.status === "Monitoring"
+              )
+            ) {
+              return 2;
+            }
 
-const isCritical = logs.some((log: any) => {
-  if (!log.date) return false;
+            return 3;
+          };
 
-  const daysOld =
-    (new Date().getTime() - new Date(log.date).getTime()) /
-    (1000 * 60 * 60 * 24);
+          return getPriority(a) - getPriority(b);
+        })
+        .map((c: any) => {
+          const logs = c.healthLogs || [];
 
-  return (
-    (log.status === "Ongoing" && daysOld > 2) ||
-    (log.status === "Monitoring" && daysOld > 5)
-  );
-});
-        const status = getHealthStatus(c);
+          const isCritical = logs.some(
+            (log: any) => {
+              if (!log.date) return false;
+
+              const daysOld =
+                (new Date().getTime() -
+                  new Date(log.date).getTime()) /
+                (1000 * 60 * 60 * 24);
+
+              return (
+                (log.status === "Ongoing" &&
+                  daysOld > 2) ||
+                (log.status === "Monitoring" &&
+                  daysOld > 5)
+              );
+            }
+          );
+
+          const status = getHealthStatus(c);
+
           const fixIssues = () => {
-  const prevLogs = c.healthLogs || [];
+            const prevLogs = c.healthLogs || [];
 
-  const updatedLogs = prevLogs.map((log: any) =>
-  log.status === "Ongoing" || log.status === "Monitoring"
-    ? { ...log, status: "Resolved" }
-    : log
-);
+            const updatedLogs = prevLogs.map(
+              (log: any) =>
+                log.status === "Ongoing" ||
+                log.status === "Monitoring"
+                  ? {
+                      ...log,
+                      status: "Resolved",
+                    }
+                  : log
+            );
 
-  const updatedChicken = {
-    ...c,
-    healthLogs: updatedLogs,
-    activity: [
-      ...(c.activity || []),
-      {
-        type: "fix",
-        text: "Issues marked as resolved",
-        time: Date.now(),
-      },
-    ],
-    _lastAction: {
-      type: "fix",
-      previousLogs: prevLogs,
-    },
-  };
+            const updatedChicken = {
+              ...c,
+              healthLogs: updatedLogs,
+              activity: [
+                ...(c.activity || []),
+                {
+                  type: "fix",
+                  text: "Issues marked as resolved",
+                  time: Date.now(),
+                },
+              ],
+              _lastAction: {
+                type: "fix",
+                previousLogs: prevLogs,
+              },
+            };
 
-  setChickens((prev: any[]) =>
-    prev.map((ch) => (ch.id === c.id ? updatedChicken : ch))
-  );
-};
+            setChickens((prev: any[]) =>
+              prev.map((ch) =>
+                ch.id === c.id
+                  ? updatedChicken
+                  : ch
+              )
+            );
+          };
 
-  // 👇 ADD THIS RIGHT HERE
-  const undoFix = () => {
-  if (!c._lastAction) return;
+          const undoFix = () => {
+            if (!c._lastAction) return;
 
-  const updatedChicken = {
-    ...c,
-    healthLogs: c._lastAction.previousLogs,
-    activity: [
-      ...(c.activity || []),
-      {
-        type: "undo",
-        text: "Fix was undone",
-        time: Date.now(),
-      },
-    ],
-    _lastAction: null,
-  };
+            const updatedChicken = {
+              ...c,
+              healthLogs:
+                c._lastAction.previousLogs,
+              activity: [
+                ...(c.activity || []),
+                {
+                  type: "undo",
+                  text: "Fix was undone",
+                  time: Date.now(),
+                },
+              ],
+              _lastAction: null,
+            };
 
-  setChickens((prev: any[]) =>
-    prev.map((ch) => (ch.id === c.id ? updatedChicken : ch))
-  );
-};
+            setChickens((prev: any[]) =>
+              prev.map((ch) =>
+                ch.id === c.id
+                  ? updatedChicken
+                  : ch
+              )
+            );
+          };
 
-  return (
-          <div
-            key={c.id}
-            style={{
-  ...card,
-  border: isCritical ? "2px solid #ef4444" : "2px solid transparent",
-  background: isCritical ? "#fef2f2" : "#fff",
-}}
-            onClick={() => {
-  setSelectedChicken({ ...c, goTo: "health" });
-  navigate("profile");
-}}
-          >
-            {/* IMAGE */}
-            <img
-              src={c.image || "https://via.placeholder.com/80"}
+          return (
+            <div
+              key={c.id}
               style={{
-                width: 80,
-                height: 80,
-                borderRadius: 10,
-                objectFit: "cover",
-                background: "#eee",
+                ...card,
+                border: isCritical
+                  ? "2px solid #ef4444"
+                  : "2px solid transparent",
+                background: isCritical
+                  ? "#fef2f2"
+                  : "#fff",
               }}
-            />
+              onClick={() => {
+                setSelectedChicken({
+                  ...c,
+                  goTo: "health",
+                });
 
-            {/* INFO */}
-            <div style={{ flex: 1 }}>
+                navigate("profile");
+              }}
+            >
+              <img
+                src={
+                  c.image ||
+                  "https://via.placeholder.com/80"
+                }
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 10,
+                  objectFit: "cover",
+                  background: "#eee",
+                }}
+              />
 
-  {/* NAME + URGENT */}
-  <div>
-    {isCritical && (
-      <div
-        style={{
-          fontSize: 10,
-          fontWeight: "bold",
-          color: "#fff",
-          background: "#ef4444",
-          padding: "2px 6px",
-          borderRadius: 6,
-          display: "inline-block",
-          marginBottom: 4,
-          animation: "pulse 1.5s infinite",
-        }}
-      >
-        URGENT
-      </div>
-    )}
+              <div style={{ flex: 1 }}>
 
-    {/* ✅ MOVE YOUR H3 HERE */}
-    <h3 style={{ margin: 0 }}>{c.name}</h3>
-  </div>
-                            
-  {/* ID */}
-  <div style={{ fontSize: 13, color: "#555" }}>
-    ID Tag: {c.idTag}
-  </div>
+                <div>
+                  {isCritical && (
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: "bold",
+                        color: "#fff",
+                        background: "#ef4444",
+                        padding: "2px 6px",
+                        borderRadius: 6,
+                        display: "inline-block",
+                        marginBottom: 4,
+                        animation:
+                          "pulse 1.5s infinite",
+                      }}
+                    >
+                      URGENT
+                    </div>
+                  )}
 
-  {/* STATUS */}
-<div style={{
-  marginTop: 6,
-  display: "flex",
-  gap: 6,
-  alignItems: "center",
-}}>
-  {isCritical && (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        fixIssues();
-      }}
-      onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}   // 👈 ADD
-      onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}         // 👈 ADD
-      onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}      // 👈 ADD
-      style={{
-        fontSize: 12,
-        padding: "4px 10px",
-        background: "#22c55e",
-        color: "#fff",
-        border: "none",
-        borderRadius: 999,
-        cursor: "pointer",
-        transition: "all 0.15s ease",
-      }}
-    >
-      ✔ Fix
-    </button>
-  )}
+                  <h3 style={{ margin: 0 }}>
+                    {c.name}
+                  </h3>
+                </div>
 
-  {c._lastAction?.type === "fix" && (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        undoFix();
-      }}
-     onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}   // 👈 ADD
-     onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}         // 👈 ADD
-     onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}      // 👈 ADD
-      style={{
-        fontSize: 11,
-        padding: "4px 10px",
-        background: "#6b7280",
-        color: "#fff",
-        border: "none",
-        borderRadius: 999,
-        cursor: "pointer",
-        transition: "all 0.15s ease",
-      }}
-    >
-      ↩ Undo
-    </button>
-  )}
-</div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "#555",
+                  }}
+                >
+                  ID Tag: {c.idTag}
+                </div>
 
-{/* ✅ BUTTON WRAPPER GOES HERE */}
+                <div
+                  style={{
+                    marginTop: 6,
+                    display: "flex",
+                    gap: 6,
+                    alignItems: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      padding: "4px 10px",
+                      background: status.color,
+                      color: "#fff",
+                      borderRadius: 999,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {status.label}
+                  </div>
 
+                  {isCritical && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fixIssues();
+                      }}
+                      style={{
+                        fontSize: 12,
+                        padding: "4px 10px",
+                        background: "#22c55e",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 999,
+                        cursor: "pointer",
+                      }}
+                    >
+                      ✔ Fix
+                    </button>
+                  )}
 
-</div>
+                  {c._lastAction?.type === "fix" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        undoFix();
+                      }}
+                      style={{
+                        fontSize: 11,
+                        padding: "4px 10px",
+                        background: "#6b7280",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 999,
+                        cursor: "pointer",
+                      }}
+                    >
+                      ↩ Undo
+                    </button>
+                  )}
+                </div>
 
-</div>
-        );
-      })}
+              </div>
+            </div>
+          );
+        })}
     </div>
   );
 }
