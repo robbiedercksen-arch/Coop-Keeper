@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
+import CoopPageBanner from "../components/CoopPageBanner";
+
+const cardClass =
+  "rounded-3xl p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)]";
+
+const statClass =
+  "rounded-2xl p-4 text-center bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)]";
 
 export default function DailyChores() {
   const [choreText, setChoreText] = useState("");
@@ -10,12 +17,8 @@ export default function DailyChores() {
   }, []);
 
   const totalTasks = chores.length;
-
-  const completedTasks =
-    chores.filter((chore) => chore.completed).length;
-
-  const pendingTasks =
-    chores.filter((chore) => !chore.completed).length;
+  const completedTasks = chores.filter((chore) => chore.completed).length;
+  const pendingTasks = chores.filter((chore) => !chore.completed).length;
 
   const loadChores = async () => {
     const { data, error } = await supabase
@@ -28,33 +31,26 @@ export default function DailyChores() {
       return;
     }
 
-    const today =
-      new Date()
-        .toISOString()
-        .split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
 
-    const choresToReset =
-      (data || []).filter(
-        (chore) =>
-          chore.completed &&
-          chore.last_completed_date &&
-          chore.last_completed_date !== today
-      );
+    const choresToReset = (data || []).filter(
+      (chore) =>
+        chore.completed &&
+        chore.last_completed_date &&
+        chore.last_completed_date !== today
+    );
 
     for (const chore of choresToReset) {
       await supabase
         .from("daily_chores")
-        .update({
-          completed: false,
-        })
+        .update({ completed: false })
         .eq("id", chore.id);
     }
 
-    const { data: refreshedData } =
-      await supabase
-        .from("daily_chores")
-        .select("*")
-        .order("id", { ascending: false });
+    const { data: refreshedData } = await supabase
+      .from("daily_chores")
+      .select("*")
+      .order("id", { ascending: false });
 
     setChores(refreshedData || []);
   };
@@ -62,15 +58,13 @@ export default function DailyChores() {
   const addChore = async () => {
     if (!choreText.trim()) return;
 
-    const { error } = await supabase
-      .from("daily_chores")
-      .insert([
-        {
-          title: choreText,
-          completed: false,
-          last_completed_date: null,
-        },
-      ]);
+    const { error } = await supabase.from("daily_chores").insert([
+      {
+        title: choreText,
+        completed: false,
+        last_completed_date: null,
+      },
+    ]);
 
     if (error) {
       console.error(error);
@@ -82,19 +76,15 @@ export default function DailyChores() {
   };
 
   const toggleComplete = async (chore: any) => {
-    const newCompletedState =
-      !chore.completed;
+    const newCompletedState = !chore.completed;
 
     const { error } = await supabase
       .from("daily_chores")
       .update({
         completed: newCompletedState,
-        last_completed_date:
-          newCompletedState
-            ? new Date()
-                .toISOString()
-                .split("T")[0]
-            : null,
+        last_completed_date: newCompletedState
+          ? new Date().toISOString().split("T")[0]
+          : null,
       })
       .eq("id", chore.id);
 
@@ -121,229 +111,101 @@ export default function DailyChores() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 20,
-      }}
-    >
+    <div className="max-w-6xl mx-auto space-y-4 px-1">
+      <CoopPageBanner
+        eyebrow="TASK MANAGER"
+        title="Daily Chores"
+        subtitle="Track recurring farm tasks and daily routines."
+        stats={[
+          { label: "Tasks", value: totalTasks },
+          { label: "Done", value: completedTasks },
+          { label: "Pending", value: pendingTasks },
+        ]}
+      />
 
-      {/* CUSTOM BANNER */}
-      <div
-        className="
-          bg-gradient-to-r
-          from-green-700
-          to-green-400
-          rounded-3xl
-          p-8
-          text-white
-          shadow-lg
-          flex
-          justify-between
-          items-center
-          gap-6
-        "
-      >
-
-        <div>
-          <div className="text-xs tracking-[0.3em] font-bold mb-3">
-            TASK MANAGER
-          </div>
-
-          <h1 className="text-4xl font-bold mb-2">
-            Daily Chores
-          </h1>
-
-          <div className="text-white/90">
-            Track recurring farm tasks and daily routines.
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className={statClass}>
+          <div className="text-3xl font-bold">{totalTasks}</div>
+          <div className="text-sm text-[#4b3a1d]">Qty Tasks</div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-
-          <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
-            <div className="text-3xl font-bold">
-              {totalTasks}
-            </div>
-
-            <div className="text-[10px] tracking-widest">
-              TASKS
-            </div>
-          </div>
-
-          <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
-            <div className="text-3xl font-bold">
-              {completedTasks}
-            </div>
-
-            <div className="text-[10px] tracking-widest">
-              DONE
-            </div>
-          </div>
-
-          <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
-            <div className="text-3xl font-bold">
-              {pendingTasks}
-            </div>
-
-            <div className="text-[10px] tracking-widest">
-              PENDING
-            </div>
-          </div>
-
+        <div className={statClass}>
+          <div className="text-3xl font-bold">{completedTasks}</div>
+          <div className="text-sm text-[#4b3a1d]">Qty Done</div>
         </div>
 
+        <div className={statClass}>
+          <div className="text-3xl font-bold">{pendingTasks}</div>
+          <div className="text-sm text-[#4b3a1d]">Qty Pending</div>
+        </div>
       </div>
 
-      {/* ADD CARD */}
-      <div
-        style={{
-          background: "#fff",
-          padding: 20,
-          borderRadius: 18,
-          display: "flex",
-          flexDirection: "column",
-          gap: 14,
-        }}
-      >
-        <h2 style={{ margin: 0 }}>
-          ✅ Daily Chores
+      <div className={cardClass}>
+        <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
+          ✅ Add Daily Chore
         </h2>
 
-        <input
-          placeholder="Enter daily chore..."
-          value={choreText}
-          onChange={(e) =>
-            setChoreText(e.target.value)
-          }
-          style={inputStyle}
-        />
+        <div className="flex flex-col gap-3">
+          <input
+            placeholder="Enter daily chore..."
+            value={choreText}
+            onChange={(e) => setChoreText(e.target.value)}
+            className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+          />
 
-        <button
-          onClick={addChore}
-          style={addBtn}
-        >
-          + Add Daily Chore
-        </button>
+          <button
+            onClick={addChore}
+            className="bg-[#022312] text-[#f7d37b] rounded-2xl p-4 font-bold"
+          >
+            + Add Daily Chore
+          </button>
+        </div>
       </div>
 
-      {/* CHORE LIST */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 14,
-        }}
-      >
+      <div className={cardClass}>
+        <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
+          📋 Chore List
+        </h2>
 
         {chores.length === 0 && (
-          <div
-            style={{
-              textAlign: "center",
-              color: "#6b7280",
-              padding: 20,
-            }}
-          >
-            No daily chores yet.
-          </div>
+          <div className="text-[#6b5a3a] text-sm">No daily chores yet.</div>
         )}
 
-        {chores.map((chore) => (
-          <div
-            key={chore.id}
-            style={{
-              background: "#fff",
-              padding: 18,
-              borderRadius: 18,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-            }}
-          >
-
+        <div className="flex flex-col gap-3">
+          {chores.map((chore) => (
             <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                flex: 1,
-              }}
+              key={chore.id}
+              className="rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)] flex items-center justify-between gap-4"
             >
+              <div className="flex items-center gap-3 flex-1">
+                <input
+                  type="checkbox"
+                  checked={chore.completed}
+                  onChange={() => toggleComplete(chore)}
+                  className="w-6 h-6 cursor-pointer"
+                />
 
-              <input
-                type="checkbox"
-                checked={chore.completed}
-                onChange={() =>
-                  toggleComplete(chore)
-                }
-                style={{
-                  width: 22,
-                  height: 22,
-                  cursor: "pointer",
-                }}
-              />
-
-              <div
-                style={{
-                  fontWeight: 600,
-                  textDecoration: chore.completed
-                    ? "line-through"
-                    : "none",
-                  opacity: chore.completed
-                    ? 0.5
-                    : 1,
-                }}
-              >
-                {chore.title}
+                <div
+                  className={`font-extrabold ${
+                    chore.completed
+                      ? "line-through opacity-50 text-[#6b5a3a]"
+                      : "text-[#3d2a10]"
+                  }`}
+                >
+                  {chore.title}
+                </div>
               </div>
 
+              <button
+                onClick={() => deleteChore(chore.id)}
+                className="bg-red-600 text-white px-4 py-2 rounded-xl font-bold"
+              >
+                🗑
+              </button>
             </div>
-
-            <button
-              onClick={() =>
-                deleteChore(chore.id)
-              }
-              style={deleteBtn}
-            >
-              🗑
-            </button>
-
-          </div>
-        ))}
-
+          ))}
+        </div>
       </div>
-
     </div>
   );
 }
-
-const inputStyle = {
-  padding: 14,
-  borderRadius: 12,
-  border: "1px solid #d1d5db",
-  fontSize: 14,
-  width: "100%",
-  boxSizing: "border-box" as const,
-};
-
-const addBtn = {
-  background: "#16a34a",
-  color: "#fff",
-  border: "none",
-  padding: "14px",
-  borderRadius: 12,
-  fontWeight: 700,
-  cursor: "pointer",
-};
-
-const deleteBtn = {
-  background: "#dc2626",
-  color: "#fff",
-  border: "none",
-  padding: "8px 12px",
-  borderRadius: 10,
-  cursor: "pointer",
-  fontWeight: 700,
-};

@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
+import CoopPageBanner from "../components/CoopPageBanner";
+
+const cardClass =
+  "rounded-3xl p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)]";
+
+const statClass =
+  "rounded-2xl p-4 text-center bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)]";
 
 export default function IncubatorRegistry() {
   const [batches, setBatches] = useState<any[]>([]);
-  const [incubatorFilter, setIncubatorFilter] =
-    useState("active");
+  const [incubatorFilter, setIncubatorFilter] = useState("active");
+  const [showForm, setShowForm] = useState(false);
 
   const [batchName, setBatchName] = useState("");
   const [breed, setBreed] = useState("");
@@ -16,20 +23,15 @@ export default function IncubatorRegistry() {
 
   const activeBatches = batches.filter(
     (batch: any) =>
-      batch.status === "Incubating" ||
-      batch.status === "Locked Down"
+      batch.status === "Incubating" || batch.status === "Locked Down"
   );
 
   const completedBatches = batches.filter(
-    (batch: any) =>
-      batch.status === "Hatched" ||
-      batch.status === "Failed"
+    (batch: any) => batch.status === "Hatched" || batch.status === "Failed"
   );
 
   const filteredBatches =
-  incubatorFilter === "active"
-    ? activeBatches
-    : completedBatches;
+    incubatorFilter === "active" ? activeBatches : completedBatches;
 
   const calculateHatchDate = (start: string) => {
     const date = new Date(start);
@@ -54,6 +56,17 @@ export default function IncubatorRegistry() {
     fetchBatches();
   }, []);
 
+  const resetForm = () => {
+    setBatchName("");
+    setBreed("");
+    setEggCount("");
+    setStartDate("");
+    setStatus("Incubating");
+    setNotes("");
+    setEditingId(null);
+    setShowForm(false);
+  };
+
   const saveBatch = async () => {
     if (!batchName || !eggCount || !startDate) {
       alert("Please complete all required fields.");
@@ -62,34 +75,25 @@ export default function IncubatorRegistry() {
 
     let error;
 
+    const payload = {
+      batchname: batchName,
+      breed,
+      eggcount: Number(eggCount),
+      startdate: startDate,
+      hatchdate: calculateHatchDate(startDate),
+      status,
+      notes,
+    };
+
     if (editingId) {
       const response = await supabase
         .from("incubator_batches")
-        .update({
-          batchname: batchName,
-          breed,
-          eggcount: Number(eggCount),
-          startdate: startDate,
-          hatchdate: calculateHatchDate(startDate),
-          status,
-          notes,
-        })
+        .update(payload)
         .eq("id", editingId);
 
       error = response.error;
     } else {
-      const response = await supabase
-        .from("incubator_batches")
-        .insert({
-          batchname: batchName,
-          breed,
-          eggcount: Number(eggCount),
-          startdate: startDate,
-          hatchdate: calculateHatchDate(startDate),
-          status,
-          notes,
-        });
-
+      const response = await supabase.from("incubator_batches").insert(payload);
       error = response.error;
     }
 
@@ -97,13 +101,7 @@ export default function IncubatorRegistry() {
       console.error("Save error:", error);
       alert("Failed to save batch.");
     } else {
-      setBatchName("");
-      setBreed("");
-      setEggCount("");
-      setStartDate("");
-      setStatus("Incubating");
-      setNotes("");
-      setEditingId(null);
+      resetForm();
       fetchBatches();
     }
   };
@@ -133,11 +131,8 @@ export default function IncubatorRegistry() {
     setStatus(batch.status || "Incubating");
     setNotes(batch.notes || "");
     setEditingId(batch.id);
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const completeHatch = async (batch: any) => {
@@ -176,19 +171,18 @@ export default function IncubatorRegistry() {
       .filter((batch: any) => batch.hatchdate)
       .sort(
         (a: any, b: any) =>
-          getDaysRemaining(a.hatchdate) -
-          getDaysRemaining(b.hatchdate)
+          getDaysRemaining(a.hatchdate) - getDaysRemaining(b.hatchdate)
       )[0] || null;
 
   const nextHatchDays = nextHatchBatch
-    ? getDaysRemaining(nextHatchBatch.hatchdate)
+    ? Math.max(getDaysRemaining(nextHatchBatch.hatchdate), 0)
     : "-";
 
-  const isLockdown = (date: string) => {
-    return getDaysRemaining(date) <= 3;
-  };
+  const isLockdown = (date: string) => getDaysRemaining(date) <= 3;
 
   const formatDate = (date: string) => {
+    if (!date) return "-";
+
     return new Date(date).toLocaleDateString("en-ZA", {
       day: "numeric",
       month: "short",
@@ -212,365 +206,243 @@ export default function IncubatorRegistry() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="max-w-6xl mx-auto space-y-4 px-1">
+      <CoopPageBanner
+        eyebrow="HATCHERY"
+        title="Incubator Registry"
+        subtitle="Track incubators, hatching cycles and fertility."
+        stats={[
+          { label: "Active", value: activeBatches.length },
+          { label: "Completed", value: completedBatches.length },
+          { label: "Days Left", value: nextHatchDays },
+        ]}
+      />
 
-      {/* CUSTOM BANNER */}
-      <div
-        className="
-          bg-gradient-to-r
-          from-green-700
-          to-green-400
-          rounded-3xl
-          p-8
-          text-white
-          shadow-lg
-          flex
-          justify-between
-          items-center
-          gap-6
-        "
-      >
-        <div>
-          <div className="text-xs tracking-[0.3em] font-bold mb-3">
-            HATCHERY
-          </div>
-
-          <h1 className="text-4xl font-bold mb-2">
-            Incubator Registry
-          </h1>
-
-          <div className="text-white/90">
-            Track incubators, hatching cycles and fertility.
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-
-          <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
-            <div className="text-3xl font-bold">
-              {activeBatches.length}
-            </div>
-
-            <div className="text-[10px] tracking-widest">
-              ACTIVE
-            </div>
-          </div>
-
-          <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
-            <div className="text-3xl font-bold">
-              {completedBatches.length}
-            </div>
-
-            <div className="text-[10px] tracking-widest">
-              COMPLETED
-            </div>
-          </div>
-
-          <div className="bg-white/20 rounded-2xl p-4 text-center min-w-[110px]">
-            <div className="text-3xl font-bold">
-              {nextHatchDays}
-            </div>
-
-            <div className="text-[10px] tracking-widest">
-              DAYS LEFT
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <div className="flex gap-3 mb-4">
+      <div className={cardClass}>
         <button
-          onClick={() => setIncubatorFilter("active")}
-          className={`
-            flex-1
-            p-3
-            rounded-xl
-            font-semibold
-            ${
-              incubatorFilter === "active"
-                ? "bg-green-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }
-          `}
-        >
-          Active Incubations
-        </button>
-
-        <button
-          onClick={() => setIncubatorFilter("history")}
-          className={`
-            flex-1
-            p-3
-            rounded-xl
-            font-semibold
-            ${
-              incubatorFilter === "history"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }
-          `}
-        >
-          Completed Incubations
-        </button>
-      </div>
-
-      {/* FORM */}
-      <div
-        style={{
-          background: "#fff",
-          padding: 20,
-          borderRadius: 16,
-        }}
-      >
-        <h2 style={{ marginBottom: 20 }}>
-          🐣 New Incubator Batch
-        </h2>
-
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
+          onClick={() => {
+            setEditingId(null);
+            setShowForm(true);
           }}
+          className="w-full bg-[#022312] text-[#f7d37b] rounded-2xl px-5 py-4 font-extrabold shadow-md"
         >
-          <input
-            placeholder="Batch Name"
-            value={batchName}
-            onChange={(e) => setBatchName(e.target.value)}
-            style={inputStyle}
-          />
+          ➕ Add Incubation Batch
+        </button>
+      </div>
 
-          <input
-            placeholder="Breed"
-            value={breed}
-            onChange={(e) => setBreed(e.target.value)}
-            style={inputStyle}
-          />
-
-          <input
-            type="number"
-            placeholder="Egg Count"
-            value={eggCount}
-            onChange={(e) => setEggCount(e.target.value)}
-            style={inputStyle}
-          />
-
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            style={inputStyle}
-          />
-
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            style={inputStyle}
+      <div className={cardClass}>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setIncubatorFilter("active")}
+            className={`px-4 py-2 rounded-full text-sm font-bold border transition ${
+              incubatorFilter === "active"
+                ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md"
+                : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"
+            }`}
           >
-            <option>Incubating</option>
-            <option>Locked Down</option>
-            <option>Hatched</option>
-            <option>Failed</option>
-          </select>
-
-          <textarea
-            placeholder="Notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={4}
-            style={inputStyle}
-          />
+            Active Incubations
+          </button>
 
           <button
-            onClick={saveBatch}
-            style={{
-              background: "#2563eb",
-              color: "#fff",
-              border: "none",
-              padding: "14px",
-              borderRadius: 12,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
+            onClick={() => setIncubatorFilter("history")}
+            className={`px-4 py-2 rounded-full text-sm font-bold border transition ${
+              incubatorFilter === "history"
+                ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md"
+                : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"
+            }`}
           >
-            {editingId ? "Update Batch" : "Save Batch"}
+            Completed Incubations
           </button>
         </div>
       </div>
 
-      {/* BATCHES */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-        }}
-      >
-        {filteredBatches.map((batch) => (
-          <div
-            key={batch.id}
-            style={{
-              background: "#fff",
-              padding: 18,
-              borderRadius: 16,
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
+      {showForm && (
+        <div className={cardClass}>
+          <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
+            🐣 {editingId ? "Edit Incubator Batch" : "New Incubator Batch"}
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              placeholder="Batch Name"
+              value={batchName}
+              onChange={(e) => setBatchName(e.target.value)}
+              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+            />
+
+            <input
+              placeholder="Breed"
+              value={breed}
+              onChange={(e) => setBreed(e.target.value)}
+              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+            />
+
+            <input
+              type="number"
+              placeholder="Egg Count"
+              value={eggCount}
+              onChange={(e) => setEggCount(e.target.value)}
+              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+            />
+
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+            />
+
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
             >
-              <h3 style={{ margin: 0 }}>
-                🐣 {batch.batchname}
-              </h3>
+              <option>Incubating</option>
+              <option>Locked Down</option>
+              <option>Hatched</option>
+              <option>Failed</option>
+            </select>
+
+            <textarea
+              placeholder="Notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
+              className="md:col-span-2 border border-[#d9a441] rounded-2xl p-3 bg-white"
+            />
+          </div>
+
+          <div className="flex gap-3 mt-5">
+            <button
+              onClick={saveBatch}
+              className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold"
+            >
+              {editingId ? "Update Batch" : "Save Batch"}
+            </button>
+
+            <button
+              onClick={resetForm}
+              className="bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {filteredBatches.length === 0 && (
+        <div className={cardClass}>
+          <p className="text-[#6b5a3a] font-semibold">
+            No incubator batches found.
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-4">
+        {filteredBatches.map((batch) => (
+          <div key={batch.id} className={cardClass}>
+            <div className="flex justify-between items-start gap-4 mb-4">
+              <div>
+                <h3 className="text-xl font-extrabold text-[#3d2a10]">
+                  🐣 {batch.batchname}
+                </h3>
+                <div className="text-sm text-[#6b5a3a]">
+                  {batch.breed || "No breed added"}
+                </div>
+              </div>
 
               <div
-                style={{
-                  background: getStatusColor(batch.status),
-                  color: "#fff",
-                  padding: "6px 10px",
-                  borderRadius: 999,
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
+                style={{ background: getStatusColor(batch.status) }}
+                className="text-white px-3 py-1 rounded-full text-xs font-bold"
               >
                 {batch.status}
               </div>
             </div>
 
-            <div>
-              <strong>Breed:</strong> {batch.breed || "-"}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+              <div className={statClass}>
+                <div className="text-2xl font-bold">{batch.eggcount}</div>
+                <div className="text-sm text-[#4b3a1d]">Egg Count</div>
+              </div>
+
+              <div className={statClass}>
+                <div className="text-lg font-bold">{formatDate(batch.startdate)}</div>
+                <div className="text-sm text-[#4b3a1d]">Started</div>
+              </div>
+
+              <div className={statClass}>
+                <div className="text-lg font-bold">{formatDate(batch.hatchdate)}</div>
+                <div className="text-sm text-[#4b3a1d]">Hatch Date</div>
+              </div>
+
+              <div className={statClass}>
+                <div className="text-2xl font-bold">
+                  {batch.hatchdate ? Math.max(getDaysRemaining(batch.hatchdate), 0) : "-"}
+                </div>
+                <div className="text-sm text-[#4b3a1d]">Days Left</div>
+              </div>
             </div>
 
-            <div>
-              <strong>Egg Count:</strong> {batch.eggcount}
-            </div>
+            {batch.hatchdate && (
+              <div
+                className={`rounded-2xl p-4 mb-4 font-bold border ${
+                  isLockdown(batch.hatchdate)
+                    ? "bg-orange-50 border-orange-400 text-orange-800"
+                    : "bg-blue-50 border-blue-200 text-blue-800"
+                }`}
+              >
+                {isLockdown(batch.hatchdate)
+                  ? `⚠ LOCKDOWN ACTIVE — ${Math.max(
+                      getDaysRemaining(batch.hatchdate),
+                      0
+                    )} Days Remaining`
+                  : `⏳ ${Math.max(
+                      getDaysRemaining(batch.hatchdate),
+                      0
+                    )} Days Remaining`}
+              </div>
+            )}
 
-            <div>
-              <strong>Started:</strong> {formatDate(batch.startdate)}
-            </div>
+            {batch.notes && (
+              <div className="text-[#4b3a1d] mb-4">
+                <strong>Notes:</strong> {batch.notes}
+              </div>
+            )}
 
-            <div>
-              <strong>Hatch Date:</strong> {formatDate(batch.hatchdate)}
-            </div>
+            {(batch.chicks_hatched || batch.chicks_survived) && (
+              <div className="text-[#4b3a1d] mb-4">
+                <strong>Chicks Hatched:</strong> {batch.chicks_hatched || 0} |{" "}
+                <strong>Survived:</strong> {batch.chicks_survived || 0}
+              </div>
+            )}
 
-            <div
-              style={{
-                background: isLockdown(batch.hatchdate)
-                  ? "#fff7ed"
-                  : "#eff6ff",
-                border: isLockdown(batch.hatchdate)
-                  ? "2px solid #f59e0b"
-                  : "none",
-                padding: 12,
-                borderRadius: 12,
-                fontWeight: 700,
-              }}
-            >
-              {isLockdown(batch.hatchdate) ? (
-                <>
-                  ⚠ LOCKDOWN ACTIVE —{" "}
-                  {getDaysRemaining(batch.hatchdate)} Days Remaining
-                </>
-              ) : (
-                <>
-                  ⏳ {getDaysRemaining(batch.hatchdate)} Days Remaining
-                </>
-              )}
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: 10,
-                marginTop: 10,
-              }}
-            >
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => editBatch(batch)}
-                style={{
-                  background: "#f59e0b",
-                  color: "#fff",
-                  border: "none",
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  cursor: "pointer",
-                  fontWeight: 700,
-                }}
+                className="bg-orange-500 text-white px-4 py-2 rounded-xl font-bold"
               >
                 ✏ Edit
               </button>
 
               <button
                 onClick={() => deleteBatch(batch.id)}
-                style={{
-                  background: "#dc2626",
-                  color: "#fff",
-                  border: "none",
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  cursor: "pointer",
-                  fontWeight: 700,
-                }}
+                className="bg-red-600 text-white px-4 py-2 rounded-xl font-bold"
               >
                 🗑 Delete
               </button>
+
+              {batch.status !== "Hatched" && (
+                <button
+                  onClick={() => completeHatch(batch)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-xl font-bold"
+                >
+                  🐣 Complete Hatch
+                </button>
+              )}
             </div>
-
-            {batch.status !== "Hatched" && (
-              <button
-                onClick={() => completeHatch(batch)}
-                style={{
-                  background: "#16a34a",
-                  color: "#fff",
-                  border: "none",
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  cursor: "pointer",
-                  fontWeight: 700,
-                  marginTop: 10,
-                  alignSelf: "flex-start",
-                }}
-              >
-                🐣 Complete Hatch
-              </button>
-            )}
-
-            {batch.chicks_hatched && (
-              <div>
-                <strong>Chicks Hatched:</strong> {batch.chicks_hatched}
-              </div>
-            )}
-
-            {batch.chicks_survived && (
-              <div>
-                <strong>Chicks Survived:</strong> {batch.chicks_survived}
-              </div>
-            )}
-
-            {batch.notes && (
-              <div>
-                <strong>Notes:</strong> {batch.notes}
-              </div>
-            )}
           </div>
         ))}
       </div>
     </div>
   );
 }
-
-const inputStyle = {
-  padding: 14,
-  borderRadius: 12,
-  border: "1px solid #d1d5db",
-  fontSize: 14,
-  width: "100%",
-  boxSizing: "border-box" as const,
-};
