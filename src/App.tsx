@@ -399,7 +399,7 @@ export default function App() {
           {page === "eggs" && <EggRegistry chickens={chickens} />}
           {page === "incubator" && <IncubatorRegistry />}
           {page === "planner" && <DailyChores />}
-          {page === "chicken-feed" && <ChickenFeed />}
+          {page === "chicken-feed" && <ChickenFeed chickens={chickens} />}
           {page === "planning" && <FarmPlanning />}
           {page === "expenses" && <Expenses />}
           {page === "wishlist" && <Wishlist />}

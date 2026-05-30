@@ -1,193 +1,159 @@
-type Chicken = {
-  id?: string | number;
-  name?: string;
-  breed?: string;
-  sex?: string;
-  ageGroup?: string;
-};
+const cardClass =
+  "rounded-3xl p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)]";
 
-type FeedGroup = {
-  label: string;
-  birds: Chicken[];
-  gramsPerDay: number;
-  feedType: string;
-  note: string;
-};
+const statClass =
+  "rounded-2xl p-4 text-center bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)]";
 
-export default function FlockFeedPlan({ chickens }: { chickens: Chicken[] }) {
-  const activeChickens = chickens || [];
-
-  const isHen = (sex?: string) =>
-    ["hen", "female"].includes((sex || "").toLowerCase());
-
-  const isRooster = (sex?: string) =>
-    ["rooster", "male", "cock"].includes((sex || "").toLowerCase());
-
-  const age = (c: Chicken) => (c.ageGroup || "").toLowerCase();
-  const breed = (c: Chicken) => (c.breed || "").toLowerCase();
-
-  const isLargeBreed = (c: Chicken) =>
-    breed(c).includes("orpington") ||
-    breed(c).includes("brahma") ||
-    breed(c).includes("wyandotte");
-
-  const chicks = activeChickens.filter((c) =>
-    ["chick", "chicks", "baby"].some((x) => age(c).includes(x))
+export default function FlockFeedPlan({ chickens = [] }: any) {
+  const activeChickens = chickens.filter(
+    (c: any) =>
+      !c.archived &&
+      c.status !== "Inactive Chicken" &&
+      c.status !== "Sold"
   );
 
-  const growers = activeChickens.filter((c) =>
-    ["grower", "juvenile", "teen"].some((x) => age(c).includes(x))
+  const isHen = (c: any) =>
+    ["hen", "female"].includes((c.sex || "").toLowerCase());
+
+  const isRooster = (c: any) =>
+    ["rooster", "male", "cock"].includes((c.sex || "").toLowerCase());
+
+  const isChick = (c: any) =>
+    (c.ageGroup || "").toLowerCase().includes("chick");
+
+  const isGrower = (c: any) =>
+    (c.ageGroup || "").toLowerCase().includes("grower");
+
+  const isAdult = (c: any) =>
+    (c.ageGroup || "").toLowerCase().includes("adult");
+
+  const hens = activeChickens.filter((c: any) => isHen(c) && isAdult(c));
+  const roosters = activeChickens.filter((c: any) => isRooster(c) && isAdult(c));
+  const chicks = activeChickens.filter(isChick);
+  const growers = activeChickens.filter(isGrower);
+
+  const unsureAdults = activeChickens.filter(
+    (c: any) =>
+      !isHen(c) &&
+      !isRooster(c) &&
+      !isChick(c) &&
+      !isGrower(c)
   );
 
-  const adultHens = activeChickens.filter(
-    (c) => isHen(c.sex) && ["adult", "laying"].some((x) => age(c).includes(x))
-  );
-
-  const adultRoosters = activeChickens.filter(
-    (c) => isRooster(c.sex) && ["adult", "mature"].some((x) => age(c).includes(x))
-  );
-
-  const unknown = activeChickens.filter(
-    (c) =>
-      !chicks.includes(c) &&
-      !growers.includes(c) &&
-      !adultHens.includes(c) &&
-      !adultRoosters.includes(c)
-  );
-
-  const getGrams = (base: number, birds: Chicken[]) => {
-    const hasLargeBreed = birds.some(isLargeBreed);
-    return hasLargeBreed ? base + 15 : base;
-  };
-
-  const groups: FeedGroup[] = [
-    {
-      label: "Chicks",
-      birds: chicks,
-      gramsPerDay: getGrams(45, chicks),
-      feedType: "Chick starter / crumble",
-      note: "Higher protein feed for early growth.",
-    },
-    {
-      label: "Growers",
-      birds: growers,
-      gramsPerDay: getGrams(90, growers),
-      feedType: "Grower pellets",
-      note: "Good for young birds before laying age.",
-    },
+  const groups = [
     {
       label: "Adult Hens",
-      birds: adultHens,
-      gramsPerDay: getGrams(125, adultHens),
-      feedType: "Layer pellets",
-      note: "Best for laying hens because of calcium support.",
+      qty: hens.length,
+      gramsEach: 120,
+      feed: "Layer pellets / breeder feed",
+      note: "Best for laying hens and adult female birds.",
     },
     {
       label: "Adult Roosters",
-      birds: adultRoosters,
-      gramsPerDay: getGrams(135, adultRoosters),
-      feedType: "Maintenance / mixed flock feed",
-      note: "Roosters do not need high calcium layer feed as their main diet.",
+      qty: roosters.length,
+      gramsEach: 130,
+      feed: "Maintenance feed / breeder feed",
+      note: "Roosters need good protein but not high layer calcium.",
     },
     {
-      label: "Unsorted / Unknown",
-      birds: unknown,
-      gramsPerDay: 100,
-      feedType: "General mixed flock feed",
-      note: "Update sex and age group for better recommendations.",
+      label: "Chicks",
+      qty: chicks.length,
+      gramsEach: 35,
+      feed: "Chick starter crumbs",
+      note: "Best for 0–6 week old chicks.",
     },
-  ].filter((g) => g.birds.length > 0);
+    {
+      label: "Growers",
+      qty: growers.length,
+      gramsEach: 85,
+      feed: "Grower pellets / grower mash",
+      note: "Best for 6–20 week birds.",
+    },
+    {
+      label: "Unsure / Other Adults",
+      qty: unsureAdults.length,
+      gramsEach: 120,
+      feed: "General maintenance feed",
+      note: "Use until sex or age group is confirmed.",
+    },
+  ];
 
   const totalGramsPerDay = groups.reduce(
-    (sum, g) => sum + g.birds.length * g.gramsPerDay,
+    (sum, group) => sum + group.qty * group.gramsEach,
     0
   );
 
   const totalKgPerDay = totalGramsPerDay / 1000;
   const totalKgPerMonth = totalKgPerDay * 30;
 
-  const estimated50KgBags = totalKgPerMonth / 50;
-
   return (
-    <div className="bg-white rounded-2xl shadow p-4 mt-4 border">
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">🌾 Flock Feed Plan</h2>
-          <p className="text-sm text-gray-500">
-            Auto-calculated from your current chicken register.
-          </p>
+    <div className={cardClass}>
+      <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
+        🐔 Flock Feed Plan
+      </h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-5">
+        <div className={statClass}>
+          <div className="text-3xl font-bold">{activeChickens.length}</div>
+          <div className="text-sm text-[#4b3a1d]">Active Chickens</div>
+        </div>
+
+        <div className={statClass}>
+          <div className="text-3xl font-bold">{totalKgPerDay.toFixed(2)} kg</div>
+          <div className="text-sm text-[#4b3a1d]">Feed / Day</div>
+        </div>
+
+        <div className={statClass}>
+          <div className="text-3xl font-bold">{totalKgPerMonth.toFixed(1)} kg</div>
+          <div className="text-sm text-[#4b3a1d]">Feed / Month</div>
+        </div>
+
+        <div className={statClass}>
+          <div className="text-3xl font-bold">
+            {Math.ceil(totalKgPerMonth / 40)}
+          </div>
+          <div className="text-sm text-[#4b3a1d]">40kg Bags / Month</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <div className="bg-green-50 rounded-xl p-3 border border-green-100">
-          <p className="text-xs text-gray-500">Total Birds</p>
-          <p className="text-2xl font-bold">{activeChickens.length}</p>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {groups.map((group) => {
+          const groupTotalGrams = group.qty * group.gramsEach;
+          const groupKg = groupTotalGrams / 1000;
 
-        <div className="bg-yellow-50 rounded-xl p-3 border border-yellow-100">
-          <p className="text-xs text-gray-500">Feed / Day</p>
-          <p className="text-2xl font-bold">{totalKgPerDay.toFixed(2)} kg</p>
-        </div>
-
-        <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
-          <p className="text-xs text-gray-500">Feed / Month</p>
-          <p className="text-2xl font-bold">{totalKgPerMonth.toFixed(1)} kg</p>
-        </div>
-
-        <div className="bg-purple-50 rounded-xl p-3 border border-purple-100">
-          <p className="text-xs text-gray-500">50kg Bags / Month</p>
-          <p className="text-2xl font-bold">{estimated50KgBags.toFixed(1)}</p>
-        </div>
-      </div>
-
-      {groups.length === 0 ? (
-        <div className="text-sm text-gray-500 bg-gray-50 rounded-xl p-4">
-          No chickens found yet. Add chickens to automatically build a feed plan.
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {groups.map((group) => {
-            const dailyKg = (group.birds.length * group.gramsPerDay) / 1000;
-            const monthlyKg = dailyKg * 30;
-
-            return (
-              <div
-                key={group.label}
-                className="rounded-xl border bg-gray-50 p-3"
-              >
-                <div className="flex justify-between gap-3">
-                  <div>
-                    <h3 className="font-bold text-gray-800">{group.label}</h3>
-                    <p className="text-sm text-gray-600">
-                      {group.birds.length} birds × {group.gramsPerDay}g/day
-                    </p>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="font-bold">{dailyKg.toFixed(2)} kg/day</p>
-                    <p className="text-xs text-gray-500">
-                      {monthlyKg.toFixed(1)} kg/month
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-3 bg-white rounded-lg p-3 border">
-                  <p className="text-sm">
-                    <span className="font-semibold">Recommended feed:</span>{" "}
-                    {group.feedType}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">{group.note}</p>
-                </div>
+          return (
+            <div key={group.label} className={statClass}>
+              <div className="text-xl font-extrabold text-[#3d2a10]">
+                {group.label}
               </div>
-            );
-          })}
-        </div>
-      )}
 
-      <div className="mt-4 text-xs text-gray-500 bg-orange-50 border border-orange-100 rounded-xl p-3">
-        ⚠️ Feed amounts are rough planning estimates. Actual intake can change
-        with breed size, weather, free-ranging, laying condition, and feed waste.
+              <div className="mt-2 text-sm text-[#4b3a1d]">
+                Qty: <b>{group.qty}</b>
+              </div>
+
+              <div className="text-sm text-[#4b3a1d]">
+                Feed Each: <b>{group.gramsEach}g/day</b>
+              </div>
+
+              <div className="text-sm text-[#4b3a1d]">
+                Group Total: <b>{groupKg.toFixed(2)}kg/day</b>
+              </div>
+
+              <div className="mt-3 text-[#022312] font-extrabold">
+                Best Feed: {group.feed}
+              </div>
+
+              <div className="text-xs text-[#6b5a3a] mt-1">
+                {group.note}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 rounded-2xl p-4 border border-[#d9a441] bg-[#fff8e8] text-[#4b3a1d] font-semibold">
+        This is an estimated feeding plan. Adjust slightly for breed size,
+        weather, free-ranging, laying condition and wastage.
       </div>
     </div>
   );
