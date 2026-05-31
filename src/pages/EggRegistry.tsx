@@ -3,10 +3,16 @@ import { useState, useEffect } from "react";
 import { supabase } from "../supabase";
 
 const cardClass =
-  "rounded-3xl p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)]";
+  "rounded-3xl p-4 sm:p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)] overflow-hidden";
 
 const statClass =
   "rounded-2xl p-4 text-center bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)]";
+
+const fieldClass =
+  "border border-[#d9a441] rounded-2xl p-3 bg-white w-full max-w-full min-w-0 box-border text-base leading-normal h-[52px]";
+
+const textAreaClass =
+  "border border-[#d9a441] rounded-2xl p-3 bg-white w-full max-w-full min-w-0 box-border text-base leading-normal";
 
 export default function EggRegistry({ chickens }: any) {
   const [eggLogs, setEggLogs] = useState<any[]>([]);
@@ -70,15 +76,12 @@ export default function EggRegistry({ chickens }: any) {
 
   const daysLogged = new Set(eggLogs.map((log) => log.date)).size;
 
-  const avgPerDay =
-    daysLogged === 0 ? 0 : Math.round(totalEggs / daysLogged);
+  const avgPerDay = daysLogged === 0 ? 0 : Math.round(totalEggs / daysLogged);
 
   const eggMonths = Array.from(
     new Set(
       eggLogs
-        .filter(
-          (log: any) => new Date(log.date).getFullYear() === currentYear
-        )
+        .filter((log: any) => new Date(log.date).getFullYear() === currentYear)
         .map((log: any) => {
           const logDate = new Date(log.date);
 
@@ -94,9 +97,7 @@ export default function EggRegistry({ chickens }: any) {
   const eggYears = Array.from(
     new Set(
       eggLogs
-        .filter(
-          (log: any) => new Date(log.date).getFullYear() < currentYear
-        )
+        .filter((log: any) => new Date(log.date).getFullYear() < currentYear)
         .map((log: any) => new Date(log.date).getFullYear())
     )
   ).sort((a: any, b: any) => b - a);
@@ -211,27 +212,29 @@ export default function EggRegistry({ chickens }: any) {
             🥚 Log Egg Collection
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-full">
+            <div className="w-full min-w-0 max-w-full">
               <label className="block text-[#4b3a1d] font-bold mb-1">
                 Collection Date
               </label>
+
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                className={`${fieldClass} appearance-none`}
               />
             </div>
 
-            <div>
+            <div className="w-full min-w-0 max-w-full">
               <label className="block text-[#4b3a1d] font-bold mb-1">
                 Select Hen Provider
               </label>
+
               <select
                 value={selectedHen}
                 onChange={(e) => setSelectedHen(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                className={fieldClass}
               >
                 <option value="">Unknown Hen</option>
 
@@ -243,27 +246,29 @@ export default function EggRegistry({ chickens }: any) {
               </select>
             </div>
 
-            <div>
+            <div className="w-full min-w-0 max-w-full">
               <label className="block text-[#4b3a1d] font-bold mb-1">
                 Number of Eggs
               </label>
+
               <input
                 type="number"
                 placeholder="Number of Eggs"
                 value={eggCount}
                 onChange={(e) => setEggCount(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                className={fieldClass}
               />
             </div>
 
-            <div>
+            <div className="w-full min-w-0 max-w-full">
               <label className="block text-[#4b3a1d] font-bold mb-1">
                 Select Purpose for Eggs
               </label>
+
               <select
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                className={fieldClass}
               >
                 <option value="">Purpose</option>
                 <option>Personal Use</option>
@@ -274,21 +279,22 @@ export default function EggRegistry({ chickens }: any) {
               </select>
             </div>
 
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 w-full min-w-0 max-w-full">
               <label className="block text-[#4b3a1d] font-bold mb-1">
                 Optional Notes
               </label>
+
               <textarea
                 placeholder="Optional Notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                className={textAreaClass}
                 rows={3}
               />
             </div>
           </div>
 
-          <div className="flex gap-3 mt-5">
+          <div className="flex flex-col sm:flex-row gap-3 mt-5">
             <button
               onClick={handleLogEggs}
               className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold"
@@ -350,9 +356,9 @@ export default function EggRegistry({ chickens }: any) {
             {filteredEggLogs.map((log: any) => (
               <div
                 key={log.id}
-                className="rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)] flex justify-between items-center"
+                className="rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)] flex justify-between items-center gap-3"
               >
-                <div>
+                <div className="min-w-0">
                   <div className="font-extrabold text-[#3d2a10]">
                     {log.henname}
                   </div>
@@ -364,13 +370,13 @@ export default function EggRegistry({ chickens }: any) {
                   </div>
 
                   {log.notes && (
-                    <div className="text-xs text-[#6b5a3a] mt-1">
+                    <div className="text-xs text-[#6b5a3a] mt-1 break-words">
                       {log.notes}
                     </div>
                   )}
                 </div>
 
-                <div className="text-3xl font-extrabold text-[#3d2a10]">
+                <div className="text-3xl font-extrabold text-[#3d2a10] shrink-0">
                   🥚 {log.eggs}
                 </div>
               </div>
