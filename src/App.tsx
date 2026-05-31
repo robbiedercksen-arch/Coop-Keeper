@@ -16,6 +16,26 @@ const logoPath = "/icon-192.png";
 const brandGreen =
   "linear-gradient(180deg, #022312 0%, #04301A 45%, #2d2412 100%)";
 
+function CoopLogo({ size = 48 }: any) {
+  return (
+    <img
+      src={logoPath}
+      alt="Coop Keeper"
+      style={{
+        width: size,
+        height: size,
+        objectFit: "contain",
+        display: "block",
+        borderRadius: 12,
+        filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.45))",
+      }}
+      onError={(e: any) => {
+        e.currentTarget.style.display = "none";
+      }}
+    />
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
@@ -80,6 +100,7 @@ export default function App() {
 
   const navigate = (pageName: string) => {
     setPage(pageName);
+    window.scrollTo({ top: 0, behavior: "auto" });
   };
 
   const menuItems = [
@@ -122,17 +143,7 @@ export default function App() {
               marginBottom: 16,
             }}
           >
-            <img
-              src={logoPath}
-              alt="Coop Keeper"
-              style={{
-                width: collapsed ? 52 : 82,
-                height: collapsed ? 52 : 82,
-                objectFit: "contain",
-                marginBottom: collapsed ? 0 : 12,
-                filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.45))",
-              }}
-            />
+            <CoopLogo size={collapsed ? 52 : 82} />
 
             {!collapsed && (
               <>
@@ -143,6 +154,7 @@ export default function App() {
                     lineHeight: 1.1,
                     color: "#ffffff",
                     letterSpacing: "-0.5px",
+                    marginTop: 12,
                     textShadow:
                       "0 1px 0 rgba(255,255,255,0.08), 0 2px 0 rgba(0,0,0,0.18), 0 3px 8px rgba(0,0,0,0.35)",
                   }}
@@ -162,18 +174,6 @@ export default function App() {
                 >
                   Chicken Farm Manager
                 </div>
-
-                <div
-                  style={{
-                    width: 145,
-                    height: 2,
-                    marginTop: 10,
-                    borderRadius: 999,
-                    background:
-                      "linear-gradient(90deg, #D9A441 0%, #F5D27A 50%, #D9A441 100%)",
-                    boxShadow: "0 0 8px rgba(217,164,65,0.4)",
-                  }}
-                />
               </>
             )}
 
@@ -261,16 +261,8 @@ export default function App() {
                 marginBottom: 14,
               }}
             >
-              <img
-                src={logoPath}
-                alt="Coop Keeper"
-                style={{
-                  width: 60,
-                  height: 60,
-                  objectFit: "contain",
-                  filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.45))",
-                }}
-              />
+              <CoopLogo size={60} />
+
               <div>
                 <div
                   style={{
@@ -285,6 +277,7 @@ export default function App() {
                 >
                   Coop Keeper
                 </div>
+
                 <div
                   style={{
                     fontSize: 12,
@@ -355,16 +348,7 @@ export default function App() {
                 fontWeight: 900,
               }}
             >
-              <img
-                src={logoPath}
-                alt="Coop Keeper"
-                style={{
-                  width: 36,
-                  height: 36,
-                  objectFit: "contain",
-                  filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.35))",
-                }}
-              />
+              <CoopLogo size={36} />
               Coop Keeper
             </div>
           </div>
