@@ -234,50 +234,80 @@ export default function FarmPlanning() {
           </h2>
 
           <div className="grid grid-cols-1 gap-4">
-            <input
-              type="text"
-              placeholder="Plan title..."
-              value={planTitle}
-              onChange={(e) => setPlanTitle(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            />
+            <div>
+              <label className="block text-[#4b3a1d] font-bold mb-1">
+                Plan Title
+              </label>
 
-            <textarea
-              placeholder="Describe the plan..."
-              value={planDescription}
-              onChange={(e) => setPlanDescription(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white min-h-[120px]"
-            />
+              <input
+                type="text"
+                placeholder="Plan title..."
+                value={planTitle}
+                onChange={(e) => setPlanTitle(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+              />
+            </div>
 
-            <select
-              value={planPriority}
-              onChange={(e) => setPlanPriority(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            >
-              <option value="Low">🟢 Low Priority</option>
-              <option value="Medium">🟡 Medium Priority</option>
-              <option value="High">🔴 High Priority</option>
-            </select>
+            <div>
+              <label className="block text-[#4b3a1d] font-bold mb-1">
+                Describe Your Plan
+              </label>
 
-            <select
-              value={planCategory}
-              onChange={(e) => setPlanCategory(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            >
-              <option value="General">📁 General</option>
-              <option value="Coop">🐔 Coop</option>
-              <option value="Breeding">🥚 Breeding</option>
-              <option value="Feed">🌾 Feed</option>
-              <option value="Construction">🔨 Construction</option>
-              <option value="Health">💊 Health</option>
-            </select>
+              <textarea
+                placeholder="Describe the plan..."
+                value={planDescription}
+                onChange={(e) => setPlanDescription(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white min-h-[120px] w-full"
+              />
+            </div>
 
-            <input
-              type="date"
-              value={planDueDate}
-              onChange={(e) => setPlanDueDate(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            />
+            <div>
+              <label className="block text-[#4b3a1d] font-bold mb-1">
+                Select Plan Priority
+              </label>
+
+              <select
+                value={planPriority}
+                onChange={(e) => setPlanPriority(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+              >
+                <option value="Low">🟢 Low Priority</option>
+                <option value="Medium">🟡 Medium Priority</option>
+                <option value="High">🔴 High Priority</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[#4b3a1d] font-bold mb-1">
+                Choose Plan Category
+              </label>
+
+              <select
+                value={planCategory}
+                onChange={(e) => setPlanCategory(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+              >
+                <option value="General">📁 General</option>
+                <option value="Coop">🐔 Coop</option>
+                <option value="Breeding">🥚 Breeding</option>
+                <option value="Feed">🌾 Feed</option>
+                <option value="Construction">🔨 Construction</option>
+                <option value="Health">💊 Health</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[#4b3a1d] font-bold mb-1">
+                Estimated Planning Date
+              </label>
+
+              <input
+                type="date"
+                value={planDueDate}
+                onChange={(e) => setPlanDueDate(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+              />
+            </div>
           </div>
 
           <div className="flex gap-3 mt-5">
@@ -300,7 +330,9 @@ export default function FarmPlanning() {
 
       <div className={cardClass}>
         <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
-          {planFilter === "active" ? "📋 Future Farm Plans" : "✅ Completed Farm Plans"}
+          {planFilter === "active"
+            ? "📋 Future Farm Plans"
+            : "✅ Completed Farm Plans"}
         </h2>
 
         {visiblePlans.length === 0 && (

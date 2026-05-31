@@ -8,6 +8,32 @@ const cardClass =
 const statClass =
   "rounded-2xl p-4 text-center bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)]";
 
+const chickenBreeds = [
+  "Australorp",
+  "Boschveld",
+  "Brahma",
+  "Buff Orpington",
+  "Cochin",
+  "Dorking",
+  "Faverolles",
+  "Frizzle",
+  "Koekoek",
+  "Leghorn",
+  "Light Sussex",
+  "Lohmann Brown",
+  "New Hampshire",
+  "Orpington",
+  "Plymouth Rock",
+  "Potchefstroom Koekoek",
+  "Rhode Island Red",
+  "Silkie",
+  "Sussex",
+  "Venda",
+  "Wyandotte",
+  "Mixed Breed",
+  "Custom Mix Breed",
+];
+
 export default function IncubatorRegistry() {
   const [batches, setBatches] = useState<any[]>([]);
   const [incubatorFilter, setIncubatorFilter] = useState("active");
@@ -15,6 +41,7 @@ export default function IncubatorRegistry() {
 
   const [batchName, setBatchName] = useState("");
   const [breed, setBreed] = useState("");
+  const [customBreed, setCustomBreed] = useState("");
   const [eggCount, setEggCount] = useState("");
   const [startDate, setStartDate] = useState("");
   const [status, setStatus] = useState("Incubating");
@@ -59,6 +86,7 @@ export default function IncubatorRegistry() {
   const resetForm = () => {
     setBatchName("");
     setBreed("");
+    setCustomBreed("");
     setEggCount("");
     setStartDate("");
     setStatus("Incubating");
@@ -73,17 +101,19 @@ export default function IncubatorRegistry() {
       return;
     }
 
-    let error;
+    const finalBreed = breed === "Custom Mix Breed" ? customBreed : breed;
 
     const payload = {
       batchname: batchName,
-      breed,
+      breed: finalBreed,
       eggcount: Number(eggCount),
       startdate: startDate,
       hatchdate: calculateHatchDate(startDate),
       status,
       notes,
     };
+
+    let error;
 
     if (editingId) {
       const response = await supabase
@@ -124,14 +154,19 @@ export default function IncubatorRegistry() {
   };
 
   const editBatch = (batch: any) => {
+    const savedBreed = batch.breed || "";
+    const isKnownBreed = chickenBreeds.includes(savedBreed);
+
     setBatchName(batch.batchname || "");
-    setBreed(batch.breed || "");
+    setBreed(isKnownBreed ? savedBreed : "Custom Mix Breed");
+    setCustomBreed(isKnownBreed ? "" : savedBreed);
     setEggCount(batch.eggcount?.toString() || "");
     setStartDate(batch.startdate || "");
     setStatus(batch.status || "Incubating");
     setNotes(batch.notes || "");
     setEditingId(batch.id);
     setShowForm(true);
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -263,53 +298,102 @@ export default function IncubatorRegistry() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              placeholder="Batch Name"
-              value={batchName}
-              onChange={(e) => setBatchName(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            />
+            <label className="flex flex-col gap-2">
+              <span className="font-extrabold text-[#3d2a10]">Batch Name</span>
+              <input
+                placeholder="Batch Name"
+                value={batchName}
+                onChange={(e) => setBatchName(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+              />
+            </label>
 
-            <input
-              placeholder="Breed"
-              value={breed}
-              onChange={(e) => setBreed(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            />
+            <label className="flex flex-col gap-2">
+              <span className="font-extrabold text-[#3d2a10]">Select Breed</span>
+              <select
+                value={breed}
+                onChange={(e) => {
+                  setBreed(e.target.value);
+                  if (e.target.value !== "Custom Mix Breed") {
+                    setCustomBreed("");
+                  }
+                }}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+              >
+                <option value="">Select Breed</option>
+                {chickenBreeds.map((breedName) => (
+                  <option key={breedName} value={breedName}>
+                    {breedName}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <input
-              type="number"
-              placeholder="Egg Count"
-              value={eggCount}
-              onChange={(e) => setEggCount(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            />
+            {breed === "Custom Mix Breed" && (
+              <label className="flex flex-col gap-2 md:col-span-2">
+                <span className="font-extrabold text-[#3d2a10]">
+                  Custom Mix Breed
+                </span>
+                <input
+                  placeholder="Example: Orpington x Wyandotte"
+                  value={customBreed}
+                  onChange={(e) => setCustomBreed(e.target.value)}
+                  className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                />
+              </label>
+            )}
 
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            />
+            <label className="flex flex-col gap-2">
+              <span className="font-extrabold text-[#3d2a10]">Egg Quantity</span>
+              <input
+                type="number"
+                placeholder="Egg Count"
+                value={eggCount}
+                onChange={(e) => setEggCount(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+              />
+            </label>
 
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            >
-              <option>Incubating</option>
-              <option>Locked Down</option>
-              <option>Hatched</option>
-              <option>Failed</option>
-            </select>
+            <label className="flex flex-col gap-2">
+              <span className="font-extrabold text-[#3d2a10]">
+                Choose Incubation Start Date
+              </span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+              />
+            </label>
 
-            <textarea
-              placeholder="Notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={4}
-              className="md:col-span-2 border border-[#d9a441] rounded-2xl p-3 bg-white"
-            />
+            <label className="flex flex-col gap-2">
+              <span className="font-extrabold text-[#3d2a10]">
+                Incubation Process
+              </span>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+              >
+                <option>Incubating</option>
+                <option>Locked Down</option>
+                <option>Hatched</option>
+                <option>Failed</option>
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-2 md:col-span-2">
+              <span className="font-extrabold text-[#3d2a10]">
+                Additional Notes
+              </span>
+              <textarea
+                placeholder="Notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={4}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+              />
+            </label>
           </div>
 
           <div className="flex gap-3 mt-5">
@@ -366,18 +450,24 @@ export default function IncubatorRegistry() {
               </div>
 
               <div className={statClass}>
-                <div className="text-lg font-bold">{formatDate(batch.startdate)}</div>
+                <div className="text-lg font-bold">
+                  {formatDate(batch.startdate)}
+                </div>
                 <div className="text-sm text-[#4b3a1d]">Started</div>
               </div>
 
               <div className={statClass}>
-                <div className="text-lg font-bold">{formatDate(batch.hatchdate)}</div>
+                <div className="text-lg font-bold">
+                  {formatDate(batch.hatchdate)}
+                </div>
                 <div className="text-sm text-[#4b3a1d]">Hatch Date</div>
               </div>
 
               <div className={statClass}>
                 <div className="text-2xl font-bold">
-                  {batch.hatchdate ? Math.max(getDaysRemaining(batch.hatchdate), 0) : "-"}
+                  {batch.hatchdate
+                    ? Math.max(getDaysRemaining(batch.hatchdate), 0)
+                    : "-"}
                 </div>
                 <div className="text-sm text-[#4b3a1d]">Days Left</div>
               </div>

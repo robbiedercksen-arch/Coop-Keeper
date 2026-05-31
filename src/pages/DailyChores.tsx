@@ -11,6 +11,7 @@ const statClass =
 export default function DailyChores() {
   const [choreText, setChoreText] = useState("");
   const [chores, setChores] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     loadChores();
@@ -72,6 +73,7 @@ export default function DailyChores() {
     }
 
     setChoreText("");
+    setShowForm(false);
     loadChores();
   };
 
@@ -141,25 +143,54 @@ export default function DailyChores() {
       </div>
 
       <div className={cardClass}>
-        <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
-          ✅ Add Daily Chore
-        </h2>
-
-        <div className="flex flex-col gap-3">
-          <input
-            placeholder="Enter daily chore..."
-            value={choreText}
-            onChange={(e) => setChoreText(e.target.value)}
-            className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-          />
-
+        {!showForm ? (
           <button
-            onClick={addChore}
-            className="bg-[#022312] text-[#f7d37b] rounded-2xl p-4 font-bold"
+            onClick={() => setShowForm(true)}
+            className="w-full bg-[#022312] text-[#f7d37b] rounded-2xl p-4 font-bold"
           >
-            + Add Daily Chore
+            + Add Daily Chores
           </button>
-        </div>
+        ) : (
+          <>
+            <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
+              ✅ Add Daily Chore
+            </h2>
+
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="block text-[#4b3a1d] font-bold mb-1">
+                  Enter New Daily Chore (Repeatable Chore)
+                </label>
+
+                <input
+                  placeholder="Enter daily chore..."
+                  value={choreText}
+                  onChange={(e) => setChoreText(e.target.value)}
+                  className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={addChore}
+                  className="bg-[#022312] text-[#f7d37b] rounded-2xl p-4 font-bold"
+                >
+                  + Add Daily Chore
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowForm(false);
+                    setChoreText("");
+                  }}
+                  className="bg-gray-500 text-white rounded-2xl p-4 font-bold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className={cardClass}>

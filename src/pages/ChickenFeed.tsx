@@ -14,6 +14,7 @@ export default function ChickenFeed({ chickens = [] }: any) {
   const [selectedFeed, setSelectedFeed] = useState<any>(null);
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("products");
+  const [showAddFeedForm, setShowAddFeedForm] = useState(false);
 
   const [compareFeedA, setCompareFeedA] = useState("");
   const [compareFeedB, setCompareFeedB] = useState("");
@@ -78,6 +79,7 @@ export default function ChickenFeed({ chickens = [] }: any) {
     setNewFeedBrand("");
     setNewFeedProduct("");
     setNewFeedSupplier("");
+    setShowAddFeedForm(false);
     await loadFeedProducts();
   };
 
@@ -414,19 +416,79 @@ export default function ChickenFeed({ chickens = [] }: any) {
           </div>
 
           <div className={cardClass}>
-            <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
-              + Add Feed Brand
-            </h2>
-
-            <div className="flex flex-col gap-3">
-              <input placeholder="Supplier / Shop" value={newFeedSupplier} onChange={(e) => setNewFeedSupplier(e.target.value)} className="border border-[#d9a441] rounded-2xl p-3 bg-white" />
-              <input placeholder="Feed Brand" value={newFeedBrand} onChange={(e) => setNewFeedBrand(e.target.value)} className="border border-[#d9a441] rounded-2xl p-3 bg-white" />
-              <input placeholder="Product Name" value={newFeedProduct} onChange={(e) => setNewFeedProduct(e.target.value)} className="border border-[#d9a441] rounded-2xl p-3 bg-white" />
-
-              <button onClick={addFeedProduct} className="bg-[#022312] text-[#f7d37b] rounded-2xl p-4 font-bold">
+            {!showAddFeedForm ? (
+              <button
+                onClick={() => setShowAddFeedForm(true)}
+                className="bg-[#022312] text-[#f7d37b] rounded-2xl p-4 font-bold w-full sm:w-auto"
+              >
                 + Add Feed Brand
               </button>
-            </div>
+            ) : (
+              <>
+                <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
+                  + Add Feed Brand
+                </h2>
+
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-[#4b3a1d] font-bold mb-1">
+                      Supplier Name
+                    </label>
+                    <input
+                      placeholder="Supplier / Shop"
+                      value={newFeedSupplier}
+                      onChange={(e) => setNewFeedSupplier(e.target.value)}
+                      className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#4b3a1d] font-bold mb-1">
+                      Feed - Brand Name
+                    </label>
+                    <input
+                      placeholder="Feed Brand"
+                      value={newFeedBrand}
+                      onChange={(e) => setNewFeedBrand(e.target.value)}
+                      className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#4b3a1d] font-bold mb-1">
+                      Feed Type Name
+                    </label>
+                    <input
+                      placeholder="Product Name"
+                      value={newFeedProduct}
+                      onChange={(e) => setNewFeedProduct(e.target.value)}
+                      className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={addFeedProduct}
+                      className="bg-[#022312] text-[#f7d37b] rounded-2xl p-4 font-bold"
+                    >
+                      + Add Feed Brand
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowAddFeedForm(false);
+                        setNewFeedSupplier("");
+                        setNewFeedBrand("");
+                        setNewFeedProduct("");
+                      }}
+                      className="bg-gray-500 text-white rounded-2xl p-4 font-bold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <div className={cardClass}>

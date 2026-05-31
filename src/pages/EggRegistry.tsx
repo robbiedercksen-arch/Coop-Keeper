@@ -212,55 +212,80 @@ export default function EggRegistry({ chickens }: any) {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            />
+            <div>
+              <label className="block text-[#4b3a1d] font-bold mb-1">
+                Collection Date
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+              />
+            </div>
 
-            <select
-              value={selectedHen}
-              onChange={(e) => setSelectedHen(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            >
-              <option value="">Unknown Hen</option>
+            <div>
+              <label className="block text-[#4b3a1d] font-bold mb-1">
+                Select Hen Provider
+              </label>
+              <select
+                value={selectedHen}
+                onChange={(e) => setSelectedHen(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+              >
+                <option value="">Unknown Hen</option>
 
-              {hens.map((hen: any) => (
-                <option key={hen.id} value={hen.id}>
-                  {hen.name}
-                </option>
-              ))}
-            </select>
+                {hens.map((hen: any) => (
+                  <option key={hen.id} value={hen.id}>
+                    {hen.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            <input
-              type="number"
-              placeholder="Number of Eggs"
-              value={eggCount}
-              onChange={(e) => setEggCount(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            />
+            <div>
+              <label className="block text-[#4b3a1d] font-bold mb-1">
+                Number of Eggs
+              </label>
+              <input
+                type="number"
+                placeholder="Number of Eggs"
+                value={eggCount}
+                onChange={(e) => setEggCount(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+              />
+            </div>
 
-            <select
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            >
-              <option value="">Purpose</option>
-              <option>Personal Use</option>
-              <option>Sell (Eating)</option>
-              <option>Sell (Fertilized)</option>
-              <option>Incubator</option>
-              <option>Natural Hatch</option>
-            </select>
+            <div>
+              <label className="block text-[#4b3a1d] font-bold mb-1">
+                Select Purpose for Eggs
+              </label>
+              <select
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+              >
+                <option value="">Purpose</option>
+                <option>Personal Use</option>
+                <option>Sell (Eating)</option>
+                <option>Sell (Fertilized)</option>
+                <option>Incubator</option>
+                <option>Natural Hatch</option>
+              </select>
+            </div>
 
-            <textarea
-              placeholder="Optional Notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="md:col-span-2 border border-[#d9a441] rounded-2xl p-3 bg-white"
-              rows={3}
-            />
+            <div className="md:col-span-2">
+              <label className="block text-[#4b3a1d] font-bold mb-1">
+                Optional Notes
+              </label>
+              <textarea
+                placeholder="Optional Notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                rows={3}
+              />
+            </div>
           </div>
 
           <div className="flex gap-3 mt-5">
