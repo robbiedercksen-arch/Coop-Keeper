@@ -30,10 +30,13 @@ const chickenBreeds = [
 ];
 
 const cardClass =
-  "rounded-3xl p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)]";
+  "rounded-3xl p-4 sm:p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)] overflow-hidden";
 
 const statClass =
   "rounded-2xl p-4 text-center bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)]";
+
+const fieldClass =
+  "rounded-xl border border-[#d9a441] p-3 bg-white w-full max-w-full min-w-0 box-border text-base leading-normal h-[52px]";
 
 export default function ChickenRegistry({
   chickens,
@@ -227,21 +230,21 @@ export default function ChickenRegistry({
       </div>
 
       <div className={cardClass}>
-  <button
-    onClick={() => setShowForm(true)}
-    className="w-full bg-green-500 text-white rounded-xl px-4 py-3 font-bold"
-  >
-    ➕ Add Chicken
-  </button>
-</div>
-      
+        <button
+          onClick={() => setShowForm(true)}
+          className="w-full bg-green-500 text-white rounded-xl px-4 py-3 font-bold"
+        >
+          ➕ Add Chicken
+        </button>
+      </div>
+
       <div className={cardClass}>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full">
           {filterButtons.map((btn) => (
             <button
               key={btn.key}
               onClick={() => setFilter(btn.key)}
-              className={`px-4 py-2 rounded-full text-sm font-bold border transition ${
+              className={`w-full px-4 py-3 rounded-full text-sm font-bold border transition text-center ${
                 filter === btn.key
                   ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md"
                   : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"
@@ -259,43 +262,43 @@ export default function ChickenRegistry({
             Add Chicken
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-full">
+            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] w-full min-w-0">
               ID Tag Color
               <select
                 value={form.idTagColor}
                 onChange={(e) =>
                   setForm({ ...form, idTagColor: e.target.value })
                 }
-                className="rounded-xl border border-[#d9a441] p-3 bg-white"
+                className={fieldClass}
               >
                 <option>Green</option>
                 <option>Red</option>
               </select>
             </label>
 
-            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d]">
+            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] w-full min-w-0">
               ID Tag Number
               <input
                 type="number"
                 placeholder="Example: 001"
                 value={form.idTag}
                 onChange={(e) => setForm({ ...form, idTag: e.target.value })}
-                className="rounded-xl border border-[#d9a441] p-3"
+                className={fieldClass}
               />
             </label>
 
-            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d]">
+            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] w-full min-w-0">
               Chicken Name
               <input
                 placeholder="Chicken name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="rounded-xl border border-[#d9a441] p-3"
+                className={fieldClass}
               />
             </label>
 
-            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d]">
+            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] w-full min-w-0">
               Breed
               <select
                 value={form.breed}
@@ -307,7 +310,7 @@ export default function ChickenRegistry({
                     fatherBreed: "",
                   })
                 }
-                className="rounded-xl border border-[#d9a441] p-3 bg-white"
+                className={fieldClass}
               >
                 {chickenBreeds.map((breed) => (
                   <option key={breed}>{breed}</option>
@@ -317,14 +320,14 @@ export default function ChickenRegistry({
 
             {form.breed === "Mix Breed" && (
               <>
-                <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d]">
+                <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] w-full min-w-0">
                   Mother Breed
                   <select
                     value={form.motherBreed}
                     onChange={(e) =>
                       setForm({ ...form, motherBreed: e.target.value })
                     }
-                    className="rounded-xl border border-[#d9a441] p-3 bg-white"
+                    className={fieldClass}
                   >
                     <option value="">Select mother breed</option>
                     {chickenBreeds
@@ -335,14 +338,14 @@ export default function ChickenRegistry({
                   </select>
                 </label>
 
-                <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d]">
+                <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] w-full min-w-0">
                   Father Breed
                   <select
                     value={form.fatherBreed}
                     onChange={(e) =>
                       setForm({ ...form, fatherBreed: e.target.value })
                     }
-                    className="rounded-xl border border-[#d9a441] p-3 bg-white"
+                    className={fieldClass}
                   >
                     <option value="">Select father breed</option>
                     {chickenBreeds
@@ -355,12 +358,12 @@ export default function ChickenRegistry({
               </>
             )}
 
-            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d]">
+            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] w-full min-w-0">
               Sex
               <select
                 value={form.sex}
                 onChange={(e) => setForm({ ...form, sex: e.target.value })}
-                className="rounded-xl border border-[#d9a441] p-3 bg-white"
+                className={fieldClass}
               >
                 <option>Hen</option>
                 <option>Rooster</option>
@@ -368,14 +371,14 @@ export default function ChickenRegistry({
               </select>
             </label>
 
-            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d]">
+            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] w-full min-w-0">
               Status
               <select
                 value={form.status}
                 onChange={(e) =>
                   setForm({ ...form, status: e.target.value })
                 }
-                className="rounded-xl border border-[#d9a441] p-3 bg-white"
+                className={fieldClass}
               >
                 <option>Active Chicken</option>
                 <option>Inactive Chicken</option>
@@ -383,7 +386,7 @@ export default function ChickenRegistry({
               </select>
             </label>
 
-            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d]">
+            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] w-full min-w-0">
               Hatch Date Optional
               <input
                 type="date"
@@ -391,18 +394,18 @@ export default function ChickenRegistry({
                 onChange={(e) =>
                   setForm({ ...form, hatchDate: e.target.value })
                 }
-                className="rounded-xl border border-[#d9a441] p-3"
+                className={`${fieldClass} appearance-none`}
               />
             </label>
 
-            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d]">
+            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] w-full min-w-0">
               Age Group
               <select
                 value={form.ageGroup}
                 onChange={(e) =>
                   setForm({ ...form, ageGroup: e.target.value })
                 }
-                className="rounded-xl border border-[#d9a441] p-3 bg-white"
+                className={fieldClass}
               >
                 <option>Chick (0-6 Weeks)</option>
                 <option>Grower (6-20 Weeks)</option>
@@ -410,17 +413,17 @@ export default function ChickenRegistry({
               </select>
             </label>
 
-            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] md:col-span-2">
+            <label className="flex flex-col gap-1 font-semibold text-[#4b3a1d] md:col-span-2 w-full min-w-0">
               Profile Photo Optional
               <input
                 type="file"
                 onChange={handleImage}
-                className="rounded-xl border border-[#d9a441] p-3 bg-white"
+                className="rounded-xl border border-[#d9a441] p-3 bg-white w-full max-w-full min-w-0 box-border text-base leading-normal"
               />
             </label>
           </div>
 
-          <div className="flex gap-3 mt-5">
+          <div className="flex flex-col sm:flex-row gap-3 mt-5">
             <button
               onClick={addChicken}
               className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold"
@@ -452,7 +455,7 @@ export default function ChickenRegistry({
         return (
           <div
             key={c.id}
-            className="rounded-3xl p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16)] cursor-pointer"
+            className="rounded-3xl p-4 sm:p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16)] cursor-pointer overflow-hidden"
             onClick={() => {
               setSelectedChicken({
                 ...c,
@@ -465,30 +468,30 @@ export default function ChickenRegistry({
             <div className="flex gap-4 items-center">
               <img
                 src={c.image || "https://via.placeholder.com/80"}
-                className="w-24 h-24 rounded-2xl object-cover bg-gray-200 border border-[#d9a441]"
+                className="w-24 h-24 rounded-2xl object-cover bg-gray-200 border border-[#d9a441] shrink-0"
               />
 
-              <div className="flex-1">
-                <h3 className="font-extrabold text-xl text-[#3d2a10]">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-extrabold text-xl text-[#3d2a10] break-words">
                   {c.name}
                 </h3>
 
-                <div className="text-sm text-[#4b3a1d] mt-1">
+                <div className="text-sm text-[#4b3a1d] mt-1 break-words">
                   Tag: {c.idTagColor} {c.idTag}
                 </div>
 
-                <div className="text-sm text-[#4b3a1d]">
+                <div className="text-sm text-[#4b3a1d] break-words">
                   {c.sex} • {c.ageGroup} • {c.breed}
                 </div>
 
-                <div className="text-sm text-[#4b3a1d]">
+                <div className="text-sm text-[#4b3a1d] break-words">
                   Status:{" "}
                   {c.status ||
                     (c.archived ? "Inactive Chicken" : "Active Chicken")}
                 </div>
 
                 {c.hatchDate && (
-                  <div className="text-sm text-[#4b3a1d]">
+                  <div className="text-sm text-[#4b3a1d] break-words">
                     Hatch Date: {c.hatchDate}
                   </div>
                 )}
