@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
 const cardClass =
-  "rounded-3xl p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)]";
+  "rounded-3xl p-4 sm:p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)] overflow-hidden";
 
 const statClass =
   "rounded-2xl p-4 text-center bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)]";
@@ -184,7 +184,7 @@ export default function ChickenFeed({ chickens = [] }: any) {
         />
 
         <div className={cardClass}>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => {
                 setSelectedFeed(null);
@@ -213,14 +213,14 @@ export default function ChickenFeed({ chickens = [] }: any) {
 
             <button
               onClick={() => deleteFeedProduct(selectedFeed.id)}
-              className="bg-red-600 text-white rounded-xl px-4 py-2 font-semibold ml-auto"
+              className="bg-red-600 text-white rounded-xl px-4 py-2 font-semibold sm:ml-auto"
             >
               🗑 Delete
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className={statClass}>
             <div className="text-[#4b3a1d] text-sm">Bag Size</div>
             <div className="text-2xl font-bold">
@@ -252,20 +252,49 @@ export default function ChickenFeed({ chickens = [] }: any) {
           </h2>
 
           <div className="flex flex-col gap-3">
-            <FeedInput label="Supplier" value={selectedFeed.supplier} editing={editing} placeholder="Where feed was bought" onChange={(v: string) => updateField("supplier", v)} />
-            <FeedInput label="Brand" value={selectedFeed.brand} editing={editing} onChange={(v: string) => updateField("brand", v)} />
-            <FeedInput label="Product Name" value={selectedFeed.product_name} editing={editing} onChange={(v: string) => updateField("product_name", v)} />
-            <FeedInput label="Bag Size" value={selectedFeed.bag_size} editing={editing} placeholder="40KG" onChange={(v: string) => updateField("bag_size", v)} />
-            <FeedInput label="Feed Cost" value={selectedFeed.feed_cost} editing={editing} type="number" placeholder="365" onChange={(v: string) => updateField("feed_cost", v)} />
+            <FeedInput
+              label="Supplier"
+              value={selectedFeed.supplier}
+              editing={editing}
+              placeholder="Where feed was bought"
+              onChange={(v: string) => updateField("supplier", v)}
+            />
+            <FeedInput
+              label="Brand"
+              value={selectedFeed.brand}
+              editing={editing}
+              onChange={(v: string) => updateField("brand", v)}
+            />
+            <FeedInput
+              label="Product Name"
+              value={selectedFeed.product_name}
+              editing={editing}
+              onChange={(v: string) => updateField("product_name", v)}
+            />
+            <FeedInput
+              label="Bag Size"
+              value={selectedFeed.bag_size}
+              editing={editing}
+              placeholder="40KG"
+              onChange={(v: string) => updateField("bag_size", v)}
+            />
+            <FeedInput
+              label="Feed Cost"
+              value={selectedFeed.feed_cost}
+              editing={editing}
+              type="number"
+              placeholder="365"
+              onChange={(v: string) => updateField("feed_cost", v)}
+            />
 
-            <div className="flex justify-between items-center gap-3 border-b border-[#d9a441]/40 pb-2">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b border-[#d9a441]/40 pb-2">
               <span className="text-[#4b3a1d] font-semibold">Best For</span>
 
               {editing ? (
                 <select
                   value={selectedFeed.best_for || ""}
                   onChange={(e) => updateField("best_for", e.target.value)}
-                  className="border border-[#d9a441] rounded-xl p-2 w-48 bg-white"
+                  className="border border-[#d9a441] rounded-xl p-2 w-full sm:w-48 bg-white"
                 >
                   <option value="">Select Purpose</option>
                   <option>Grower</option>
@@ -326,7 +355,7 @@ export default function ChickenFeed({ chickens = [] }: any) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-4 px-1">
+    <div className="w-full max-w-6xl mx-auto space-y-4 px-3 sm:px-4 overflow-hidden">
       <CoopPageBanner
         eyebrow="NUTRITION"
         title="Chicken Feed"
@@ -334,16 +363,37 @@ export default function ChickenFeed({ chickens = [] }: any) {
       />
 
       <div className={cardClass}>
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => setActiveTab("products")} className={`px-4 py-2 rounded-full text-sm font-bold border transition ${activeTab === "products" ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md" : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"}`}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+          <button
+            onClick={() => setActiveTab("products")}
+            className={`w-full px-4 py-3 rounded-full text-sm font-bold border transition text-center ${
+              activeTab === "products"
+                ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md"
+                : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"
+            }`}
+          >
             🌾 Feed Products
           </button>
 
-          <button onClick={() => setActiveTab("flock-plan")} className={`px-4 py-2 rounded-full text-sm font-bold border transition ${activeTab === "flock-plan" ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md" : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"}`}>
+          <button
+            onClick={() => setActiveTab("flock-plan")}
+            className={`w-full px-4 py-3 rounded-full text-sm font-bold border transition text-center ${
+              activeTab === "flock-plan"
+                ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md"
+                : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"
+            }`}
+          >
             🐔 Flock Feed Plan
           </button>
 
-          <button onClick={() => setActiveTab("compare")} className={`px-4 py-2 rounded-full text-sm font-bold border transition ${activeTab === "compare" ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md" : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"}`}>
+          <button
+            onClick={() => setActiveTab("compare")}
+            className={`w-full px-4 py-3 rounded-full text-sm font-bold border transition text-center ${
+              activeTab === "compare"
+                ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md"
+                : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"
+            }`}
+          >
             ⚖️ Feed Compare
           </button>
         </div>
@@ -387,13 +437,18 @@ export default function ChickenFeed({ chickens = [] }: any) {
 
           {compareFeedA && compareFeedB ? (
             <FeedCompareTable
-              feedA={feedProducts.find((f) => String(f.id) === String(compareFeedA))}
-              feedB={feedProducts.find((f) => String(f.id) === String(compareFeedB))}
+              feedA={feedProducts.find(
+                (f) => String(f.id) === String(compareFeedA)
+              )}
+              feedB={feedProducts.find(
+                (f) => String(f.id) === String(compareFeedB)
+              )}
               getCostPerKg={getCostPerKg}
             />
           ) : (
             <div className="text-[#6b5a3a] font-semibold">
-              Select two feeds to compare cost, bag size, supplier, nutrition and best use.
+              Select two feeds to compare cost, bag size, supplier, nutrition
+              and best use.
             </div>
           )}
         </div>
@@ -419,7 +474,7 @@ export default function ChickenFeed({ chickens = [] }: any) {
             {!showAddFeedForm ? (
               <button
                 onClick={() => setShowAddFeedForm(true)}
-                className="bg-[#022312] text-[#f7d37b] rounded-2xl p-4 font-bold w-full sm:w-auto"
+                className="bg-[#022312] text-[#f7d37b] rounded-2xl p-4 font-bold w-full"
               >
                 + Add Feed Brand
               </button>
@@ -508,18 +563,22 @@ export default function ChickenFeed({ chickens = [] }: any) {
                 const filledNutrition = nutritionFields(feed);
 
                 return (
-                  <div key={feed.id} onClick={() => setSelectedFeed(feed)} className="border border-[#d9a441] bg-[#faf7f0] rounded-3xl p-4 cursor-pointer hover:bg-[#f3d39a]/40 transition">
+                  <div
+                    key={feed.id}
+                    onClick={() => setSelectedFeed(feed)}
+                    className="border border-[#d9a441] bg-[#faf7f0] rounded-3xl p-4 cursor-pointer hover:bg-[#f3d39a]/40 transition"
+                  >
                     <div className="flex justify-between items-start gap-4">
-                      <div>
-                        <div className="text-xl font-extrabold text-[#3d2a10]">
+                      <div className="min-w-0">
+                        <div className="text-xl font-extrabold text-[#3d2a10] break-words">
                           {feed.brand}
                         </div>
 
-                        <div className="text-[#4b3a1d]">
+                        <div className="text-[#4b3a1d] break-words">
                           {feed.product_name}
                         </div>
 
-                        <div className="text-sm text-[#6b5a3a] mt-1">
+                        <div className="text-sm text-[#6b5a3a] mt-1 break-words">
                           Supplier: {feed.supplier || "Not added"}
                         </div>
 
@@ -528,7 +587,7 @@ export default function ChickenFeed({ chickens = [] }: any) {
                         </div>
                       </div>
 
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <div className="font-bold text-green-800">
                           {feed.feed_cost
                             ? `R ${Number(feed.feed_cost).toFixed(2)}`
@@ -575,7 +634,7 @@ function FeedInput({
   type = "text",
 }: any) {
   return (
-    <div className="flex justify-between items-center gap-3 border-b border-[#d9a441]/40 pb-2">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b border-[#d9a441]/40 pb-2">
       <span className="text-[#4b3a1d] font-semibold">{label}</span>
 
       {editing ? (
@@ -584,10 +643,12 @@ function FeedInput({
           value={value || ""}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
-          className="border border-[#d9a441] rounded-xl p-2 w-48 bg-white"
+          className="border border-[#d9a441] rounded-xl p-2 w-full sm:w-48 bg-white"
         />
       ) : (
-        <span className="font-semibold text-right">{value || "-"}</span>
+        <span className="font-semibold text-right break-words">
+          {value || "-"}
+        </span>
       )}
     </div>
   );
