@@ -3,10 +3,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
 const cardClass =
-  "rounded-3xl p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)]";
+  "rounded-3xl p-4 sm:p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)] overflow-hidden";
 
 const statClass =
   "rounded-2xl p-4 text-center bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)]";
+
+const fieldClass =
+  "border border-[#d9a441] rounded-2xl p-3 bg-white w-full max-w-full min-w-0 box-border text-base leading-normal h-[52px]";
+
+const textAreaClass =
+  "border border-[#d9a441] rounded-2xl p-3 bg-white w-full max-w-full min-w-0 box-border text-base leading-normal min-h-[120px]";
 
 export default function FarmPlanning() {
   const [planTitle, setPlanTitle] = useState("");
@@ -50,8 +56,7 @@ export default function FarmPlanning() {
     (plan) => plan.priority === "High"
   );
 
-  const visiblePlans =
-    planFilter === "active" ? activePlans : completedPlans;
+  const visiblePlans = planFilter === "active" ? activePlans : completedPlans;
 
   const resetForm = () => {
     setPlanTitle("");
@@ -202,10 +207,10 @@ export default function FarmPlanning() {
       </div>
 
       <div className={cardClass}>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
           <button
             onClick={() => setPlanFilter("active")}
-            className={`px-4 py-2 rounded-full text-sm font-bold border transition ${
+            className={`w-full px-4 py-3 rounded-full text-sm font-bold border transition text-center ${
               planFilter === "active"
                 ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md"
                 : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"
@@ -216,7 +221,7 @@ export default function FarmPlanning() {
 
           <button
             onClick={() => setPlanFilter("completed")}
-            className={`px-4 py-2 rounded-full text-sm font-bold border transition ${
+            className={`w-full px-4 py-3 rounded-full text-sm font-bold border transition text-center ${
               planFilter === "completed"
                 ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md"
                 : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"
@@ -233,8 +238,8 @@ export default function FarmPlanning() {
             📋 {editingId ? "Edit Farm Plan" : "New Farm Plan"}
           </h2>
 
-          <div className="grid grid-cols-1 gap-4">
-            <div>
+          <div className="grid grid-cols-1 gap-4 w-full max-w-full">
+            <div className="w-full min-w-0 max-w-full">
               <label className="block text-[#4b3a1d] font-bold mb-1">
                 Plan Title
               </label>
@@ -244,11 +249,11 @@ export default function FarmPlanning() {
                 placeholder="Plan title..."
                 value={planTitle}
                 onChange={(e) => setPlanTitle(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                className={fieldClass}
               />
             </div>
 
-            <div>
+            <div className="w-full min-w-0 max-w-full">
               <label className="block text-[#4b3a1d] font-bold mb-1">
                 Describe Your Plan
               </label>
@@ -257,11 +262,11 @@ export default function FarmPlanning() {
                 placeholder="Describe the plan..."
                 value={planDescription}
                 onChange={(e) => setPlanDescription(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white min-h-[120px] w-full"
+                className={textAreaClass}
               />
             </div>
 
-            <div>
+            <div className="w-full min-w-0 max-w-full">
               <label className="block text-[#4b3a1d] font-bold mb-1">
                 Select Plan Priority
               </label>
@@ -269,7 +274,7 @@ export default function FarmPlanning() {
               <select
                 value={planPriority}
                 onChange={(e) => setPlanPriority(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                className={fieldClass}
               >
                 <option value="Low">🟢 Low Priority</option>
                 <option value="Medium">🟡 Medium Priority</option>
@@ -277,7 +282,7 @@ export default function FarmPlanning() {
               </select>
             </div>
 
-            <div>
+            <div className="w-full min-w-0 max-w-full">
               <label className="block text-[#4b3a1d] font-bold mb-1">
                 Choose Plan Category
               </label>
@@ -285,7 +290,7 @@ export default function FarmPlanning() {
               <select
                 value={planCategory}
                 onChange={(e) => setPlanCategory(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                className={fieldClass}
               >
                 <option value="General">📁 General</option>
                 <option value="Coop">🐔 Coop</option>
@@ -296,7 +301,7 @@ export default function FarmPlanning() {
               </select>
             </div>
 
-            <div>
+            <div className="w-full min-w-0 max-w-full">
               <label className="block text-[#4b3a1d] font-bold mb-1">
                 Estimated Planning Date
               </label>
@@ -305,12 +310,12 @@ export default function FarmPlanning() {
                 type="date"
                 value={planDueDate}
                 onChange={(e) => setPlanDueDate(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+                className={`${fieldClass} appearance-none`}
               />
             </div>
           </div>
 
-          <div className="flex gap-3 mt-5">
+          <div className="flex flex-col sm:flex-row gap-3 mt-5">
             <button
               onClick={addPlan}
               className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold"
@@ -350,17 +355,17 @@ export default function FarmPlanning() {
               className="rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)]"
             >
               <div className="flex justify-between items-start gap-3">
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={plan.completed}
                       onChange={() => toggleComplete(plan)}
-                      className="w-5 h-5"
+                      className="w-5 h-5 shrink-0"
                     />
 
                     <div
-                      className={`font-extrabold text-lg ${
+                      className={`font-extrabold text-lg break-words ${
                         plan.completed
                           ? "line-through text-[#6b5a3a]/60"
                           : "text-[#3d2a10]"
@@ -370,7 +375,7 @@ export default function FarmPlanning() {
                     </div>
                   </div>
 
-                  <div className="mt-2 text-sm text-[#4b3a1d]">
+                  <div className="mt-2 text-sm text-[#4b3a1d] break-words">
                     {plan.description || "No description added."}
                   </div>
 
@@ -417,7 +422,7 @@ export default function FarmPlanning() {
                 </div>
 
                 <div
-                  className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
+                  className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap shrink-0 ${
                     plan.priority === "High"
                       ? "bg-red-700 text-white"
                       : plan.priority === "Medium"
