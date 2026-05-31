@@ -39,7 +39,7 @@ const fieldClass =
   "rounded-xl border border-[#d9a441] p-3 bg-white w-full max-w-full min-w-0 box-border text-base leading-normal h-[52px]";
 
 export default function ChickenRegistry({
-  chickens,
+  chickens = [],
   setChickens,
   setSelectedChicken,
   navigate,
@@ -62,17 +62,27 @@ export default function ChickenRegistry({
     image: "",
   });
 
-  const activeChickens = chickens.filter((c: any) => !c.archived);
+  const chickenList = Array.isArray(chickens) ? chickens : [];
+
+  const getValue = (c: any, camelKey: string, snakeKey: string) =>
+    c?.[camelKey] ?? c?.[snakeKey] ?? "";
+
+  const isArchived = (c: any) =>
+    c.archived === true ||
+    c.archived === "true" ||
+    c.status === "Inactive Chicken" ||
+    c.status === "Sold";
 
   const isHen = (c: any) =>
-    ["hen", "female"].includes((c.sex || "").toLowerCase());
+    ["hen", "female"].includes(String(c.sex || "").toLowerCase());
 
   const isRooster = (c: any) =>
-    ["rooster", "male", "cock"].includes((c.sex || "").toLowerCase());
+    ["rooster", "male", "cock"].includes(String(c.sex || "").toLowerCase());
 
   const isChick = (c: any) =>
-    (c.ageGroup || "").toLowerCase().includes("chick");
+    String(getValue(c, "ageGroup", "age_group")).toLowerCase().includes("chick");
 
+  const activeChickens = chickenList.filter((c: any) => !isArchived(c));
   const activeHens = activeChickens.filter(isHen).length;
   const activeRoosters = activeChickens.filter(isRooster).length;
   const activeChicks = activeChickens.filter(isChick).length;
@@ -86,24 +96,24 @@ export default function ChickenRegistry({
     { key: "issues", label: "Health Issues" },
   ];
 
-  const filteredChickens = chickens.filter((c: any) => {
-    if (filter === "active") return !c.archived;
-    if (filter === "inactive") return c.archived;
-    if (filter === "roosters") return !c.archived && isRooster(c);
-    if (filter === "hens") return !c.archived && isHen(c);
-    if (filter === "chicks") return !c.archived && isChick(c);
+  const filteredChickens = chickenList.filter((c: any) => {
+    if (filter === "active") return !isArchived(c);
+    if (filter === "inactive") return isArchived(c);
+    if (filter === "roosters") return !isArchived(c) && isRooster(c);
+    if (filter === "hens") return !isArchived(c) && isHen(c);
+    if (filter === "chicks") return !isArchived(c) && isChick(c);
 
     if (filter === "issues") {
       return (
-        !c.archived &&
-        (c.healthLogs || []).some(
+        !isArchived(c) &&
+        (c.healthLogs || c.health_logs || []).some(
           (log: any) =>
             log.status === "Ongoing" || log.status === "Monitoring"
         )
       );
     }
 
-    return !c.archived;
+    return !isArchived(c);
   });
 
   const handleImage = (e: any) => {
@@ -184,7 +194,7 @@ export default function ChickenRegistry({
   };
 
   const getHealthStatus = (c: any) => {
-    const logs = c.healthLogs || [];
+    const logs = c.healthLogs || c.health_logs || [];
 
     if (logs.some((l: any) => l.status === "Ongoing")) {
       return { color: "#ef4444", label: "Ongoing" };
@@ -452,6 +462,12 @@ export default function ChickenRegistry({
       {filteredChickens.map((c: any) => {
         const status = getHealthStatus(c);
 
+        const idTagColor = getValue(c, "idTagColor", "id_tag_color");
+        const idTag = getValue(c, "idTag", "id_tag");
+        const ageGroup = getValue(c, "ageGroup", "age_group");
+        const hatchDate = getValue(c, "hatchDate", "hatch_date");
+        const image = c.image || c.image_url || "";
+
         return (
           <div
             key={c.id}
@@ -459,6 +475,11 @@ export default function ChickenRegistry({
             onClick={() => {
               setSelectedChicken({
                 ...c,
+                idTagColor,
+                idTag,
+                ageGroup,
+                hatchDate,
+                image,
                 goTo: "health",
               });
 
@@ -467,32 +488,32 @@ export default function ChickenRegistry({
           >
             <div className="flex gap-4 items-center">
               <img
-                src={c.image || "https://via.placeholder.com/80"}
+                src={image || "https://via.placeholder.com/80"}
                 className="w-24 h-24 rounded-2xl object-cover bg-gray-200 border border-[#d9a441] shrink-0"
               />
 
               <div className="flex-1 min-w-0">
                 <h3 className="font-extrabold text-xl text-[#3d2a10] break-words">
-                  {c.name}
+                  {c.name || "Unnamed Chicken"}
                 </h3>
 
                 <div className="text-sm text-[#4b3a1d] mt-1 break-words">
-                  Tag: {c.idTagColor} {c.idTag}
+                  Tag: {idTagColor} {idTag}
                 </div>
 
                 <div className="text-sm text-[#4b3a1d] break-words">
-                  {c.sex} • {c.ageGroup} • {c.breed}
+                  {c.sex} • {ageGroup} • {c.breed}
                 </div>
 
                 <div className="text-sm text-[#4b3a1d] break-words">
                   Status:{" "}
                   {c.status ||
-                    (c.archived ? "Inactive Chicken" : "Active Chicken")}
+                    (isArchived(c) ? "Inactive Chicken" : "Active Chicken")}
                 </div>
 
-                {c.hatchDate && (
+                {hatchDate && (
                   <div className="text-sm text-[#4b3a1d] break-words">
-                    Hatch Date: {c.hatchDate}
+                    Hatch Date: {hatchDate}
                   </div>
                 )}
 
