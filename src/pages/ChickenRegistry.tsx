@@ -473,6 +473,8 @@ export default function ChickenRegistry({
             key={c.id}
             className="rounded-3xl p-4 sm:p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16)] cursor-pointer overflow-hidden"
             onClick={() => {
+              window.scrollTo({ top: 0, behavior: "auto" });
+
               setSelectedChicken({
                 ...c,
                 idTagColor,
@@ -484,6 +486,10 @@ export default function ChickenRegistry({
               });
 
               navigate("profile");
+
+              setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: "auto" });
+              }, 0);
             }}
           >
             <div className="flex gap-4 items-center">
