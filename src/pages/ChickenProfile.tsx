@@ -5,6 +5,18 @@ import PhotoSection from "../components/PhotoSection";
 import NotesSection from "../components/NotesSection";
 import HealthSection from "../components/HealthSection";
 
+const inputClass =
+  "border rounded px-2 py-2 text-base w-full max-w-full min-w-0 box-border";
+
+const smallInputClass =
+  "border rounded px-2 py-2 text-base w-28 max-w-full min-w-0 box-border";
+
+const weightDateClass =
+  "border rounded-xl p-3 flex-1 min-w-0 text-base appearance-none";
+
+const weightInputClass =
+  "border rounded-xl p-3 w-24 text-base max-w-full min-w-0 box-border";
+
 export default function ChickenProfile({
   selectedChicken,
   setChickens,
@@ -131,6 +143,7 @@ export default function ChickenProfile({
         {
           date: newWeightDate,
           weightKg: newWeight,
+          weight_kg: newWeight,
         },
       ],
     };
@@ -177,21 +190,21 @@ export default function ChickenProfile({
           {!editing ? (
             <button
               onClick={() => setEditing(true)}
-              className="bg-blue-500 text-white px-4 py-2 rounded-xl text-sm"
+              className="bg-blue-500 text-white px-4 py-2 rounded-xl text-base"
             >
               Edit
             </button>
           ) : (
             <button
               onClick={saveEdits}
-              className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm"
+              className="bg-green-500 text-white px-4 py-2 rounded-xl text-base"
             >
               Save
             </button>
           )}
 
           <button
-            className="bg-gray-500 text-white px-4 py-2 rounded-xl"
+            className="bg-gray-500 text-white px-4 py-2 rounded-xl text-base"
             onClick={() => navigate("registry")}
           >
             ← Back
@@ -200,7 +213,7 @@ export default function ChickenProfile({
       </div>
 
       <ProfileSection title="Info">
-        <div className="flex flex-col gap-3 text-sm">
+        <div className="flex flex-col gap-3 text-base">
           <div className="flex justify-between gap-3">
             <span className="text-gray-500">Name</span>
 
@@ -213,7 +226,7 @@ export default function ChickenProfile({
                     name: e.target.value,
                   })
                 }
-                className="border rounded px-2 py-1 text-sm"
+                className={inputClass}
               />
             ) : (
               <span className="font-medium text-right">{chicken.name}</span>
@@ -238,7 +251,7 @@ export default function ChickenProfile({
                     id_tag_color: e.target.value,
                   })
                 }
-                className="border rounded px-2 py-1 text-sm"
+                className={inputClass}
               >
                 <option value="">Select Color</option>
                 <option>Green</option>
@@ -265,7 +278,7 @@ export default function ChickenProfile({
                     breed: e.target.value,
                   })
                 }
-                className="border rounded px-2 py-1 text-sm"
+                className={inputClass}
               />
             ) : (
               <span className="text-right">{chicken.breed}</span>
@@ -284,7 +297,7 @@ export default function ChickenProfile({
                     sex: e.target.value,
                   })
                 }
-                className="border rounded px-2 py-1 text-sm"
+                className={inputClass}
               >
                 <option value="Hen">Hen</option>
                 <option value="Rooster">Rooster</option>
@@ -315,7 +328,7 @@ export default function ChickenProfile({
                       e.target.value === "Sold",
                   })
                 }
-                className="border rounded px-2 py-1 text-sm"
+                className={inputClass}
               >
                 <option>Active Chicken</option>
                 <option>Inactive Chicken</option>
@@ -343,7 +356,7 @@ export default function ChickenProfile({
                     hatch_date: e.target.value,
                   })
                 }
-                className="border rounded px-2 py-1 text-sm"
+                className={`${inputClass} appearance-none`}
               />
             ) : (
               <span className="text-right">{hatchDate || "Not Recorded"}</span>
@@ -357,6 +370,7 @@ export default function ChickenProfile({
               <input
                 type="number"
                 step="0.01"
+                inputMode="decimal"
                 value={weightKg || ""}
                 onChange={(e) =>
                   setChicken({
@@ -365,7 +379,7 @@ export default function ChickenProfile({
                     weight_kg: e.target.value,
                   })
                 }
-                className="border rounded px-2 py-1 text-sm w-24"
+                className={smallInputClass}
               />
             ) : (
               <span className="text-right">
@@ -377,28 +391,29 @@ export default function ChickenProfile({
       </ProfileSection>
 
       <ProfileSection title="⚖️ Weight History">
-        <div className="flex flex-col gap-3 text-sm">
+        <div className="flex flex-col gap-3 text-base">
           <div className="flex gap-2">
             <input
               type="date"
               value={newWeightDate}
               onChange={(e) => setNewWeightDate(e.target.value)}
-              className="border rounded-xl p-2 flex-1 min-w-0"
+              className={weightDateClass}
             />
 
             <input
               type="number"
               step="0.01"
+              inputMode="decimal"
               placeholder="KG"
               value={newWeight}
               onChange={(e) => setNewWeight(e.target.value)}
-              className="border rounded-xl p-2 w-24"
+              className={weightInputClass}
             />
           </div>
 
           <button
             onClick={addWeightEntry}
-            className="bg-green-600 text-white rounded-xl p-3 font-semibold"
+            className="bg-green-600 text-white rounded-xl p-3 font-semibold text-base"
           >
             + Add Weight
           </button>
@@ -412,7 +427,7 @@ export default function ChickenProfile({
             .map((entry: any, index: number) => (
               <div
                 key={index}
-                className="bg-gray-50 rounded-xl p-3 flex justify-between"
+                className="bg-gray-50 rounded-xl p-3 flex justify-between gap-3"
               >
                 <span>{entry.date}</span>
                 <span className="font-semibold">
@@ -429,7 +444,7 @@ export default function ChickenProfile({
 
       {chicken.sex?.toLowerCase() === "hen" && (
         <ProfileSection title="🥚 Egg Production">
-          <div className="flex flex-col gap-3 text-sm">
+          <div className="flex flex-col gap-3 text-base">
             <div className="flex justify-between">
               <span className="text-gray-500">Eggs This Week</span>
               <span className="font-medium">{eggStats.week}</span>
@@ -459,7 +474,7 @@ export default function ChickenProfile({
 
       <ProfileSection title="Health">
         <ProfileSection title="Activity">
-          <div className="flex flex-col gap-2 text-xs">
+          <div className="flex flex-col gap-2 text-base">
             {(chicken.activity || []).length === 0 && (
               <div className="text-gray-400">No activity yet</div>
             )}
