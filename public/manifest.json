@@ -1,20 +1,17 @@
 {
   "name": "Coop Keeper",
-  "short_name": "Coop",
+  "short_name": "Coop Keeper",
+  "description": "Chicken Farm Manager",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f3f4f6",
-  "theme_color": "#4f46e5",
+  "background_color": "#faf7f0",
+  "theme_color": "#022312",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
