@@ -3,10 +3,16 @@ import { supabase } from "../supabase";
 import CoopPageBanner from "../components/CoopPageBanner";
 
 const cardClass =
-  "rounded-3xl p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)]";
+  "rounded-3xl p-4 sm:p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)] overflow-hidden";
 
 const statClass =
   "rounded-2xl p-4 text-center bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)]";
+
+const fieldClass =
+  "border border-[#d9a441] rounded-2xl p-3 bg-white w-full max-w-full min-w-0 box-border text-base leading-normal h-[52px]";
+
+const textAreaClass =
+  "border border-[#d9a441] rounded-2xl p-3 bg-white w-full max-w-full min-w-0 box-border text-base leading-normal min-h-[120px]";
 
 const chickenBreeds = [
   "Australorp",
@@ -266,10 +272,10 @@ export default function IncubatorRegistry() {
       </div>
 
       <div className={cardClass}>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
           <button
             onClick={() => setIncubatorFilter("active")}
-            className={`px-4 py-2 rounded-full text-sm font-bold border transition ${
+            className={`w-full px-4 py-3 rounded-full text-sm font-bold border transition text-center ${
               incubatorFilter === "active"
                 ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md"
                 : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"
@@ -280,7 +286,7 @@ export default function IncubatorRegistry() {
 
           <button
             onClick={() => setIncubatorFilter("history")}
-            className={`px-4 py-2 rounded-full text-sm font-bold border transition ${
+            className={`w-full px-4 py-3 rounded-full text-sm font-bold border transition text-center ${
               incubatorFilter === "history"
                 ? "bg-[#022312] text-[#f7d37b] border-[#d9a441] shadow-md"
                 : "bg-[#faf7f0] text-[#4b3a1d] border-[#d9a441]/60 hover:bg-[#f3d39a]"
@@ -297,18 +303,18 @@ export default function IncubatorRegistry() {
             🐣 {editingId ? "Edit Incubator Batch" : "New Incubator Batch"}
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="flex flex-col gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-full">
+            <label className="flex flex-col gap-2 w-full min-w-0 max-w-full">
               <span className="font-extrabold text-[#3d2a10]">Batch Name</span>
               <input
                 placeholder="Batch Name"
                 value={batchName}
                 onChange={(e) => setBatchName(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className={fieldClass}
               />
             </label>
 
-            <label className="flex flex-col gap-2">
+            <label className="flex flex-col gap-2 w-full min-w-0 max-w-full">
               <span className="font-extrabold text-[#3d2a10]">Select Breed</span>
               <select
                 value={breed}
@@ -318,7 +324,7 @@ export default function IncubatorRegistry() {
                     setCustomBreed("");
                   }
                 }}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className={fieldClass}
               >
                 <option value="">Select Breed</option>
                 {chickenBreeds.map((breedName) => (
@@ -330,7 +336,7 @@ export default function IncubatorRegistry() {
             </label>
 
             {breed === "Custom Mix Breed" && (
-              <label className="flex flex-col gap-2 md:col-span-2">
+              <label className="flex flex-col gap-2 md:col-span-2 w-full min-w-0 max-w-full">
                 <span className="font-extrabold text-[#3d2a10]">
                   Custom Mix Breed
                 </span>
@@ -338,23 +344,23 @@ export default function IncubatorRegistry() {
                   placeholder="Example: Orpington x Wyandotte"
                   value={customBreed}
                   onChange={(e) => setCustomBreed(e.target.value)}
-                  className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                  className={fieldClass}
                 />
               </label>
             )}
 
-            <label className="flex flex-col gap-2">
+            <label className="flex flex-col gap-2 w-full min-w-0 max-w-full">
               <span className="font-extrabold text-[#3d2a10]">Egg Quantity</span>
               <input
                 type="number"
                 placeholder="Egg Count"
                 value={eggCount}
                 onChange={(e) => setEggCount(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className={fieldClass}
               />
             </label>
 
-            <label className="flex flex-col gap-2">
+            <label className="flex flex-col gap-2 w-full min-w-0 max-w-full">
               <span className="font-extrabold text-[#3d2a10]">
                 Choose Incubation Start Date
               </span>
@@ -362,18 +368,18 @@ export default function IncubatorRegistry() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className={`${fieldClass} appearance-none`}
               />
             </label>
 
-            <label className="flex flex-col gap-2">
+            <label className="flex flex-col gap-2 w-full min-w-0 max-w-full">
               <span className="font-extrabold text-[#3d2a10]">
                 Incubation Process
               </span>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className={fieldClass}
               >
                 <option>Incubating</option>
                 <option>Locked Down</option>
@@ -382,7 +388,7 @@ export default function IncubatorRegistry() {
               </select>
             </label>
 
-            <label className="flex flex-col gap-2 md:col-span-2">
+            <label className="flex flex-col gap-2 md:col-span-2 w-full min-w-0 max-w-full">
               <span className="font-extrabold text-[#3d2a10]">
                 Additional Notes
               </span>
@@ -391,12 +397,12 @@ export default function IncubatorRegistry() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className={textAreaClass}
               />
             </label>
           </div>
 
-          <div className="flex gap-3 mt-5">
+          <div className="flex flex-col sm:flex-row gap-3 mt-5">
             <button
               onClick={saveBatch}
               className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold"
@@ -426,18 +432,18 @@ export default function IncubatorRegistry() {
         {filteredBatches.map((batch) => (
           <div key={batch.id} className={cardClass}>
             <div className="flex justify-between items-start gap-4 mb-4">
-              <div>
-                <h3 className="text-xl font-extrabold text-[#3d2a10]">
+              <div className="min-w-0">
+                <h3 className="text-xl font-extrabold text-[#3d2a10] break-words">
                   🐣 {batch.batchname}
                 </h3>
-                <div className="text-sm text-[#6b5a3a]">
+                <div className="text-sm text-[#6b5a3a] break-words">
                   {batch.breed || "No breed added"}
                 </div>
               </div>
 
               <div
                 style={{ background: getStatusColor(batch.status) }}
-                className="text-white px-3 py-1 rounded-full text-xs font-bold"
+                className="text-white px-3 py-1 rounded-full text-xs font-bold shrink-0"
               >
                 {batch.status}
               </div>
@@ -494,7 +500,7 @@ export default function IncubatorRegistry() {
             )}
 
             {batch.notes && (
-              <div className="text-[#4b3a1d] mb-4">
+              <div className="text-[#4b3a1d] mb-4 break-words">
                 <strong>Notes:</strong> {batch.notes}
               </div>
             )}
