@@ -14,19 +14,13 @@ export default function ChickenProfile({
 }: any) {
   const healthRef = useRef<HTMLDivElement | null>(null);
 
-  const [chicken, setChicken] =
-    useState(selectedChicken);
+  const [chicken, setChicken] = useState(selectedChicken);
+  const [editing, setEditing] = useState(false);
+  const [newWeight, setNewWeight] = useState("");
 
-  const [editing, setEditing] =
-    useState(false);
-
-  const [newWeight, setNewWeight] =
-    useState("");
-
-  const [newWeightDate, setNewWeightDate] =
-    useState(
-      new Date().toISOString().split("T")[0]
-    );
+  const [newWeightDate, setNewWeightDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
 
   const [eggStats, setEggStats] = useState({
     week: 0,
@@ -40,8 +34,15 @@ export default function ChickenProfile({
   }, [selectedChicken]);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, []);
+
+  useEffect(() => {
     loadEggStats();
   }, [selectedChicken]);
+
+  const getValue = (camelKey: string, snakeKey: string) =>
+    chicken?.[camelKey] ?? chicken?.[snakeKey] ?? "";
 
   const loadEggStats = async () => {
     if (!selectedChicken) return;
@@ -69,15 +70,9 @@ export default function ChickenProfile({
       .filter((log) => new Date(log.date) >= monthAgo)
       .reduce((sum, log) => sum + log.eggs, 0);
 
-    const lifetimeEggs = data.reduce(
-      (sum, log) => sum + log.eggs,
-      0
-    );
+    const lifetimeEggs = data.reduce((sum, log) => sum + log.eggs, 0);
 
-    const lastDate =
-      data.length > 0
-        ? data[data.length - 1].date
-        : "None";
+    const lastDate = data.length > 0 ? data[data.length - 1].date : "None";
 
     setEggStats({
       week: weekEggs,
@@ -91,20 +86,27 @@ export default function ChickenProfile({
     return <div className="p-4">Loading...</div>;
   }
 
-  const hasHealthIssue =
-    (chicken.healthLogs || []).some(
-      (log: any) =>
-        log.status === "Ongoing" ||
-        log.status === "Monitoring"
-    );
+  const idTagColor = getValue("idTagColor", "id_tag_color");
+  const idTag = getValue("idTag", "id_tag");
+  const ageGroup = getValue("ageGroup", "age_group");
+  const hatchDate = getValue("hatchDate", "hatch_date");
+  const weightKg = getValue("weightKg", "weight_kg");
+
+  const profileImage =
+    chicken.image ||
+    chicken.image_url ||
+    chicken.photos?.[0] ||
+    "https://via.placeholder.com/160";
+
+  const hasHealthIssue = (chicken.healthLogs || chicken.health_logs || []).some(
+    (log: any) => log.status === "Ongoing" || log.status === "Monitoring"
+  );
 
   const updateChicken = async (updated: any) => {
     setChicken(updated);
 
     setChickens((prev: any[]) =>
-      prev.map((c) =>
-        c.id === updated.id ? updated : c
-      )
+      prev.map((c) => (c.id === updated.id ? updated : c))
     );
 
     setSelectedChicken(updated);
@@ -123,8 +125,9 @@ export default function ChickenProfile({
     const updated = {
       ...chicken,
       weightKg: newWeight,
+      weight_kg: newWeight,
       weightHistory: [
-        ...(chicken.weightHistory || []),
+        ...(chicken.weightHistory || chicken.weight_history || []),
         {
           date: newWeightDate,
           weightKg: newWeight,
@@ -133,136 +136,62 @@ export default function ChickenProfile({
     };
 
     await updateChicken(updated);
-
     setNewWeight("");
-
-    setNewWeightDate(
-      new Date().toISOString().split("T")[0]
-    );
+    setNewWeightDate(new Date().toISOString().split("T")[0]);
   };
 
   return (
-    <div className="max-w-md mx-auto p-4 flex flex-col gap-4">
-      {/* HEADER */}
+    <div className="w-full max-w-md mx-auto p-4 flex flex-col gap-4 overflow-hidden">
       <div className="flex flex-col items-center gap-4">
-        <h2 className="text-2xl font-bold">
-          🐔 Chicken Profile
-        </h2>
+        <h2 className="text-2xl font-bold">🐔 Chicken Profile</h2>
 
-        {/* PROFILE PHOTO */}
-        {(chicken.photos || []).length > 0 && (
-          <div className="relative">
-            <img
-              src={chicken.photos[0]}
-              className="
-                w-40
-                h-40
-                object-cover
-                rounded-full
-                border-4
-                border-white
-                shadow-xl
-              "
-            />
+        <div className="relative">
+          <img
+            src={profileImage}
+            className="w-40 h-40 object-cover rounded-full border-4 border-white shadow-xl"
+          />
 
-            <div
-              className="
-                absolute
-                bottom-1
-                right-1
-                bg-green-500
-                w-5
-                h-5
-                rounded-full
-                border-2
-                border-white
-              "
-            />
+          <div className="absolute bottom-1 right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white" />
 
-            {hasHealthIssue && (
-              <button
-                onClick={() =>
-                  healthRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                  })
-                }
-                className="
-                  absolute
-                  top-0
-                  right-0
-                  bg-red-500
-                  text-white
-                  w-10
-                  h-10
-                  rounded-full
-                  border-4
-                  border-white
-                  shadow-lg
-                  animate-pulse
-                  flex
-                  items-center
-                  justify-center
-                  text-lg
-                "
-                title="Health attention needed"
-              >
-                ⚠️
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* NAME */}
-        <div className="text-center">
-          <div className="text-xl font-semibold">
-            {chicken.name}
-          </div>
-
-          <div className="text-gray-500 text-sm">
-            {chicken.breed}
-          </div>
+          {hasHealthIssue && (
+            <button
+              onClick={() =>
+                healthRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                })
+              }
+              className="absolute top-0 right-0 bg-red-500 text-white w-10 h-10 rounded-full border-4 border-white shadow-lg animate-pulse flex items-center justify-center text-lg"
+              title="Health attention needed"
+            >
+              ⚠️
+            </button>
+          )}
         </div>
 
-        {/* BUTTONS */}
+        <div className="text-center">
+          <div className="text-xl font-semibold">{chicken.name}</div>
+          <div className="text-gray-500 text-sm">{chicken.breed}</div>
+        </div>
+
         <div className="flex gap-2">
           {!editing ? (
             <button
               onClick={() => setEditing(true)}
-              className="
-                bg-blue-500
-                text-white
-                px-4
-                py-2
-                rounded-xl
-                text-sm
-              "
+              className="bg-blue-500 text-white px-4 py-2 rounded-xl text-sm"
             >
               Edit
             </button>
           ) : (
             <button
               onClick={saveEdits}
-              className="
-                bg-green-500
-                text-white
-                px-4
-                py-2
-                rounded-xl
-                text-sm
-              "
+              className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm"
             >
               Save
             </button>
           )}
 
           <button
-            className="
-              bg-gray-500
-              text-white
-              px-4
-              py-2
-              rounded-xl
-            "
+            className="bg-gray-500 text-white px-4 py-2 rounded-xl"
             onClick={() => navigate("registry")}
           >
             ← Back
@@ -270,13 +199,10 @@ export default function ChickenProfile({
         </div>
       </div>
 
-      {/* INFO */}
       <ProfileSection title="Info">
         <div className="flex flex-col gap-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-500">
-              Name
-            </span>
+          <div className="flex justify-between gap-3">
+            <span className="text-gray-500">Name</span>
 
             {editing ? (
               <input
@@ -287,33 +213,48 @@ export default function ChickenProfile({
                     name: e.target.value,
                   })
                 }
-                className="
-                  border
-                  rounded
-                  px-2
-                  py-1
-                  text-sm
-                "
+                className="border rounded px-2 py-1 text-sm"
               />
             ) : (
-              <span className="font-medium">
-                {chicken.name}
-              </span>
+              <span className="font-medium text-right">{chicken.name}</span>
             )}
           </div>
 
-          <div className="flex justify-between">
-            <span className="text-gray-500">
-              ID
-            </span>
-
-            <span>{chicken.idTag}</span>
+          <div className="flex justify-between gap-3">
+            <span className="text-gray-500">ID</span>
+            <span className="text-right">{idTag || "-"}</span>
           </div>
 
-          <div className="flex justify-between">
-            <span className="text-gray-500">
-              Breed
-            </span>
+          <div className="flex justify-between gap-3">
+            <span className="text-gray-500">ID Tag Color</span>
+
+            {editing ? (
+              <select
+                value={idTagColor || ""}
+                onChange={(e) =>
+                  setChicken({
+                    ...chicken,
+                    idTagColor: e.target.value,
+                    id_tag_color: e.target.value,
+                  })
+                }
+                className="border rounded px-2 py-1 text-sm"
+              >
+                <option value="">Select Color</option>
+                <option>Green</option>
+                <option>Red</option>
+                <option>Blue</option>
+                <option>Yellow</option>
+                <option>White</option>
+                <option>Black</option>
+              </select>
+            ) : (
+              <span className="text-right">{idTagColor || "-"}</span>
+            )}
+          </div>
+
+          <div className="flex justify-between gap-3">
+            <span className="text-gray-500">Breed</span>
 
             {editing ? (
               <input
@@ -324,23 +265,15 @@ export default function ChickenProfile({
                     breed: e.target.value,
                   })
                 }
-                className="
-                  border
-                  rounded
-                  px-2
-                  py-1
-                  text-sm
-                "
+                className="border rounded px-2 py-1 text-sm"
               />
             ) : (
-              <span>{chicken.breed}</span>
+              <span className="text-right">{chicken.breed}</span>
             )}
           </div>
 
-          <div className="flex justify-between">
-            <span className="text-gray-500">
-              Sex
-            </span>
+          <div className="flex justify-between gap-3">
+            <span className="text-gray-500">Sex</span>
 
             {editing ? (
               <select
@@ -351,82 +284,106 @@ export default function ChickenProfile({
                     sex: e.target.value,
                   })
                 }
-                className="
-                  border
-                  rounded
-                  px-2
-                  py-1
-                  text-sm
-                "
+                className="border rounded px-2 py-1 text-sm"
               >
                 <option value="Hen">Hen</option>
-                <option value="Rooster">
-                  Rooster
-                </option>
-                <option value="Unknown">
-                  Unknown
-                </option>
+                <option value="Rooster">Rooster</option>
+                <option value="Unknown">Unknown</option>
               </select>
             ) : (
-              <span>{chicken.sex}</span>
+              <span className="text-right">{chicken.sex}</span>
             )}
           </div>
 
-          <div className="flex justify-between">
-            <span className="text-gray-500">
-              Age
-            </span>
-
-            <span>{chicken.ageGroup}</span>
+          <div className="flex justify-between gap-3">
+            <span className="text-gray-500">Age</span>
+            <span className="text-right">{ageGroup || "-"}</span>
           </div>
 
-          <div className="flex justify-between">
-            <span className="text-gray-500">
-              Weight (KG)
-            </span>
+          <div className="flex justify-between gap-3">
+            <span className="text-gray-500">Chicken Status</span>
+
+            {editing ? (
+              <select
+                value={chicken.status || ""}
+                onChange={(e) =>
+                  setChicken({
+                    ...chicken,
+                    status: e.target.value,
+                    archived:
+                      e.target.value === "Inactive Chicken" ||
+                      e.target.value === "Sold",
+                  })
+                }
+                className="border rounded px-2 py-1 text-sm"
+              >
+                <option>Active Chicken</option>
+                <option>Inactive Chicken</option>
+                <option>Sold</option>
+              </select>
+            ) : (
+              <span className="text-right">
+                {chicken.status ||
+                  (chicken.archived ? "Inactive Chicken" : "Active Chicken")}
+              </span>
+            )}
+          </div>
+
+          <div className="flex justify-between gap-3">
+            <span className="text-gray-500">Hatch Date</span>
+
+            {editing ? (
+              <input
+                type="date"
+                value={hatchDate || ""}
+                onChange={(e) =>
+                  setChicken({
+                    ...chicken,
+                    hatchDate: e.target.value,
+                    hatch_date: e.target.value,
+                  })
+                }
+                className="border rounded px-2 py-1 text-sm"
+              />
+            ) : (
+              <span className="text-right">{hatchDate || "Not Recorded"}</span>
+            )}
+          </div>
+
+          <div className="flex justify-between gap-3">
+            <span className="text-gray-500">Weight (KG)</span>
 
             {editing ? (
               <input
                 type="number"
                 step="0.01"
-                value={chicken.weightKg || ""}
+                value={weightKg || ""}
                 onChange={(e) =>
                   setChicken({
                     ...chicken,
                     weightKg: e.target.value,
+                    weight_kg: e.target.value,
                   })
                 }
-                className="
-                  border
-                  rounded
-                  px-2
-                  py-1
-                  text-sm
-                  w-24
-                "
+                className="border rounded px-2 py-1 text-sm w-24"
               />
             ) : (
-              <span>
-                {chicken.weightKg
-                  ? `${chicken.weightKg} kg`
-                  : "Not Recorded"}
+              <span className="text-right">
+                {weightKg ? `${weightKg} kg` : "Not Recorded"}
               </span>
             )}
           </div>
         </div>
       </ProfileSection>
 
-      {/* WEIGHT HISTORY */}
       <ProfileSection title="⚖️ Weight History">
         <div className="flex flex-col gap-3 text-sm">
           <div className="flex gap-2">
             <input
               type="date"
               value={newWeightDate}
-              onChange={(e) =>
-                setNewWeightDate(e.target.value)
-              }
-              className="border rounded-xl p-2 flex-1"
+              onChange={(e) => setNewWeightDate(e.target.value)}
+              className="border rounded-xl p-2 flex-1 min-w-0"
             />
 
             <input
@@ -434,128 +391,77 @@ export default function ChickenProfile({
               step="0.01"
               placeholder="KG"
               value={newWeight}
-              onChange={(e) =>
-                setNewWeight(e.target.value)
-              }
+              onChange={(e) => setNewWeight(e.target.value)}
               className="border rounded-xl p-2 w-24"
             />
           </div>
 
           <button
             onClick={addWeightEntry}
-            className="
-              bg-green-600
-              text-white
-              rounded-xl
-              p-3
-              font-semibold
-            "
+            className="bg-green-600 text-white rounded-xl p-3 font-semibold"
           >
             + Add Weight
           </button>
 
-          {(chicken.weightHistory || []).length === 0 && (
-            <div className="text-gray-400">
-              No weight records yet.
-            </div>
-          )}
+          {(chicken.weightHistory || chicken.weight_history || []).length ===
+            0 && <div className="text-gray-400">No weight records yet.</div>}
 
-          {(chicken.weightHistory || [])
+          {(chicken.weightHistory || chicken.weight_history || [])
             .slice()
             .reverse()
             .map((entry: any, index: number) => (
               <div
                 key={index}
-                className="
-                  bg-gray-50
-                  rounded-xl
-                  p-3
-                  flex
-                  justify-between
-                "
+                className="bg-gray-50 rounded-xl p-3 flex justify-between"
               >
                 <span>{entry.date}</span>
-
                 <span className="font-semibold">
-                  {entry.weightKg} kg
+                  {entry.weightKg || entry.weight_kg} kg
                 </span>
               </div>
             ))}
         </div>
       </ProfileSection>
 
-      {/* PHOTOS */}
       <ProfileSection title="Photos">
-        <PhotoSection
-          chicken={chicken}
-          updateChicken={updateChicken}
-        />
+        <PhotoSection chicken={chicken} updateChicken={updateChicken} />
       </ProfileSection>
 
-      {/* EGG PRODUCTION */}
       {chicken.sex?.toLowerCase() === "hen" && (
         <ProfileSection title="🥚 Egg Production">
           <div className="flex flex-col gap-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">
-                Eggs This Week
-              </span>
-
-              <span className="font-medium">
-                {eggStats.week}
-              </span>
+              <span className="text-gray-500">Eggs This Week</span>
+              <span className="font-medium">{eggStats.week}</span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-gray-500">
-                Eggs This Month
-              </span>
-
-              <span className="font-medium">
-                {eggStats.month}
-              </span>
+              <span className="text-gray-500">Eggs This Month</span>
+              <span className="font-medium">{eggStats.month}</span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-gray-500">
-                Lifetime Eggs
-              </span>
-
-              <span className="font-medium">
-                {eggStats.lifetime}
-              </span>
+              <span className="text-gray-500">Lifetime Eggs</span>
+              <span className="font-medium">{eggStats.lifetime}</span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-gray-500">
-                Last Egg Logged
-              </span>
-
-              <span className="font-medium">
-                {eggStats.lastDate}
-              </span>
+              <span className="text-gray-500">Last Egg Logged</span>
+              <span className="font-medium">{eggStats.lastDate}</span>
             </div>
           </div>
         </ProfileSection>
       )}
 
-      {/* NOTES */}
       <ProfileSection title="Notes">
-        <NotesSection
-          chicken={chicken}
-          updateChicken={updateChicken}
-        />
+        <NotesSection chicken={chicken} updateChicken={updateChicken} />
       </ProfileSection>
 
-      {/* HEALTH */}
       <ProfileSection title="Health">
-        {/* ACTIVITY */}
         <ProfileSection title="Activity">
           <div className="flex flex-col gap-2 text-xs">
             {(chicken.activity || []).length === 0 && (
-              <div className="text-gray-400">
-                No activity yet
-              </div>
+              <div className="text-gray-400">No activity yet</div>
             )}
 
             {(chicken.activity || [])
@@ -564,20 +470,11 @@ export default function ChickenProfile({
               .map((item: any, i: number) => (
                 <div
                   key={i}
-                  className="
-                    bg-gray-50
-                    p-2
-                    rounded-md
-                    flex
-                    justify-between
-                  "
+                  className="bg-gray-50 p-2 rounded-md flex justify-between gap-3"
                 >
                   <span>{item.text}</span>
-
                   <span className="text-gray-400">
-                    {new Date(
-                      item.time
-                    ).toLocaleDateString()}
+                    {new Date(item.time).toLocaleDateString()}
                   </span>
                 </div>
               ))}
@@ -585,10 +482,7 @@ export default function ChickenProfile({
         </ProfileSection>
 
         <div ref={healthRef}>
-          <HealthSection
-            chicken={chicken}
-            updateChicken={updateChicken}
-          />
+          <HealthSection chicken={chicken} updateChicken={updateChicken} />
         </div>
       </ProfileSection>
     </div>
