@@ -174,7 +174,7 @@ export default function ChickenFeed({ chickens = [] }: any) {
     const perKg = getCostPerKg(selectedFeed);
 
     return (
-      <div className="max-w-6xl mx-auto space-y-4 px-1">
+      <div className="w-full max-w-6xl mx-auto space-y-4 px-3 sm:px-4 overflow-hidden">
         <CoopPageBanner
           eyebrow="FEED PROFILE"
           title={`${selectedFeed.brand || "Feed"} ${
