@@ -480,15 +480,22 @@ export default function Wishlist() {
               )}
 
               {item.product_url && (
-                <a
-                  href={normalizeUrl(item.product_url)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-blue-600 text-white rounded-2xl p-3 text-center font-bold break-words"
-                >
-                  🔗 Open Product
-                </a>
-              )}
+  <button
+    onClick={() => {
+      const finalUrl = normalizeUrl(item.product_url);
+
+      if (!finalUrl || finalUrl === "https://") {
+        alert("No valid product link saved for this item.");
+        return;
+      }
+
+      window.location.href = finalUrl;
+    }}
+    className="bg-blue-600 text-white rounded-2xl p-3 text-center font-bold break-words"
+  >
+    🔗 Open Product
+  </button>
+)}
 
               <button
                 onClick={() => openPurchaseModal(item)}
