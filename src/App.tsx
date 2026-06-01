@@ -111,7 +111,7 @@ export default function App() {
       setLoadingChickens(false);
       return;
     }
-
+console.log("SUPABASE RAW DATA:", data);
     const formatted = (data || []).map((row: any) => {
       const chickenData = row.data || {};
 
@@ -124,7 +124,8 @@ export default function App() {
         ...chickenData,
       };
     });
-
+    
+console.log("FORMATTED CHICKENS:", formatted);
     setChickens(formatted);
     setLoadingChickens(false);
   };
