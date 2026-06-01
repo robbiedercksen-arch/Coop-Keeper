@@ -9,8 +9,12 @@ const cardClass =
 const statClass =
   "rounded-2xl p-4 text-center bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)]";
 
+const fieldClass =
+  "border border-[#d9a441] rounded-2xl p-3 bg-white w-full max-w-full min-w-0 box-border text-base leading-normal";
+
 export default function Expenses() {
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Feed");
@@ -29,6 +33,7 @@ export default function Expenses() {
   const [unitPrice, setUnitPrice] = useState("");
 
   const [slipFiles, setSlipFiles] = useState<File[]>([]);
+  const [existingSlipImages, setExistingSlipImages] = useState<string[]>([]);
   const [selectedSlipImages, setSelectedSlipImages] = useState<string[]>([]);
   const [showSlipViewer, setShowSlipViewer] = useState(false);
   const [activeSlipIndex, setActiveSlipIndex] = useState(0);
@@ -68,7 +73,41 @@ export default function Expenses() {
     setFeedProducts(data || []);
   };
 
-  const addExpense = async () => {
+  const resetForm = () => {
+    setTitle("");
+    setCategory("Feed");
+    setExpenseDate("");
+    setNotes("");
+    setRecurring(false);
+    setQty("1");
+    setUnitPrice("");
+    setBagSize("");
+    setSelectedFeed("");
+    setSlipFiles([]);
+    setExistingSlipImages([]);
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  const editExpense = (expense: any) => {
+    setEditingId(expense.id);
+    setTitle(expense.title || "");
+    setCategory(expense.category || "Feed");
+    setExpenseDate(expense.expense_date || "");
+    setNotes(expense.notes || "");
+    setRecurring(Boolean(expense.recurring));
+    setSelectedFeed(expense.feed_product || "");
+    setBagSize(expense.bag_size || "");
+    setQty(expense.qty?.toString() || "1");
+    setUnitPrice(expense.unit_price?.toString() || "");
+    setExistingSlipImages(expense.slip_images || []);
+    setSlipFiles([]);
+    setShowForm(true);
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const saveExpense = async () => {
     if (!title || subtotal <= 0) return;
 
     const uploadedSlipUrls: string[] = [];
@@ -92,43 +131,47 @@ export default function Expenses() {
       uploadedSlipUrls.push(data.publicUrl);
     }
 
-    const { error } = await supabase.from("expenses").insert([
-      {
-        title,
-        amount: subtotal,
-        category,
-        expense_date: expenseDate,
-        notes,
-        recurring,
-        feed_product: selectedFeed,
-        bag_size: bagSize,
-        qty: Number(qty),
-        unit_price: Number(unitPrice),
-        slip_images: uploadedSlipUrls,
-      },
-    ]);
+    const payload = {
+      title,
+      amount: subtotal,
+      category,
+      expense_date: expenseDate,
+      notes,
+      recurring,
+      feed_product: selectedFeed,
+      bag_size: bagSize,
+      qty: Number(qty),
+      unit_price: Number(unitPrice),
+      slip_images: [...existingSlipImages, ...uploadedSlipUrls],
+    };
+
+    let error;
+
+    if (editingId) {
+      const response = await supabase
+        .from("expenses")
+        .update(payload)
+        .eq("id", editingId);
+
+      error = response.error;
+    } else {
+      const response = await supabase.from("expenses").insert([payload]);
+      error = response.error;
+    }
 
     if (error) {
       console.error(error);
       return;
     }
 
-    setTitle("");
-    setCategory("Feed");
-    setExpenseDate("");
-    setNotes("");
-    setRecurring(false);
-    setQty("1");
-    setUnitPrice("");
-    setBagSize("");
-    setSelectedFeed("");
-    setSlipFiles([]);
-    setShowForm(false);
-
+    resetForm();
     loadExpenses();
   };
 
   const deleteExpense = async (id: number) => {
+    const confirmed = confirm("Delete this expense?");
+    if (!confirmed) return;
+
     const { error } = await supabase.from("expenses").delete().eq("id", id);
 
     if (error) {
@@ -414,7 +457,10 @@ export default function Expenses() {
 
       <div className={cardClass}>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => {
+            resetForm();
+            setShowForm(true);
+          }}
           className="w-full bg-[#022312] text-[#f7d37b] rounded-2xl px-5 py-4 font-extrabold shadow-md"
         >
           ➕ Add Expense
@@ -422,199 +468,221 @@ export default function Expenses() {
       </div>
 
       {showForm && (
-  <div className={cardClass}>
-    <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
-      💰 Add Expense
-    </h2>
+        <div className={cardClass}>
+          <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
+            💰 {editingId ? "Edit Expense" : "Add Expense"}
+          </h2>
 
-    <div className="flex flex-col gap-4">
-      <label className="flex flex-col gap-2">
-        <span className="font-extrabold text-[#3d2a10]">Expense Info</span>
-        <input
-          placeholder="Expense Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-        />
-      </label>
+          <div className="flex flex-col gap-4">
+            <label className="flex flex-col gap-2">
+              <span className="font-extrabold text-[#3d2a10]">
+                Expense Info
+              </span>
+              <input
+                placeholder="Expense Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className={fieldClass}
+              />
+            </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="font-extrabold text-[#3d2a10]">Purchase Category</span>
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-        >
-          <option>Feed</option>
-          <option>Medicine</option>
-          <option>Construction</option>
-          <option>Equipment</option>
-          <option>Utilities</option>
-          <option>Transport</option>
-          <option>Maintenance</option>
-          <option>Other</option>
-        </select>
-      </label>
+            <label className="flex flex-col gap-2">
+              <span className="font-extrabold text-[#3d2a10]">
+                Purchase Category
+              </span>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className={fieldClass}
+              >
+                <option>Feed</option>
+                <option>Medicine</option>
+                <option>Construction</option>
+                <option>Equipment</option>
+                <option>Utilities</option>
+                <option>Transport</option>
+                <option>Maintenance</option>
+                <option>Other</option>
+              </select>
+            </label>
 
-      {category === "Feed" && (
-        <>
-          <label className="flex flex-col gap-2">
-            <span className="font-extrabold text-[#3d2a10]">
-              Choose Feed Type
-            </span>
-            <select
-              value={selectedFeed}
-              onChange={(e) => setSelectedFeed(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            >
-              <option value="">Select Feed Type</option>
+            {category === "Feed" && (
+              <>
+                <label className="flex flex-col gap-2">
+                  <span className="font-extrabold text-[#3d2a10]">
+                    Choose Feed Type
+                  </span>
+                  <select
+                    value={selectedFeed}
+                    onChange={(e) => setSelectedFeed(e.target.value)}
+                    className={fieldClass}
+                  >
+                    <option value="">Select Feed Type</option>
 
-              {feedProducts.map((feed) => (
-                <option
-                  key={feed.id}
-                  value={`${feed.brand} - ${feed.product_name}`}
-                >
-                  {feed.brand} - {feed.product_name}
-                </option>
-              ))}
-            </select>
-          </label>
+                    {feedProducts.map((feed) => (
+                      <option
+                        key={feed.id}
+                        value={`${feed.brand} - ${feed.product_name}`}
+                      >
+                        {feed.brand} - {feed.product_name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-          <label className="flex flex-col gap-2">
-            <span className="font-extrabold text-[#3d2a10]">
-              Feed Bag Size Selection
-            </span>
-            <select
-              value={bagSize}
-              onChange={(e) => setBagSize(e.target.value)}
-              className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-            >
-              <option value="">Select Bag Size</option>
-              <option>5KG</option>
-              <option>10KG</option>
-              <option>20KG</option>
-              <option>25KG</option>
-              <option>40KG</option>
-              <option>50KG</option>
-              <option>60KG</option>
-              <option>80KG</option>
-              <option>100KG</option>
-            </select>
-          </label>
-        </>
-      )}
+                <label className="flex flex-col gap-2">
+                  <span className="font-extrabold text-[#3d2a10]">
+                    Feed Bag Size Selection
+                  </span>
+                  <select
+                    value={bagSize}
+                    onChange={(e) => setBagSize(e.target.value)}
+                    className={fieldClass}
+                  >
+                    <option value="">Select Bag Size</option>
+                    <option>5KG</option>
+                    <option>10KG</option>
+                    <option>20KG</option>
+                    <option>25KG</option>
+                    <option>40KG</option>
+                    <option>50KG</option>
+                    <option>60KG</option>
+                    <option>80KG</option>
+                    <option>100KG</option>
+                  </select>
+                </label>
+              </>
+            )}
 
-      <label className="flex flex-col gap-2">
-        <span className="font-extrabold text-[#3d2a10]">Product Quantity</span>
-        <input
-          type="number"
-          placeholder="Product Quantity"
-          value={qty}
-          onChange={(e) => setQty(e.target.value)}
-          className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-        />
-      </label>
+            <label className="flex flex-col gap-2">
+              <span className="font-extrabold text-[#3d2a10]">
+                Product Quantity
+              </span>
+              <input
+                type="number"
+                placeholder="Product Quantity"
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
+                className={fieldClass}
+              />
+            </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="font-extrabold text-[#3d2a10]">Unit Price</span>
-        <input
-          type="number"
-          placeholder="Price Per Unit"
-          value={unitPrice}
-          onChange={(e) => setUnitPrice(e.target.value)}
-          className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-        />
-      </label>
+            <label className="flex flex-col gap-2">
+              <span className="font-extrabold text-[#3d2a10]">Unit Price</span>
+              <input
+                type="number"
+                placeholder="Price Per Unit"
+                value={unitPrice}
+                onChange={(e) => setUnitPrice(e.target.value)}
+                className={fieldClass}
+              />
+            </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="font-extrabold text-[#3d2a10]">Purchase Date</span>
-        <input
-          type="date"
-          value={expenseDate}
-          onChange={(e) => setExpenseDate(e.target.value)}
-          className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-        />
-      </label>
+            <label className="flex flex-col gap-2">
+              <span className="font-extrabold text-[#3d2a10]">
+                Purchase Date
+              </span>
+              <input
+                type="date"
+                value={expenseDate}
+                onChange={(e) => setExpenseDate(e.target.value)}
+                className={`${fieldClass} appearance-none`}
+              />
+            </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="font-extrabold text-[#3d2a10]">Additional Notes</span>
-        <textarea
-          placeholder="Additional Notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="border border-[#d9a441] rounded-2xl p-3 bg-white"
-          rows={3}
-        />
-      </label>
+            <label className="flex flex-col gap-2">
+              <span className="font-extrabold text-[#3d2a10]">
+                Additional Notes
+              </span>
+              <textarea
+                placeholder="Additional Notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className={fieldClass}
+                rows={3}
+              />
+            </label>
 
-      <div className="flex flex-col gap-3">
-        <span className="font-extrabold text-[#3d2a10]">Invoice Slip</span>
+            <div className="flex flex-col gap-3">
+              <span className="font-extrabold text-[#3d2a10]">
+                Invoice Slip
+              </span>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <label className="border border-[#d9a441] rounded-2xl p-4 bg-white cursor-pointer font-bold text-[#4b3a1d] text-center">
-            📁 Upload Files
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => setSlipFiles(Array.from(e.target.files || []))}
-              className="hidden"
-            />
-          </label>
+              {existingSlipImages.length > 0 && (
+                <div className="text-sm text-[#6b5a3a] font-semibold">
+                  Existing slip image(s): {existingSlipImages.length}
+                </div>
+              )}
 
-          <label className="border border-[#d9a441] rounded-2xl p-4 bg-white cursor-pointer font-bold text-[#4b3a1d] text-center">
-            📷 Camera
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => setSlipFiles(Array.from(e.target.files || []))}
-              className="hidden"
-            />
-          </label>
-        </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label className="border border-[#d9a441] rounded-2xl p-4 bg-white cursor-pointer font-bold text-[#4b3a1d] text-center">
+                  📁 Upload Files
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) =>
+                      setSlipFiles(Array.from(e.target.files || []))
+                    }
+                    className="hidden"
+                  />
+                </label>
 
-        {slipFiles.length > 0 && (
-          <div className="text-sm text-[#6b5a3a] font-semibold">
-            {slipFiles.length} slip(s) selected
+                <label className="border border-[#d9a441] rounded-2xl p-4 bg-white cursor-pointer font-bold text-[#4b3a1d] text-center">
+                  📷 Camera
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) =>
+                      setSlipFiles(Array.from(e.target.files || []))
+                    }
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {slipFiles.length > 0 && (
+                <div className="text-sm text-[#6b5a3a] font-semibold">
+                  {slipFiles.length} new slip(s) selected
+                </div>
+              )}
+            </div>
+
+            <label className="flex items-center gap-2 text-[#4b3a1d] font-semibold">
+              <input
+                type="checkbox"
+                checked={recurring}
+                onChange={(e) => setRecurring(e.target.checked)}
+              />
+              Recurring Expense
+            </label>
+
+            <div className={statClass}>
+              <div className="text-sm text-[#4b3a1d]">Subtotal</div>
+              <div className="text-2xl font-bold text-[#3d2a10]">
+                R {subtotal.toFixed(2)}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={saveExpense}
+                className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold"
+              >
+                {editingId ? "Update Expense" : "+ Add Expense"}
+              </button>
+
+              <button
+                onClick={resetForm}
+                className="bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        )}
-      </div>
-
-      <label className="flex items-center gap-2 text-[#4b3a1d] font-semibold">
-        <input
-          type="checkbox"
-          checked={recurring}
-          onChange={(e) => setRecurring(e.target.checked)}
-        />
-        Recurring Expense
-      </label>
-
-      <div className={statClass}>
-        <div className="text-sm text-[#4b3a1d]">Subtotal</div>
-        <div className="text-2xl font-bold text-[#3d2a10]">
-          R {subtotal.toFixed(2)}
         </div>
-      </div>
-
-      <div className="flex gap-3">
-        <button
-          onClick={addExpense}
-          className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold"
-        >
-          + Add Expense
-        </button>
-
-        <button
-          onClick={() => setShowForm(false)}
-          className="bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
       <div className={cardClass}>
         <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
@@ -681,7 +749,9 @@ export default function Expenses() {
         <div className="rounded-2xl p-4 mb-4 bg-white/60 border border-[#d9a441]/60 flex flex-col gap-2">
           <div className="flex justify-between items-center gap-4">
             <div>
-              <div className="text-sm text-[#6b5a3a]">Selected Period Total</div>
+              <div className="text-sm text-[#6b5a3a]">
+                Selected Period Total
+              </div>
 
               <div className="text-xl font-extrabold text-green-800">
                 R {selectedViewTotal.toFixed(2)}
@@ -754,7 +824,9 @@ export default function Expenses() {
                     {expense.title}
                   </div>
 
-                  <div className="text-sm text-[#4b3a1d]">{expense.category}</div>
+                  <div className="text-sm text-[#4b3a1d]">
+                    {expense.category}
+                  </div>
 
                   <div className="text-sm text-[#6b5a3a] mb-2">
                     {expense.expense_date}
@@ -788,19 +860,21 @@ export default function Expenses() {
 
                   {expense.slip_images && expense.slip_images.length > 0 && (
                     <div className="flex gap-2 mt-3 flex-wrap">
-                      {expense.slip_images.map((image: string, index: number) => (
-                        <img
-                          key={index}
-                          src={image}
-                          alt="Slip"
-                          onClick={() => {
-                            setSelectedSlipImages(expense.slip_images);
-                            setActiveSlipIndex(index);
-                            setShowSlipViewer(true);
-                          }}
-                          className="w-20 h-20 object-cover rounded-xl border cursor-pointer hover:scale-105 transition"
-                        />
-                      ))}
+                      {expense.slip_images.map(
+                        (image: string, index: number) => (
+                          <img
+                            key={index}
+                            src={image}
+                            alt="Slip"
+                            onClick={() => {
+                              setSelectedSlipImages(expense.slip_images);
+                              setActiveSlipIndex(index);
+                              setShowSlipViewer(true);
+                            }}
+                            className="w-20 h-20 object-cover rounded-xl border cursor-pointer hover:scale-105 transition"
+                          />
+                        )
+                      )}
                     </div>
                   )}
                 </div>
@@ -817,8 +891,15 @@ export default function Expenses() {
                   )}
 
                   <button
+                    onClick={() => editExpense(expense)}
+                    className="mt-3 bg-orange-500 text-white px-3 py-2 rounded-xl text-sm font-bold w-full"
+                  >
+                    ✏ Edit
+                  </button>
+
+                  <button
                     onClick={() => deleteExpense(expense.id)}
-                    className="mt-3 bg-red-600 text-white px-3 py-2 rounded-xl text-sm font-bold"
+                    className="mt-2 bg-red-600 text-white px-3 py-2 rounded-xl text-sm font-bold w-full"
                   >
                     🗑 Delete
                   </button>
