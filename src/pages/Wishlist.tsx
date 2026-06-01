@@ -34,6 +34,21 @@ export default function Wishlist() {
 
   const totalCost = Number(qty || 0) * Number(unitPrice || 0);
 
+  const normalizeUrl = (url: string) => {
+    if (!url) return "";
+
+    const trimmedUrl = url.trim();
+
+    if (
+      trimmedUrl.startsWith("http://") ||
+      trimmedUrl.startsWith("https://")
+    ) {
+      return trimmedUrl;
+    }
+
+    return `https://${trimmedUrl}`;
+  };
+
   useEffect(() => {
     loadWishlistItems();
   }, []);
@@ -101,7 +116,7 @@ export default function Wishlist() {
         unit_price: Number(unitPrice),
         total_cost: totalCost,
         item_details: itemDetails,
-        product_url: productUrl,
+        product_url: normalizeUrl(productUrl),
         product_images: uploadedImageUrls,
       },
     ]);
@@ -117,6 +132,9 @@ export default function Wishlist() {
   };
 
   const deleteWishlistItem = async (id: string) => {
+    const confirmed = confirm("Delete this wishlist item?");
+    if (!confirmed) return;
+
     const { error } = await supabase.from("wishlist").delete().eq("id", id);
 
     if (error) {
@@ -246,7 +264,7 @@ export default function Wishlist() {
               <select
                 value={itemCategory}
                 onChange={(e) => setItemCategory(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white text-base"
               >
                 <option>Minerals & Vitamins</option>
                 <option>Food</option>
@@ -267,7 +285,7 @@ export default function Wishlist() {
                 placeholder="Item Name"
                 value={itemName}
                 onChange={(e) => setItemName(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white text-base"
               />
             </label>
 
@@ -280,7 +298,7 @@ export default function Wishlist() {
                 placeholder="Quantity"
                 value={qty}
                 onChange={(e) => setQty(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white text-base"
               />
             </label>
 
@@ -293,7 +311,7 @@ export default function Wishlist() {
                 placeholder="Unit Price"
                 value={unitPrice}
                 onChange={(e) => setUnitPrice(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white text-base"
               />
             </label>
 
@@ -305,7 +323,7 @@ export default function Wishlist() {
                 placeholder="Item Details"
                 value={itemDetails}
                 onChange={(e) => setItemDetails(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white text-base"
                 rows={3}
               />
             </label>
@@ -316,10 +334,10 @@ export default function Wishlist() {
               </span>
               <input
                 type="url"
-                placeholder="Product URL"
+                placeholder="Example: https://www.takealot.com/product"
                 value={productUrl}
                 onChange={(e) => setProductUrl(e.target.value)}
-                className="border border-[#d9a441] rounded-2xl p-3 bg-white"
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white text-base"
               />
             </label>
 
@@ -406,8 +424,8 @@ export default function Wishlist() {
               className="rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)] flex flex-col gap-4"
             >
               <div className="flex justify-between items-start gap-4">
-                <div className="flex-1">
-                  <div className="font-extrabold text-xl text-[#3d2a10]">
+                <div className="flex-1 min-w-0">
+                  <div className="font-extrabold text-xl text-[#3d2a10] break-words">
                     {item.item_name}
                   </div>
                   <div className="text-sm text-[#6b5a3a]">
@@ -415,7 +433,7 @@ export default function Wishlist() {
                   </div>
                 </div>
 
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <div className="font-extrabold text-2xl text-green-800">
                     R {Number(item.total_cost).toFixed(2)}
                   </div>
@@ -437,7 +455,7 @@ export default function Wishlist() {
               </div>
 
               {item.item_details && (
-                <div className="bg-white/60 rounded-2xl p-3 text-sm border border-[#d9a441]/50 text-[#4b3a1d]">
+                <div className="bg-white/60 rounded-2xl p-3 text-sm border border-[#d9a441]/50 text-[#4b3a1d] break-words">
                   <span className="font-bold">Details:</span>{" "}
                   {item.item_details}
                 </div>
@@ -463,10 +481,10 @@ export default function Wishlist() {
 
               {item.product_url && (
                 <a
-                  href={item.product_url}
+                  href={normalizeUrl(item.product_url)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-blue-600 text-white rounded-2xl p-3 text-center font-bold"
+                  className="bg-blue-600 text-white rounded-2xl p-3 text-center font-bold break-words"
                 >
                   🔗 Open Product
                 </a>
@@ -491,7 +509,7 @@ export default function Wishlist() {
       </div>
 
       {showPurchaseModal && purchaseItem && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-3">
           <div className={`${cardClass} w-full max-w-md flex flex-col gap-4`}>
             <h2 className="text-xl font-extrabold text-[#3d2a10]">
               ✅ Mark Item as Purchased
@@ -509,7 +527,7 @@ export default function Wishlist() {
             <select
               value={purchaseCategory}
               onChange={(e) => setPurchaseCategory(e.target.value)}
-              className="border border-[#d9a441] rounded-xl p-3 bg-white"
+              className="border border-[#d9a441] rounded-xl p-3 bg-white text-base"
             >
               <option>Feed</option>
               <option>Medicine</option>
@@ -525,7 +543,7 @@ export default function Wishlist() {
               type="date"
               value={purchaseDate}
               onChange={(e) => setPurchaseDate(e.target.value)}
-              className="border border-[#d9a441] rounded-xl p-3 bg-white"
+              className="border border-[#d9a441] rounded-xl p-3 bg-white text-base"
             />
 
             <input
@@ -536,7 +554,7 @@ export default function Wishlist() {
               onChange={(e) =>
                 setPurchaseSlipFiles(Array.from(e.target.files || []))
               }
-              className="border border-[#d9a441] rounded-xl p-3 bg-white"
+              className="border border-[#d9a441] rounded-xl p-3 bg-white text-base"
             />
 
             <div className="flex gap-2">
