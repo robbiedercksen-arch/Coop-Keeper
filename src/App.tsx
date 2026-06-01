@@ -105,7 +105,7 @@ export default function App() {
 
     const { data, error } = await supabase
   .from("chickens")
-  .select("id,created_at,data,name,idTag,breed,sex,ageGroup,image,notes,healthLogs,album")
+  .select("id,name,idTag,breed,sex,ageGroup,image")
   .order("id", { ascending: true });
 
     if (error) {
