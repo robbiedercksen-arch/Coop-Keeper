@@ -29,6 +29,7 @@ export default function ChickenProfile({
   const [chicken, setChicken] = useState(selectedChicken);
   const [editing, setEditing] = useState(false);
   const [newWeight, setNewWeight] = useState("");
+  const [loadingFullProfile, setLoadingFullProfile] = useState(false);
 
   const [editingWeightIndex, setEditingWeightIndex] = useState<number | null>(
     null
@@ -56,8 +57,66 @@ export default function ChickenProfile({
   }, []);
 
   useEffect(() => {
+    loadFullChicken();
     loadEggStats();
-  }, [selectedChicken]);
+  }, [selectedChicken?.id]);
+
+  const parseChickenData = (value: any) => {
+    if (!value) return {};
+
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return {};
+      }
+    }
+
+    return value;
+  };
+
+  const loadFullChicken = async () => {
+    if (!selectedChicken?.id) return;
+
+    setLoadingFullProfile(true);
+
+    const { data, error } = await supabase
+      .from("chickens")
+      .select("*")
+      .eq("id", selectedChicken.id)
+      .single();
+
+    if (error) {
+      console.error("Full chicken load error:", error);
+      setLoadingFullProfile(false);
+      return;
+    }
+
+    const chickenData = parseChickenData(data?.data);
+
+    const fullChicken = {
+      ...data,
+      ...chickenData,
+      id: chickenData.id || data.id,
+      name: chickenData.name || data.name || "",
+      idTag: chickenData.idTag || data.idTag || "",
+      breed: chickenData.breed || data.breed || "",
+      sex: chickenData.sex || data.sex || "",
+      ageGroup: chickenData.ageGroup || data.ageGroup || "",
+      image: chickenData.image || data.image || "",
+      photos: chickenData.photos || data.photos || [],
+      notes: chickenData.notes || data.notes || [],
+      healthLogs: chickenData.healthLogs || data.healthLogs || [],
+      album: chickenData.album || data.album || [],
+      weightHistory:
+        chickenData.weightHistory || chickenData.weight_history || [],
+      activity: chickenData.activity || [],
+    };
+
+    setChicken(fullChicken);
+    setSelectedChicken(fullChicken);
+    setLoadingFullProfile(false);
+  };
 
   const getValue = (camelKey: string, snakeKey: string) =>
     chicken?.[camelKey] ?? chicken?.[snakeKey] ?? "";
@@ -80,7 +139,7 @@ export default function ChickenProfile({
   };
 
   const loadEggStats = async () => {
-    if (!selectedChicken) return;
+    if (!selectedChicken?.id) return;
 
     const { data, error } = await supabase
       .from("egg_logs")
@@ -253,6 +312,12 @@ export default function ChickenProfile({
     <div className="w-full max-w-md mx-auto p-4 flex flex-col gap-4 overflow-hidden">
       <div className="flex flex-col items-center gap-4">
         <h2 className="text-2xl font-bold">🐔 Chicken Profile</h2>
+
+        {loadingFullProfile && (
+          <div className="text-sm text-gray-500 font-semibold">
+            Loading full profile...
+          </div>
+        )}
 
         <div className="relative">
           <img
