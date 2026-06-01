@@ -37,16 +37,19 @@ export default function Wishlist() {
   const normalizeUrl = (url: string) => {
     if (!url) return "";
 
-    const trimmedUrl = url.trim();
+    const match = url.match(/(https?:\/\/[^\s]+|www\.[^\s]+)/i);
 
-    if (
-      trimmedUrl.startsWith("http://") ||
-      trimmedUrl.startsWith("https://")
-    ) {
-      return trimmedUrl;
+    if (!match) return "";
+
+    let cleanUrl = match[0].trim();
+
+    cleanUrl = cleanUrl.replace(/[),.;]+$/g, "");
+
+    if (!cleanUrl.startsWith("http")) {
+      cleanUrl = `https://${cleanUrl}`;
     }
 
-    return `https://${trimmedUrl}`;
+    return cleanUrl;
   };
 
   useEffect(() => {
@@ -332,12 +335,12 @@ export default function Wishlist() {
               <span className="font-extrabold text-[#3d2a10]">
                 Add Product URL / Link
               </span>
-              <input
-                type="url"
-                placeholder="Example: https://www.takealot.com/product"
+              <textarea
+                placeholder="Paste Takealot share text or product URL here"
                 value={productUrl}
                 onChange={(e) => setProductUrl(e.target.value)}
                 className="border border-[#d9a441] rounded-2xl p-3 bg-white text-base"
+                rows={3}
               />
             </label>
 
@@ -418,100 +421,107 @@ export default function Wishlist() {
         )}
 
         <div className="flex flex-col gap-4">
-          {wishlistItems.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)] flex flex-col gap-4"
-            >
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="font-extrabold text-xl text-[#3d2a10] break-words">
-                    {item.item_name}
-                  </div>
-                  <div className="text-sm text-[#6b5a3a]">
-                    {item.item_category}
-                  </div>
-                </div>
+          {wishlistItems.map((item) => {
+            const cleanProductUrl = normalizeUrl(item.product_url || "");
 
-                <div className="text-right shrink-0">
-                  <div className="font-extrabold text-2xl text-green-800">
-                    R {Number(item.total_cost).toFixed(2)}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-white/60 rounded-2xl p-3 border border-[#d9a441]/50">
-                  <div className="text-[#6b5a3a]">Quantity</div>
-                  <div className="font-extrabold text-[#3d2a10]">{item.qty}</div>
-                </div>
-
-                <div className="bg-white/60 rounded-2xl p-3 border border-[#d9a441]/50">
-                  <div className="text-[#6b5a3a]">Unit Price</div>
-                  <div className="font-extrabold text-[#3d2a10]">
-                    R {Number(item.unit_price).toFixed(2)}
-                  </div>
-                </div>
-              </div>
-
-              {item.item_details && (
-                <div className="bg-white/60 rounded-2xl p-3 text-sm border border-[#d9a441]/50 text-[#4b3a1d] break-words">
-                  <span className="font-bold">Details:</span>{" "}
-                  {item.item_details}
-                </div>
-              )}
-
-              {item.product_images && item.product_images.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
-                  {item.product_images.map((image: string, index: number) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt="Product"
-                      onClick={() => {
-                        setSelectedProductImages(item.product_images);
-                        setActiveImageIndex(index);
-                        setShowImageViewer(true);
-                      }}
-                      className="w-24 h-24 object-cover rounded-2xl border border-[#d9a441] cursor-pointer hover:scale-105 transition"
-                    />
-                  ))}
-                </div>
-              )}
-
-              {item.product_url && (
-  <button
-    onClick={() => {
-      const finalUrl = normalizeUrl(item.product_url);
-
-      if (!finalUrl || finalUrl === "https://") {
-        alert("No valid product link saved for this item.");
-        return;
-      }
-
-      window.location.href = finalUrl;
-    }}
-    className="bg-blue-600 text-white rounded-2xl p-3 text-center font-bold break-words"
-  >
-    🔗 Open Product
-  </button>
-)}
-
-              <button
-                onClick={() => openPurchaseModal(item)}
-                className="bg-green-700 text-white rounded-2xl p-4 font-bold text-lg shadow-md"
+            return (
+              <div
+                key={item.id}
+                className="rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)] flex flex-col gap-4"
               >
-                ✅ Item Purchased
-              </button>
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-extrabold text-xl text-[#3d2a10] break-words">
+                      {item.item_name}
+                    </div>
+                    <div className="text-sm text-[#6b5a3a]">
+                      {item.item_category}
+                    </div>
+                  </div>
 
-              <button
-                onClick={() => deleteWishlistItem(item.id)}
-                className="bg-red-600 text-white rounded-2xl p-3 font-bold"
-              >
-                🗑 Delete Item
-              </button>
-            </div>
-          ))}
+                  <div className="text-right shrink-0">
+                    <div className="font-extrabold text-2xl text-green-800">
+                      R {Number(item.total_cost).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-white/60 rounded-2xl p-3 border border-[#d9a441]/50">
+                    <div className="text-[#6b5a3a]">Quantity</div>
+                    <div className="font-extrabold text-[#3d2a10]">
+                      {item.qty}
+                    </div>
+                  </div>
+
+                  <div className="bg-white/60 rounded-2xl p-3 border border-[#d9a441]/50">
+                    <div className="text-[#6b5a3a]">Unit Price</div>
+                    <div className="font-extrabold text-[#3d2a10]">
+                      R {Number(item.unit_price).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+
+                {item.item_details && (
+                  <div className="bg-white/60 rounded-2xl p-3 text-sm border border-[#d9a441]/50 text-[#4b3a1d] break-words">
+                    <span className="font-bold">Details:</span>{" "}
+                    {item.item_details}
+                  </div>
+                )}
+
+                {item.product_images && item.product_images.length > 0 && (
+                  <div className="flex gap-2 flex-wrap">
+                    {item.product_images.map((image: string, index: number) => (
+                      <img
+                        key={index}
+                        src={image}
+                        alt="Product"
+                        onClick={() => {
+                          setSelectedProductImages(item.product_images);
+                          setActiveImageIndex(index);
+                          setShowImageViewer(true);
+                        }}
+                        className="w-24 h-24 object-cover rounded-2xl border border-[#d9a441] cursor-pointer hover:scale-105 transition"
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {item.product_url && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!cleanProductUrl) {
+                        alert(
+                          "No valid product link found. Please paste the Takealot share text or product URL again."
+                        );
+                        return;
+                      }
+
+                      window.open(cleanProductUrl, "_blank", "noopener,noreferrer");
+                    }}
+                    className="bg-blue-600 text-white rounded-2xl p-3 text-center font-bold break-words"
+                  >
+                    🔗 Open Product
+                  </button>
+                )}
+
+                <button
+                  onClick={() => openPurchaseModal(item)}
+                  className="bg-green-700 text-white rounded-2xl p-4 font-bold text-lg shadow-md"
+                >
+                  ✅ Item Purchased
+                </button>
+
+                <button
+                  onClick={() => deleteWishlistItem(item.id)}
+                  className="bg-red-600 text-white rounded-2xl p-3 font-bold"
+                >
+                  🗑 Delete Item
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
