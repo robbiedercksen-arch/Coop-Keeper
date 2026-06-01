@@ -36,6 +36,53 @@ function CoopLogo({ size = 48 }: any) {
   );
 }
 
+function LoadingScreen() {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f4f0e8",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 24,
+      }}
+    >
+      <div
+        style={{
+          border: "1px solid #d9a441",
+          background: "#faf7f0",
+          borderRadius: 24,
+          padding: 28,
+          textAlign: "center",
+          boxShadow: "0 16px 34px rgba(76,54,24,0.16)",
+          maxWidth: 340,
+          width: "100%",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+          <CoopLogo size={76} />
+        </div>
+
+        <div
+          style={{
+            fontSize: 22,
+            fontWeight: 900,
+            color: "#3d2a10",
+            marginBottom: 6,
+          }}
+        >
+          Loading Coop Keeper
+        </div>
+
+        <div style={{ color: "#6b5a3a", fontWeight: 600 }}>
+          Fetching your chickens from Supabase...
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
@@ -44,6 +91,7 @@ export default function App() {
 
   const [chickens, setChickens] = useState<any[]>([]);
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
+  const [loadingChickens, setLoadingChickens] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -53,18 +101,32 @@ export default function App() {
   }, []);
 
   const loadChickens = async () => {
+    setLoadingChickens(true);
+
     const { data, error } = await supabase.from("chickens").select("*");
 
     if (error) {
       console.error("Load error:", error);
+      setChickens([]);
+      setLoadingChickens(false);
       return;
     }
 
-    const formatted = (data || []).map((row: any) => ({
-      ...row.data,
-    }));
+    const formatted = (data || []).map((row: any) => {
+      const chickenData = row.data || {};
+
+      return {
+        id: chickenData.id || row.id,
+        name: chickenData.name || row.name || "",
+        idTag: chickenData.idTag || row.idTag || row.id_tag || "",
+        breed: chickenData.breed || row.breed || "",
+        sex: chickenData.sex || row.sex || "",
+        ...chickenData,
+      };
+    });
 
     setChickens(formatted);
+    setLoadingChickens(false);
   };
 
   const saveChickenToDB = async (chicken: any) => {
@@ -82,9 +144,10 @@ export default function App() {
 
     if (error) {
       console.error("Save error:", error);
-    } else {
-      await loadChickens();
+      return;
     }
+
+    await loadChickens();
   };
 
   useEffect(() => {
@@ -114,6 +177,10 @@ export default function App() {
     { key: "expenses", label: "Expenses", icon: "💰" },
     { key: "wishlist", label: "Wishlist", icon: "🛒" },
   ];
+
+  if (loadingChickens) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div style={{ display: "flex", background: "#f4f0e8", minHeight: "100vh" }}>
@@ -365,6 +432,7 @@ export default function App() {
               setSelectedChicken={(chicken: any) => {
                 setSelectedChicken(chicken);
                 setPage("profile");
+                window.scrollTo({ top: 0, behavior: "auto" });
               }}
               navigate={navigate}
             />
