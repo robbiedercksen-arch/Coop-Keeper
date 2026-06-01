@@ -198,31 +198,62 @@ export default function ChickenProfile({
   );
 
   const updateChicken = async (updated: any) => {
-  const profileThumbnail =
-    updated.image ||
-    updated.image_url ||
-    updated.photos?.[0] ||
-    "";
+    const profileThumbnail =
+      updated.image ||
+      updated.image_url ||
+      updated.photos?.[0] ||
+      "";
 
-  const updatedWithThumbnail = {
-    ...updated,
-    image: profileThumbnail,
+    const updatedWithThumbnail = {
+      ...updated,
+      image: profileThumbnail,
+    };
+
+    setChicken(updatedWithThumbnail);
+
+    setChickens((prev: any[]) =>
+      prev.map((c) =>
+        c.id === updatedWithThumbnail.id ? updatedWithThumbnail : c
+      )
+    );
+
+    setSelectedChicken(updatedWithThumbnail);
+
+    await saveChickenToDB(updatedWithThumbnail);
   };
-
-  setChicken(updatedWithThumbnail);
-
-  setChickens((prev: any[]) =>
-    prev.map((c) => (c.id === updatedWithThumbnail.id ? updatedWithThumbnail : c))
-  );
-
-  setSelectedChicken(updatedWithThumbnail);
-
-  await saveChickenToDB(updatedWithThumbnail);
-};
 
   const saveEdits = async () => {
     await updateChicken(chicken);
     setEditing(false);
+  };
+
+  const deleteChicken = async () => {
+    const confirmed = confirm(
+      `Are you sure you want to permanently delete ${chicken.name}? This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    const secondConfirm = confirm(
+      "Final confirmation: This will permanently delete this chicken profile."
+    );
+
+    if (!secondConfirm) return;
+
+    const { error } = await supabase
+      .from("chickens")
+      .delete()
+      .eq("id", chicken.id);
+
+    if (error) {
+      console.error("Delete chicken error:", error);
+      alert("Could not delete chicken profile.");
+      return;
+    }
+
+    setChickens((prev: any[]) => prev.filter((c) => c.id !== chicken.id));
+    setSelectedChicken(null);
+    navigate("registry");
   };
 
   const addWeightEntry = async () => {
@@ -325,11 +356,11 @@ export default function ChickenProfile({
         <h2 className="text-2xl font-bold">🐔 Chicken Profile</h2>
 
         {loadingFullProfile && (
-  <div className="flex items-center gap-2 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-full font-bold text-sm shadow-md animate-pulse">
-    <span className="text-xl animate-spin">⏳</span>
-    <span>Loading chicken profile...</span>
-  </div>
-)}
+          <div className="flex items-center gap-2 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-full font-bold text-sm shadow-md animate-pulse">
+            <span className="text-xl animate-spin">⏳</span>
+            <span>Loading chicken profile...</span>
+          </div>
+        )}
 
         <div className="relative">
           <img
@@ -359,7 +390,7 @@ export default function ChickenProfile({
           <div className="text-gray-500 text-sm">{chicken.breed}</div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-center gap-2">
           {!editing ? (
             <button
               onClick={() => setEditing(true)}
@@ -381,6 +412,13 @@ export default function ChickenProfile({
             onClick={() => navigate("registry")}
           >
             ← Back
+          </button>
+
+          <button
+            onClick={deleteChicken}
+            className="bg-red-600 text-white px-4 py-2 rounded-xl text-base font-bold"
+          >
+            🗑 Delete Chicken
           </button>
         </div>
       </div>
