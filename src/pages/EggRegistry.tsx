@@ -147,7 +147,7 @@ export default function EggRegistry({ chickens }: any) {
 
     if (error) {
       console.error(error);
-      alert("Could not log egg collection.");
+      alert("Could not log egg production.");
       return;
     }
 
@@ -202,20 +202,20 @@ export default function EggRegistry({ chickens }: any) {
           onClick={() => setShowForm(true)}
           className="w-full bg-[#022312] text-[#f7d37b] rounded-2xl px-5 py-4 font-extrabold shadow-md"
         >
-          ➕ Add Egg Collection
+          ➕ Add Egg Production
         </button>
       </div>
 
       {showForm && (
         <div className={cardClass}>
           <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
-            🥚 Log Egg Collection
+            🥚 Log Egg Production
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-full">
             <div className="w-full min-w-0 max-w-full">
               <label className="block text-[#4b3a1d] font-bold mb-1">
-                Collection Date
+                Production Date
               </label>
 
               <input
@@ -314,7 +314,7 @@ export default function EggRegistry({ chickens }: any) {
 
       <div className={cardClass}>
         <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
-          📜 Collection History
+          🥚 Egg Production History
         </h2>
 
         <div className="flex gap-2 overflow-x-auto pb-3 mb-3">
@@ -349,7 +349,7 @@ export default function EggRegistry({ chickens }: any) {
 
         {filteredEggLogs.length === 0 ? (
           <div className="text-[#6b5a3a] text-sm">
-            No egg collections logged for this period.
+            No egg production logged for this period.
           </div>
         ) : (
           <div className="flex flex-col gap-3">
