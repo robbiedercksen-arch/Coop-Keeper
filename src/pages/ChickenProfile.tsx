@@ -30,6 +30,12 @@ export default function ChickenProfile({
   const [editing, setEditing] = useState(false);
   const [newWeight, setNewWeight] = useState("");
 
+  const [editingWeightIndex, setEditingWeightIndex] = useState<number | null>(
+    null
+  );
+  const [editWeightDate, setEditWeightDate] = useState("");
+  const [editWeightValue, setEditWeightValue] = useState("");
+
   const [newWeightDate, setNewWeightDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -55,6 +61,21 @@ export default function ChickenProfile({
 
   const getValue = (camelKey: string, snakeKey: string) =>
     chicken?.[camelKey] ?? chicken?.[snakeKey] ?? "";
+
+  const getWeightHistory = () =>
+    chicken?.weightHistory || chicken?.weight_history || [];
+
+  const getLatestWeight = (history: any[]) => {
+    if (!history || history.length === 0) return "";
+
+    const sorted = [...history].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    const latest = sorted[sorted.length - 1];
+
+    return latest?.weightKg || latest?.weight_kg || "";
+  };
 
   const loadEggStats = async () => {
     if (!selectedChicken) return;
@@ -103,6 +124,7 @@ export default function ChickenProfile({
   const ageGroup = getValue("ageGroup", "age_group");
   const hatchDate = getValue("hatchDate", "hatch_date");
   const weightKg = getValue("weightKg", "weight_kg");
+  const weightHistory = getWeightHistory();
 
   const profileImage =
     chicken.image ||
@@ -134,23 +156,90 @@ export default function ChickenProfile({
   const addWeightEntry = async () => {
     if (!newWeight) return;
 
+    const updatedHistory = [
+      ...weightHistory,
+      {
+        date: newWeightDate,
+        weightKg: newWeight,
+        weight_kg: newWeight,
+      },
+    ];
+
+    const latestWeight = getLatestWeight(updatedHistory);
+
     const updated = {
       ...chicken,
-      weightKg: newWeight,
-      weight_kg: newWeight,
-      weightHistory: [
-        ...(chicken.weightHistory || chicken.weight_history || []),
-        {
-          date: newWeightDate,
-          weightKg: newWeight,
-          weight_kg: newWeight,
-        },
-      ],
+      weightKg: latestWeight,
+      weight_kg: latestWeight,
+      weightHistory: updatedHistory,
+      weight_history: updatedHistory,
     };
 
     await updateChicken(updated);
     setNewWeight("");
     setNewWeightDate(new Date().toISOString().split("T")[0]);
+  };
+
+  const startEditWeight = (entry: any, originalIndex: number) => {
+    setEditingWeightIndex(originalIndex);
+    setEditWeightDate(entry.date || "");
+    setEditWeightValue(entry.weightKg || entry.weight_kg || "");
+  };
+
+  const cancelEditWeight = () => {
+    setEditingWeightIndex(null);
+    setEditWeightDate("");
+    setEditWeightValue("");
+  };
+
+  const saveWeightEdit = async () => {
+    if (editingWeightIndex === null) return;
+    if (!editWeightValue) return;
+
+    const updatedHistory = weightHistory.map((entry: any, index: number) =>
+      index === editingWeightIndex
+        ? {
+            ...entry,
+            date: editWeightDate,
+            weightKg: editWeightValue,
+            weight_kg: editWeightValue,
+          }
+        : entry
+    );
+
+    const latestWeight = getLatestWeight(updatedHistory);
+
+    const updated = {
+      ...chicken,
+      weightKg: latestWeight,
+      weight_kg: latestWeight,
+      weightHistory: updatedHistory,
+      weight_history: updatedHistory,
+    };
+
+    await updateChicken(updated);
+    cancelEditWeight();
+  };
+
+  const deleteWeightEntry = async (originalIndex: number) => {
+    const confirmed = confirm("Delete this weight record?");
+    if (!confirmed) return;
+
+    const updatedHistory = weightHistory.filter(
+      (_entry: any, index: number) => index !== originalIndex
+    );
+
+    const latestWeight = getLatestWeight(updatedHistory);
+
+    const updated = {
+      ...chicken,
+      weightKg: latestWeight,
+      weight_kg: latestWeight,
+      weightHistory: updatedHistory,
+      weight_history: updatedHistory,
+    };
+
+    await updateChicken(updated);
   };
 
   return (
@@ -418,21 +507,87 @@ export default function ChickenProfile({
             + Add Weight
           </button>
 
-          {(chicken.weightHistory || chicken.weight_history || []).length ===
-            0 && <div className="text-gray-400">No weight records yet.</div>}
+          {weightHistory.length === 0 && (
+            <div className="text-gray-400">No weight records yet.</div>
+          )}
 
-          {(chicken.weightHistory || chicken.weight_history || [])
+          {weightHistory
+            .map((entry: any, originalIndex: number) => ({
+              ...entry,
+              originalIndex,
+            }))
             .slice()
             .reverse()
-            .map((entry: any, index: number) => (
+            .map((entry: any) => (
               <div
-                key={index}
-                className="bg-gray-50 rounded-xl p-3 flex justify-between gap-3"
+                key={entry.originalIndex}
+                className="bg-gray-50 rounded-xl p-3 flex flex-col gap-3"
               >
-                <span>{entry.date}</span>
-                <span className="font-semibold">
-                  {entry.weightKg || entry.weight_kg} kg
-                </span>
+                {editingWeightIndex === entry.originalIndex ? (
+                  <>
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={editWeightDate}
+                        onChange={(e) => setEditWeightDate(e.target.value)}
+                        className={weightDateClass}
+                      />
+
+                      <input
+                        type="number"
+                        step="0.01"
+                        inputMode="decimal"
+                        value={editWeightValue}
+                        onChange={(e) => setEditWeightValue(e.target.value)}
+                        className={weightInputClass}
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={saveWeightEdit}
+                        className="bg-green-600 text-white px-3 py-2 rounded-xl font-bold text-sm flex-1"
+                      >
+                        Save
+                      </button>
+
+                      <button
+                        onClick={cancelEditWeight}
+                        className="bg-gray-500 text-white px-3 py-2 rounded-xl font-bold text-sm flex-1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between gap-3">
+                      <span>{entry.date}</span>
+
+                      <span className="font-semibold">
+                        {entry.weightKg || entry.weight_kg} kg
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() =>
+                          startEditWeight(entry, entry.originalIndex)
+                        }
+                        className="bg-blue-500 text-white px-3 py-2 rounded-xl font-bold text-sm flex-1"
+                      >
+                        ✏️ Edit
+                      </button>
+
+                      <button
+                        onClick={() => deleteWeightEntry(entry.originalIndex)}
+                        className="bg-red-600 text-white px-3 py-2 rounded-xl font-bold text-sm flex-1"
+                      >
+                        🗑 Delete
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
         </div>
