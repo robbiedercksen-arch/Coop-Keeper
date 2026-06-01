@@ -62,6 +62,8 @@ export default function ChickenProfile({
   const getValue = (camelKey: string, snakeKey: string) =>
     chicken?.[camelKey] ?? chicken?.[snakeKey] ?? "";
 
+  const cleanWeightValue = (value: string) => value.trim().replace(",", ".");
+
   const getWeightHistory = () =>
     chicken?.weightHistory || chicken?.weight_history || [];
 
@@ -154,14 +156,16 @@ export default function ChickenProfile({
   };
 
   const addWeightEntry = async () => {
-    if (!newWeight) return;
+    const cleanWeight = cleanWeightValue(newWeight);
+
+    if (!cleanWeight) return;
 
     const updatedHistory = [
       ...weightHistory,
       {
         date: newWeightDate,
-        weightKg: newWeight,
-        weight_kg: newWeight,
+        weightKg: cleanWeight,
+        weight_kg: cleanWeight,
       },
     ];
 
@@ -194,15 +198,18 @@ export default function ChickenProfile({
 
   const saveWeightEdit = async () => {
     if (editingWeightIndex === null) return;
-    if (!editWeightValue) return;
+
+    const cleanEditWeight = cleanWeightValue(editWeightValue);
+
+    if (!cleanEditWeight) return;
 
     const updatedHistory = weightHistory.map((entry: any, index: number) =>
       index === editingWeightIndex
         ? {
             ...entry,
             date: editWeightDate,
-            weightKg: editWeightValue,
-            weight_kg: editWeightValue,
+            weightKg: cleanEditWeight,
+            weight_kg: cleanEditWeight,
           }
         : entry
     );
@@ -457,8 +464,7 @@ export default function ChickenProfile({
 
             {editing ? (
               <input
-                type="number"
-                step="0.01"
+                type="text"
                 inputMode="decimal"
                 value={weightKg || ""}
                 onChange={(e) =>
@@ -490,8 +496,7 @@ export default function ChickenProfile({
             />
 
             <input
-              type="number"
-              step="0.01"
+              type="text"
               inputMode="decimal"
               placeholder="KG"
               value={newWeight}
@@ -534,8 +539,7 @@ export default function ChickenProfile({
                       />
 
                       <input
-                        type="number"
-                        step="0.01"
+                        type="text"
                         inputMode="decimal"
                         value={editWeightValue}
                         onChange={(e) => setEditWeightValue(e.target.value)}
