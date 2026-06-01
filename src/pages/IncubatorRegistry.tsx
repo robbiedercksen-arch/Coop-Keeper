@@ -479,26 +479,7 @@ export default function IncubatorRegistry() {
               </div>
             </div>
 
-            {batch.hatchdate && (
-              <div
-                className={`rounded-2xl p-4 mb-4 font-bold border ${
-                  isLockdown(batch.hatchdate)
-                    ? "bg-orange-50 border-orange-400 text-orange-800"
-                    : "bg-blue-50 border-blue-200 text-blue-800"
-                }`}
-              >
-                {isLockdown(batch.hatchdate)
-                  ? `⚠ LOCKDOWN ACTIVE — ${Math.max(
-                      getDaysRemaining(batch.hatchdate),
-                      0
-                    )} Days Remaining`
-                  : `⏳ ${Math.max(
-                      getDaysRemaining(batch.hatchdate),
-                      0
-                    )} Days Remaining`}
-              </div>
-            )}
-
+            
             {batch.notes && (
               <div className="text-[#4b3a1d] mb-4 break-words">
                 <strong>Notes:</strong> {batch.notes}
