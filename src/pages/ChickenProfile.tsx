@@ -198,16 +198,27 @@ export default function ChickenProfile({
   );
 
   const updateChicken = async (updated: any) => {
-    setChicken(updated);
+  const profileThumbnail =
+    updated.image ||
+    updated.image_url ||
+    updated.photos?.[0] ||
+    "";
 
-    setChickens((prev: any[]) =>
-      prev.map((c) => (c.id === updated.id ? updated : c))
-    );
-
-    setSelectedChicken(updated);
-
-    await saveChickenToDB(updated);
+  const updatedWithThumbnail = {
+    ...updated,
+    image: profileThumbnail,
   };
+
+  setChicken(updatedWithThumbnail);
+
+  setChickens((prev: any[]) =>
+    prev.map((c) => (c.id === updatedWithThumbnail.id ? updatedWithThumbnail : c))
+  );
+
+  setSelectedChicken(updatedWithThumbnail);
+
+  await saveChickenToDB(updatedWithThumbnail);
+};
 
   const saveEdits = async () => {
     await updateChicken(chicken);
