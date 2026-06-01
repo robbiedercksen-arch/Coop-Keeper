@@ -103,7 +103,10 @@ export default function App() {
   const loadChickens = async () => {
     setLoadingChickens(true);
 
-    const { data, error } = await supabase.from("chickens").select("*");
+    const { data, error } = await supabase
+  .from("chickens")
+  .select("id,created_at,data,name,idTag,breed,sex,ageGroup,image,notes,healthLogs,album")
+  .order("id", { ascending: true });
 
     if (error) {
       console.error("Load error:", error);
@@ -116,15 +119,21 @@ console.log("SUPABASE RAW DATA:", data);
       const chickenData = row.data || {};
 
       return {
-        id: chickenData.id || row.id,
-        name: chickenData.name || row.name || "",
-        idTag: chickenData.idTag || row.idTag || row.id_tag || "",
-        breed: chickenData.breed || row.breed || "",
-        sex: chickenData.sex || row.sex || "",
-        ...chickenData,
-      };
+  ...row,
+  ...chickenData,
+  id: chickenData.id || row.id,
+  name: chickenData.name || row.name || "",
+  idTag: chickenData.idTag || row.idTag || "",
+  breed: chickenData.breed || row.breed || "",
+  sex: chickenData.sex || row.sex || "",
+  ageGroup: chickenData.ageGroup || row.ageGroup || "",
+  image: chickenData.image || row.image || "",
+  notes: chickenData.notes || row.notes || [],
+  healthLogs: chickenData.healthLogs || row.healthLogs || [],
+  album: chickenData.album || row.album || [],
+};
     });
-    
+
 console.log("FORMATTED CHICKENS:", formatted);
     setChickens(formatted);
     setLoadingChickens(false);
