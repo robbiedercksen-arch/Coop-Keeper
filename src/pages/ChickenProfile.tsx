@@ -325,10 +325,11 @@ export default function ChickenProfile({
         <h2 className="text-2xl font-bold">🐔 Chicken Profile</h2>
 
         {loadingFullProfile && (
-          <div className="text-sm text-gray-500 font-semibold">
-            Loading full profile...
-          </div>
-        )}
+  <div className="flex items-center gap-2 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-full font-bold text-sm shadow-md animate-pulse">
+    <span className="text-xl animate-spin">⏳</span>
+    <span>Loading chicken profile...</span>
+  </div>
+)}
 
         <div className="relative">
           <img
