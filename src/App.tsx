@@ -140,33 +140,36 @@ console.log("FORMATTED CHICKENS:", formatted);
   };
 
   const saveChickenToDB = async (chicken: any) => {
-    const thumbnailImage =
-  chicken.image ||
-  chicken.image_url ||
-  chicken.photos?.[0] ||
-  "";
+  const thumbnailImage =
+    chicken.image ||
+    chicken.image_url ||
+    chicken.photos?.[0] ||
+    "";
 
-const { error } = await supabase.from("chickens").upsert(
-  {
-    id: chicken.id,
-    name: chicken.name,
-    idTag: chicken.idTag,
-    breed: chicken.breed,
-    sex: chicken.sex,
-    ageGroup: chicken.ageGroup || "",
-    image: thumbnailImage,
-    data: chicken,
-  },
-  { onConflict: "id" }
-);
+  const { error } = await supabase.from("chickens").upsert(
+    {
+      id: chicken.id,
+      name: chicken.name,
+      idTag: chicken.idTag,
+      breed: chicken.breed,
+      sex: chicken.sex,
+      ageGroup: chicken.ageGroup || "",
+      image: thumbnailImage,
+      data: {
+        ...chicken,
+        image: thumbnailImage,
+      },
+    },
+    { onConflict: "id" }
+  );
 
-    if (error) {
-      console.error("Save error:", error);
-      return;
-    }
+  if (error) {
+    console.error("Save error:", error);
+    return;
+  }
 
-    await loadChickens();
-  };
+  await loadChickens();
+};
 
   useEffect(() => {
     loadChickens();
