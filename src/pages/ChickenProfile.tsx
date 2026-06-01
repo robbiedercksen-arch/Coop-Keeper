@@ -25,11 +25,16 @@ export default function ChickenProfile({
   saveChickenToDB,
 }: any) {
   const healthRef = useRef<HTMLDivElement | null>(null);
+  const profilePhotoInputRef = useRef<HTMLInputElement | null>(null);
 
   const [chicken, setChicken] = useState(selectedChicken);
   const [editing, setEditing] = useState(false);
   const [newWeight, setNewWeight] = useState("");
   const [loadingFullProfile, setLoadingFullProfile] = useState(false);
+
+  const [showPhotoEditor, setShowPhotoEditor] = useState(false);
+  const [newProfilePhoto, setNewProfilePhoto] = useState("");
+  const [profilePhotoZoom, setProfilePhotoZoom] = useState(1);
 
   const [editingWeightIndex, setEditingWeightIndex] = useState<number | null>(
     null
@@ -104,6 +109,7 @@ export default function ChickenProfile({
       sex: chickenData.sex || data.sex || "",
       ageGroup: chickenData.ageGroup || data.ageGroup || "",
       image: chickenData.image || data.image || "",
+      profileImageZoom: chickenData.profileImageZoom || 1,
       photos: chickenData.photos || data.photos || [],
       notes: chickenData.notes || data.notes || [],
       healthLogs: chickenData.healthLogs || data.healthLogs || [],
@@ -193,6 +199,8 @@ export default function ChickenProfile({
     chicken.photos?.[0] ||
     "https://via.placeholder.com/160";
 
+  const currentProfileZoom = Number(chicken.profileImageZoom || 1);
+
   const hasHealthIssue = (chicken.healthLogs || chicken.health_logs || []).some(
     (log: any) => log.status === "Ongoing" || log.status === "Monitoring"
   );
@@ -225,6 +233,48 @@ export default function ChickenProfile({
   const saveEdits = async () => {
     await updateChicken(chicken);
     setEditing(false);
+  };
+
+  const handleProfilePhotoSelect = (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      setNewProfilePhoto(reader.result as string);
+      setProfilePhotoZoom(1);
+      setShowPhotoEditor(true);
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const saveProfilePhoto = async () => {
+    if (!newProfilePhoto) return;
+
+    const updatedPhotos = chicken.photos?.includes(newProfilePhoto)
+      ? chicken.photos || []
+      : [newProfilePhoto, ...(chicken.photos || [])];
+
+    const updated = {
+      ...chicken,
+      image: newProfilePhoto,
+      profileImageZoom: profilePhotoZoom,
+      photos: updatedPhotos,
+    };
+
+    await updateChicken(updated);
+
+    setShowPhotoEditor(false);
+    setNewProfilePhoto("");
+    setProfilePhotoZoom(1);
+  };
+
+  const cancelProfilePhotoEdit = () => {
+    setShowPhotoEditor(false);
+    setNewProfilePhoto("");
+    setProfilePhotoZoom(1);
   };
 
   const deleteChicken = async () => {
@@ -362,10 +412,14 @@ export default function ChickenProfile({
           </div>
         )}
 
-        <div className="relative">
+        <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-200">
           <img
             src={profileImage}
-            className="w-40 h-40 object-cover rounded-full border-4 border-white shadow-xl"
+            className="w-full h-full object-cover"
+            style={{
+              transform: `scale(${currentProfileZoom})`,
+              transformOrigin: "center",
+            }}
           />
 
           <div className="absolute bottom-1 right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white" />
@@ -384,6 +438,72 @@ export default function ChickenProfile({
             </button>
           )}
         </div>
+
+        <input
+          ref={profilePhotoInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleProfilePhotoSelect}
+          className="hidden"
+        />
+
+        <button
+          onClick={() => profilePhotoInputRef.current?.click()}
+          className="bg-[#022312] text-[#f7d37b] px-4 py-2 rounded-xl text-base font-bold"
+        >
+          📷 Change Profile Photo
+        </button>
+
+        {showPhotoEditor && (
+          <div className="w-full bg-white border border-[#d9a441] rounded-2xl p-4 shadow-md flex flex-col items-center gap-4">
+            <div className="text-[#3d2a10] font-extrabold">
+              Adjust Profile Picture
+            </div>
+
+            <div className="w-44 h-44 rounded-full overflow-hidden border-4 border-[#d9a441] bg-gray-200">
+              <img
+                src={newProfilePhoto}
+                className="w-full h-full object-cover"
+                style={{
+                  transform: `scale(${profilePhotoZoom})`,
+                  transformOrigin: "center",
+                }}
+              />
+            </div>
+
+            <div className="w-full">
+              <label className="block text-sm font-bold text-[#4b3a1d] mb-1">
+                Zoom
+              </label>
+
+              <input
+                type="range"
+                min="1"
+                max="2.5"
+                step="0.05"
+                value={profilePhotoZoom}
+                onChange={(e) => setProfilePhotoZoom(Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+
+            <div className="flex gap-2 w-full">
+              <button
+                onClick={saveProfilePhoto}
+                className="bg-green-600 text-white px-3 py-3 rounded-xl font-bold flex-1"
+              >
+                Save Photo
+              </button>
+
+              <button
+                onClick={cancelProfilePhotoEdit}
+                className="bg-gray-500 text-white px-3 py-3 rounded-xl font-bold flex-1"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="text-center">
           <div className="text-xl font-semibold">{chicken.name}</div>
