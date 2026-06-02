@@ -409,7 +409,7 @@ export default function ChickenProfile({
 
       setNewProfilePhotoBlob(compressedBlob);
       setNewProfilePhotoPreview(previewUrl);
-      setProfilePhotoZoom(0.75);
+      setProfilePhotoZoom(1);
       setProfilePhotoX(0);
       setProfilePhotoY(0);
       setShowPhotoEditor(true);
@@ -619,17 +619,17 @@ export default function ChickenProfile({
           </div>
         )}
 
-        <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-200">
+        <div className="relative w-52 h-72 rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-gray-100">
           <img
             src={profileImage}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain bg-gray-100"
             style={{
               transform: `translate(${currentProfileX}%, ${currentProfileY}%) scale(${currentProfileZoom})`,
               transformOrigin: "center",
             }}
           />
 
-          <div className="absolute bottom-1 right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white" />
+          <div className="absolute bottom-2 right-2 bg-green-500 w-5 h-5 rounded-full border-2 border-white" />
 
           {hasHealthIssue && (
             <button
@@ -638,7 +638,7 @@ export default function ChickenProfile({
                   behavior: "smooth",
                 })
               }
-              className="absolute top-0 right-0 bg-red-500 text-white w-10 h-10 rounded-full border-4 border-white shadow-lg animate-pulse flex items-center justify-center text-lg"
+              className="absolute top-2 right-2 bg-red-500 text-white w-10 h-10 rounded-full border-4 border-white shadow-lg animate-pulse flex items-center justify-center text-lg"
               title="Health attention needed"
             >
               ⚠️
@@ -667,10 +667,10 @@ export default function ChickenProfile({
               Adjust Profile Picture
             </div>
 
-            <div className="w-44 h-44 rounded-full overflow-hidden border-4 border-[#d9a441] bg-gray-200">
+            <div className="w-56 h-80 rounded-3xl overflow-hidden border-4 border-[#d9a441] bg-gray-100">
               <img
                 src={newProfilePhotoPreview}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain bg-gray-100"
                 style={{
                   transform: `translate(${profilePhotoX}%, ${profilePhotoY}%) scale(${profilePhotoZoom})`,
                   transformOrigin: "center",
@@ -685,7 +685,7 @@ export default function ChickenProfile({
 
               <input
                 type="range"
-                min="1"
+                min="0.5"
                 max="2.5"
                 step="0.05"
                 value={profilePhotoZoom}
