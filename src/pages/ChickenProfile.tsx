@@ -37,7 +37,10 @@ export default function ChickenProfile({
   const [newProfilePhotoBlob, setNewProfilePhotoBlob] = useState<Blob | null>(
     null
   );
+
   const [profilePhotoZoom, setProfilePhotoZoom] = useState(1);
+  const [profilePhotoX, setProfilePhotoX] = useState(0);
+  const [profilePhotoY, setProfilePhotoY] = useState(0);
   const [savingProfilePhoto, setSavingProfilePhoto] = useState(false);
 
   const [editingWeightIndex, setEditingWeightIndex] = useState<number | null>(
@@ -209,6 +212,8 @@ export default function ChickenProfile({
       ageGroup: chickenData.ageGroup || data.ageGroup || "",
       image: chickenData.image || data.image || "",
       profileImageZoom: chickenData.profileImageZoom || 1,
+      profileImageX: chickenData.profileImageX || 0,
+      profileImageY: chickenData.profileImageY || 0,
       photos: chickenData.photos || data.photos || [],
       notes: chickenData.notes || data.notes || [],
       healthLogs: chickenData.healthLogs || data.healthLogs || [],
@@ -301,6 +306,8 @@ export default function ChickenProfile({
       "https://via.placeholder.com/160";
 
   const currentProfileZoom = Number(chicken.profileImageZoom || 1);
+  const currentProfileX = Number(chicken.profileImageX || 0);
+  const currentProfileY = Number(chicken.profileImageY || 0);
 
   const hasHealthIssue = (chicken.healthLogs || chicken.health_logs || []).some(
     (log: any) => log.status === "Ongoing" || log.status === "Monitoring"
@@ -335,6 +342,10 @@ export default function ChickenProfile({
       album: updatedAlbum,
       healthLogs: updated.healthLogs ?? chicken.healthLogs ?? [],
       activity: updated.activity ?? chicken.activity ?? [],
+      profileImageZoom:
+        updated.profileImageZoom ?? chicken.profileImageZoom ?? 1,
+      profileImageX: updated.profileImageX ?? chicken.profileImageX ?? 0,
+      profileImageY: updated.profileImageY ?? chicken.profileImageY ?? 0,
       weightHistory:
         updated.weightHistory ??
         updated.weight_history ??
@@ -399,6 +410,8 @@ export default function ChickenProfile({
       setNewProfilePhotoBlob(compressedBlob);
       setNewProfilePhotoPreview(previewUrl);
       setProfilePhotoZoom(1);
+      setProfilePhotoX(0);
+      setProfilePhotoY(0);
       setShowPhotoEditor(true);
 
       if (profilePhotoInputRef.current) {
@@ -432,6 +445,8 @@ export default function ChickenProfile({
         image: publicUrl,
         image_url: publicUrl,
         profileImageZoom: profilePhotoZoom,
+        profileImageX: profilePhotoX,
+        profileImageY: profilePhotoY,
         photos: updatedPhotos,
         album: updatedPhotos,
       };
@@ -442,6 +457,8 @@ export default function ChickenProfile({
       setNewProfilePhotoPreview("");
       setNewProfilePhotoBlob(null);
       setProfilePhotoZoom(1);
+      setProfilePhotoX(0);
+      setProfilePhotoY(0);
     } catch (error) {
       console.error("Profile photo save error:", error);
       alert(
@@ -457,6 +474,14 @@ export default function ChickenProfile({
     setNewProfilePhotoPreview("");
     setNewProfilePhotoBlob(null);
     setProfilePhotoZoom(1);
+    setProfilePhotoX(0);
+    setProfilePhotoY(0);
+  };
+
+  const resetProfilePhotoPosition = () => {
+    setProfilePhotoZoom(1);
+    setProfilePhotoX(0);
+    setProfilePhotoY(0);
   };
 
   const deleteChicken = async () => {
@@ -599,7 +624,7 @@ export default function ChickenProfile({
             src={profileImage}
             className="w-full h-full object-cover"
             style={{
-              transform: `scale(${currentProfileZoom})`,
+              transform: `translate(${currentProfileX}%, ${currentProfileY}%) scale(${currentProfileZoom})`,
               transformOrigin: "center",
             }}
           />
@@ -647,7 +672,7 @@ export default function ChickenProfile({
                 src={newProfilePhotoPreview}
                 className="w-full h-full object-cover"
                 style={{
-                  transform: `scale(${profilePhotoZoom})`,
+                  transform: `translate(${profilePhotoX}%, ${profilePhotoY}%) scale(${profilePhotoZoom})`,
                   transformOrigin: "center",
                 }}
               />
@@ -668,6 +693,46 @@ export default function ChickenProfile({
                 className="w-full"
               />
             </div>
+
+            <div className="w-full">
+              <label className="block text-sm font-bold text-[#4b3a1d] mb-1">
+                Move Left / Right
+              </label>
+
+              <input
+                type="range"
+                min="-40"
+                max="40"
+                step="1"
+                value={profilePhotoX}
+                onChange={(e) => setProfilePhotoX(Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+
+            <div className="w-full">
+              <label className="block text-sm font-bold text-[#4b3a1d] mb-1">
+                Move Up / Down
+              </label>
+
+              <input
+                type="range"
+                min="-40"
+                max="40"
+                step="1"
+                value={profilePhotoY}
+                onChange={(e) => setProfilePhotoY(Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+
+            <button
+              onClick={resetProfilePhotoPosition}
+              disabled={savingProfilePhoto}
+              className="bg-orange-500 text-white px-3 py-3 rounded-xl font-bold w-full disabled:bg-gray-400"
+            >
+              Reset Position
+            </button>
 
             <div className="flex gap-2 w-full">
               <button
