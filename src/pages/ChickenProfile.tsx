@@ -82,6 +82,55 @@ export default function ChickenProfile({
     return value;
   };
 
+  const resizeImage = (
+    file: File,
+    maxSize = 900,
+    quality = 0.8
+  ): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      const img = new Image();
+
+      reader.onload = () => {
+        img.src = reader.result as string;
+      };
+
+      reader.onerror = () => reject("Could not read image file.");
+
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > maxSize) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          reject("Could not resize image.");
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+
+      img.onerror = () => reject("Could not load image.");
+
+      reader.readAsDataURL(file);
+    });
+  };
+
   const loadFullChicken = async () => {
     if (!selectedChicken?.id) return;
 
@@ -246,9 +295,9 @@ export default function ChickenProfile({
       "";
 
     const updatedWithThumbnail = {
-  ...mergedChicken,
-  image: profileThumbnail,
-};
+      ...mergedChicken,
+      image: profileThumbnail,
+    };
 
     setChicken(updatedWithThumbnail);
     setSelectedChicken(updatedWithThumbnail);
@@ -277,19 +326,24 @@ export default function ChickenProfile({
     setEditing(false);
   };
 
-  const handleProfilePhotoSelect = (e: any) => {
+  const handleProfilePhotoSelect = async (e: any) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
+    try {
+      const compressedImage = await resizeImage(file, 900, 0.8);
 
-    reader.onloadend = () => {
-      setNewProfilePhoto(reader.result as string);
+      setNewProfilePhoto(compressedImage);
       setProfilePhotoZoom(1);
       setShowPhotoEditor(true);
-    };
 
-    reader.readAsDataURL(file);
+      if (profilePhotoInputRef.current) {
+        profilePhotoInputRef.current.value = "";
+      }
+    } catch (error) {
+      console.error("Profile photo resize error:", error);
+      alert("Could not process profile photo. Please try a different image.");
+    }
   };
 
   const saveProfilePhoto = async () => {
@@ -304,6 +358,7 @@ export default function ChickenProfile({
       image: newProfilePhoto,
       profileImageZoom: profilePhotoZoom,
       photos: updatedPhotos,
+      album: updatedPhotos,
     };
 
     await updateChicken(updated);

@@ -10,48 +10,95 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [touchStart, setTouchStart] = useState(0);
+  const [uploading, setUploading] = useState(false);
 
   const photos = chicken.photos || chicken.album || [];
+
+  const resizeImage = (
+    file: File,
+    maxSize = 1200,
+    quality = 0.8
+  ): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      const img = new Image();
+
+      reader.onload = () => {
+        img.src = reader.result as string;
+      };
+
+      reader.onerror = () => reject("Could not read image file.");
+
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > maxSize) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          reject("Could not resize image.");
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+
+      img.onerror = () => reject("Could not load image.");
+
+      reader.readAsDataURL(file);
+    });
+  };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    const readers: Promise<string>[] = [];
+    try {
+      setUploading(true);
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+      const resizedPhotos: string[] = [];
 
-      const promise = new Promise<string>((resolve) => {
-        const reader = new FileReader();
+      for (const file of files) {
+        const resizedPhoto = await resizeImage(file, 1200, 0.8);
+        resizedPhotos.push(resizedPhoto);
+      }
 
-        reader.onload = () => {
-          resolve(reader.result as string);
-        };
+      const updatedPhotos = [...photos, ...resizedPhotos];
 
-        reader.readAsDataURL(file);
-      });
+      const updated = {
+        ...chicken,
+        photos: updatedPhotos,
+        album: updatedPhotos,
+      };
 
-      readers.push(promise);
-    }
+      await updateChicken(updated);
 
-    const newPhotos = await Promise.all(readers);
-    const updatedPhotos = [...photos, ...newPhotos];
-
-    const updated = {
-      ...chicken,
-      photos: updatedPhotos,
-      album: updatedPhotos,
-    };
-
-    await updateChicken(updated);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (error) {
+      console.error("Photo resize error:", error);
+      alert("Could not add photo. Please try a different image.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -80,9 +127,10 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
     <div className="flex flex-col gap-3">
       <button
         onClick={handleUploadClick}
-        className="bg-blue-500 text-white px-3 py-3 rounded-lg text-base font-semibold"
+        disabled={uploading}
+        className="bg-blue-500 text-white px-3 py-3 rounded-lg text-base font-semibold disabled:bg-gray-400"
       >
-        + Add Photo
+        {uploading ? "Compressing Photo..." : "+ Add Photo"}
       </button>
 
       <input

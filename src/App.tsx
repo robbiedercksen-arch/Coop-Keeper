@@ -118,7 +118,6 @@ export default function App() {
 
     if (error) {
       console.error("Load chickens error:", error);
-      setChickens([]);
       setLoadingChickens(false);
       return;
     }
@@ -141,6 +140,8 @@ export default function App() {
     const thumbnailImage =
       chicken.image || chicken.image_url || chicken.photos?.[0] || "";
 
+    const { data: _oldData, ...cleanChicken } = chicken;
+
     const { error } = await supabase.from("chickens").upsert(
       {
         id: chicken.id,
@@ -151,7 +152,7 @@ export default function App() {
         ageGroup: chicken.ageGroup || "",
         image: thumbnailImage,
         data: {
-          ...chicken,
+          ...cleanChicken,
           image: thumbnailImage,
         },
       },
@@ -159,35 +160,35 @@ export default function App() {
     );
 
     if (error) {
-  console.error("Save chicken error:", error);
-  return;
-}
+      console.error("Save chicken error:", error);
+      return;
+    }
 
-setChickens((prev) =>
-  prev.map((c) =>
-    c.id === chicken.id
-      ? {
-          ...c,
-          name: chicken.name || "",
-          idTag: chicken.idTag || "",
-          breed: chicken.breed || "",
-          sex: chicken.sex || "",
-          ageGroup: chicken.ageGroup || "",
-          image: thumbnailImage,
-        }
-      : c
-  )
-);
+    setChickens((prev) =>
+      prev.map((c) =>
+        c.id === chicken.id
+          ? {
+              ...c,
+              name: chicken.name || "",
+              idTag: chicken.idTag || "",
+              breed: chicken.breed || "",
+              sex: chicken.sex || "",
+              ageGroup: chicken.ageGroup || "",
+              image: thumbnailImage,
+            }
+          : c
+      )
+    );
 
-setSelectedChicken((current: any) => {
-  if (!current || current.id !== chicken.id) return current;
+    setSelectedChicken((current: any) => {
+      if (!current || current.id !== chicken.id) return current;
 
-  return {
-    ...current,
-    ...chicken,
-    image: thumbnailImage,
-  };
-});
+      return {
+        ...current,
+        ...cleanChicken,
+        image: thumbnailImage,
+      };
+    });
   };
 
   useEffect(() => {
