@@ -17,6 +17,12 @@ const weightDateClass =
 const weightInputClass =
   "border rounded-xl p-3 w-24 text-base max-w-full min-w-0 box-border";
 
+const profilePhotoFrameClass =
+  "relative w-52 h-72 rounded-3xl overflow-hidden border-[5px] border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.22),inset_0_1px_0_rgba(255,255,255,0.8)]";
+
+const profileEditorFrameClass =
+  "w-56 h-80 rounded-3xl overflow-hidden border-[5px] border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.22),inset_0_1px_0_rgba(255,255,255,0.8)]";
+
 export default function ChickenProfile({
   selectedChicken,
   setChickens,
@@ -619,17 +625,17 @@ export default function ChickenProfile({
           </div>
         )}
 
-        <div className="relative w-52 h-72 rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-gray-100">
+        <div className={profilePhotoFrameClass}>
           <img
             src={profileImage}
-            className="w-full h-full object-contain bg-gray-100"
+            className="w-full h-full object-contain bg-[#faf7f0]"
             style={{
               transform: `translate(${currentProfileX}%, ${currentProfileY}%) scale(${currentProfileZoom})`,
               transformOrigin: "center",
             }}
           />
 
-          <div className="absolute bottom-2 right-2 bg-green-500 w-5 h-5 rounded-full border-2 border-white" />
+          <div className="absolute bottom-2 right-2 bg-green-500 w-5 h-5 rounded-full border-2 border-white shadow-md" />
 
           {hasHealthIssue && (
             <button
@@ -662,15 +668,15 @@ export default function ChickenProfile({
         </button>
 
         {showPhotoEditor && (
-          <div className="w-full bg-white border border-[#d9a441] rounded-2xl p-4 shadow-md flex flex-col items-center gap-4">
+          <div className="w-full bg-[#faf7f0] border border-[#d9a441] rounded-3xl p-4 shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)] flex flex-col items-center gap-4">
             <div className="text-[#3d2a10] font-extrabold">
               Adjust Profile Picture
             </div>
 
-            <div className="w-56 h-80 rounded-3xl overflow-hidden border-4 border-[#d9a441] bg-gray-100">
+            <div className={profileEditorFrameClass}>
               <img
                 src={newProfilePhotoPreview}
-                className="w-full h-full object-contain bg-gray-100"
+                className="w-full h-full object-contain bg-[#faf7f0]"
                 style={{
                   transform: `translate(${profilePhotoX}%, ${profilePhotoY}%) scale(${profilePhotoZoom})`,
                   transformOrigin: "center",
