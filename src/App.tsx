@@ -109,7 +109,7 @@ export default function App() {
 
     const { data, error } = await supabase
       .from("chickens")
-      .select("id,name,idTag,breed,sex,ageGroup")
+      .select("id,name,idTag,breed,sex,ageGroup,image")
       .order("id", { ascending: true });
 
     if (error) {
@@ -141,7 +141,7 @@ export default function App() {
       breed: row.breed || "",
       sex: row.sex || "",
       ageGroup: row.ageGroup || "",
-      image: "",
+      image: row.image || "",
     }));
 
     setChickens(formatted);
