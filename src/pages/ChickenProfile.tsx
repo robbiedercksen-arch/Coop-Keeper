@@ -54,8 +54,10 @@ export default function ChickenProfile({
   });
 
   useEffect(() => {
-    setChicken(selectedChicken);
-  }, [selectedChicken]);
+    if (selectedChicken) {
+      setChicken(selectedChicken);
+    }
+  }, [selectedChicken?.id]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -116,6 +118,8 @@ export default function ChickenProfile({
       album: chickenData.album || data.album || [],
       weightHistory:
         chickenData.weightHistory || chickenData.weight_history || [],
+      weight_history:
+        chickenData.weight_history || chickenData.weightHistory || [],
       activity: chickenData.activity || [],
     };
 
@@ -164,15 +168,22 @@ export default function ChickenProfile({
 
     const weekEggs = data
       .filter((log) => new Date(log.date) >= weekAgo)
-      .reduce((sum, log) => sum + log.eggs, 0);
+      .reduce((sum, log) => sum + Number(log.eggs || 0), 0);
 
     const monthEggs = data
       .filter((log) => new Date(log.date) >= monthAgo)
-      .reduce((sum, log) => sum + log.eggs, 0);
+      .reduce((sum, log) => sum + Number(log.eggs || 0), 0);
 
-    const lifetimeEggs = data.reduce((sum, log) => sum + log.eggs, 0);
+    const lifetimeEggs = data.reduce(
+      (sum, log) => sum + Number(log.eggs || 0),
+      0
+    );
 
-    const lastDate = data.length > 0 ? data[data.length - 1].date : "None";
+    const sortedLogs = [...data].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const lastDate = sortedLogs.length > 0 ? sortedLogs[0].date : "None";
 
     setEggStats({
       week: weekEggs,
@@ -206,26 +217,61 @@ export default function ChickenProfile({
   );
 
   const updateChicken = async (updated: any) => {
+    const mergedChicken = {
+      ...chicken,
+      ...updated,
+      notes: updated.notes ?? chicken.notes ?? [],
+      photos: updated.photos ?? chicken.photos ?? [],
+      album: updated.album ?? chicken.album ?? [],
+      healthLogs: updated.healthLogs ?? chicken.healthLogs ?? [],
+      activity: updated.activity ?? chicken.activity ?? [],
+      weightHistory:
+        updated.weightHistory ??
+        updated.weight_history ??
+        chicken.weightHistory ??
+        chicken.weight_history ??
+        [],
+      weight_history:
+        updated.weight_history ??
+        updated.weightHistory ??
+        chicken.weight_history ??
+        chicken.weightHistory ??
+        [],
+    };
+
     const profileThumbnail =
-      updated.image ||
-      updated.image_url ||
-      updated.photos?.[0] ||
+      mergedChicken.image ||
+      mergedChicken.image_url ||
+      mergedChicken.photos?.[0] ||
       "";
 
     const updatedWithThumbnail = {
-      ...updated,
+      ...mergedChicken,
       image: profileThumbnail,
+      data: {
+        ...mergedChicken,
+        image: profileThumbnail,
+      },
     };
 
     setChicken(updatedWithThumbnail);
+    setSelectedChicken(updatedWithThumbnail);
 
     setChickens((prev: any[]) =>
       prev.map((c) =>
-        c.id === updatedWithThumbnail.id ? updatedWithThumbnail : c
+        c.id === updatedWithThumbnail.id
+          ? {
+              ...c,
+              name: updatedWithThumbnail.name || "",
+              idTag: updatedWithThumbnail.idTag || "",
+              breed: updatedWithThumbnail.breed || "",
+              sex: updatedWithThumbnail.sex || "",
+              ageGroup: updatedWithThumbnail.ageGroup || "",
+              image: updatedWithThumbnail.image || "",
+            }
+          : c
       )
     );
-
-    setSelectedChicken(updatedWithThumbnail);
 
     await saveChickenToDB(updatedWithThumbnail);
   };
@@ -866,30 +912,30 @@ export default function ChickenProfile({
         <NotesSection chicken={chicken} updateChicken={updateChicken} />
       </ProfileSection>
 
+      <ProfileSection title="Activity">
+        <div className="flex flex-col gap-2 text-base">
+          {(chicken.activity || []).length === 0 && (
+            <div className="text-gray-400">No activity yet</div>
+          )}
+
+          {(chicken.activity || [])
+            .slice()
+            .reverse()
+            .map((item: any, i: number) => (
+              <div
+                key={i}
+                className="bg-gray-50 p-2 rounded-md flex justify-between gap-3"
+              >
+                <span>{item.text}</span>
+                <span className="text-gray-400">
+                  {new Date(item.time).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+        </div>
+      </ProfileSection>
+
       <ProfileSection title="Health">
-        <ProfileSection title="Activity">
-          <div className="flex flex-col gap-2 text-base">
-            {(chicken.activity || []).length === 0 && (
-              <div className="text-gray-400">No activity yet</div>
-            )}
-
-            {(chicken.activity || [])
-              .slice()
-              .reverse()
-              .map((item: any, i: number) => (
-                <div
-                  key={i}
-                  className="bg-gray-50 p-2 rounded-md flex justify-between gap-3"
-                >
-                  <span>{item.text}</span>
-                  <span className="text-gray-400">
-                    {new Date(item.time).toLocaleDateString()}
-                  </span>
-                </div>
-              ))}
-          </div>
-        </ProfileSection>
-
         <div ref={healthRef}>
           <HealthSection chicken={chicken} updateChicken={updateChicken} />
         </div>
