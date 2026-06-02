@@ -36,7 +36,7 @@ function CoopLogo({ size = 48 }: any) {
   );
 }
 
-function LoadingScreen() {
+function LoadingScreen({ message = "Fetching your chickens from Supabase..." }: any) {
   return (
     <div
       style={{
@@ -60,30 +60,15 @@ function LoadingScreen() {
           width: "100%",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginBottom: 14,
-          }}
-        >
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
           <CoopLogo size={76} />
         </div>
 
-        <div
-          style={{
-            fontSize: 22,
-            fontWeight: 900,
-            color: "#3d2a10",
-            marginBottom: 6,
-          }}
-        >
+        <div style={{ fontSize: 22, fontWeight: 900, color: "#3d2a10", marginBottom: 6 }}>
           Loading Coop Keeper
         </div>
 
-        <div style={{ color: "#6b5a3a", fontWeight: 600 }}>
-          Fetching your chickens from Supabase...
-        </div>
+        <div style={{ color: "#6b5a3a", fontWeight: 600 }}>{message}</div>
       </div>
     </div>
   );
@@ -98,6 +83,9 @@ export default function App() {
   const [chickens, setChickens] = useState<any[]>([]);
   const [selectedChicken, setSelectedChicken] = useState<any>(null);
   const [loadingChickens, setLoadingChickens] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState(
+    "Fetching your chickens from Supabase..."
+  );
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -108,8 +96,16 @@ export default function App() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const loadChickens = async () => {
-    setLoadingChickens(true);
+  const loadChickens = async (attempt = 1) => {
+    if (chickens.length === 0) {
+      setLoadingChickens(true);
+    }
+
+    setLoadingMessage(
+      attempt === 1
+        ? "Fetching your chickens from Supabase..."
+        : `Still loading your chickens... retry ${attempt}`
+    );
 
     const { data, error } = await supabase
       .from("chickens")
@@ -117,9 +113,25 @@ export default function App() {
       .order("id", { ascending: true });
 
     if (error) {
-      console.error("Load chickens error:", error);
+      console.error(`Load chickens error attempt ${attempt}:`, error);
+
+      if (attempt < 5) {
+        setTimeout(() => loadChickens(attempt + 1), 1200);
+        return;
+      }
+
+      setLoadingMessage("Could not load chickens. Please refresh and try again.");
       setLoadingChickens(false);
       return;
+    }
+
+    if (!data || data.length === 0) {
+      console.warn(`Chicken load returned 0 rows attempt ${attempt}. Retrying...`);
+
+      if (attempt < 5) {
+        setTimeout(() => loadChickens(attempt + 1), 1200);
+        return;
+      }
     }
 
     const formatted = (data || []).map((row: any) => ({
@@ -219,7 +231,7 @@ export default function App() {
   ];
 
   if (loadingChickens) {
-    return <LoadingScreen />;
+    return <LoadingScreen message={loadingMessage} />;
   }
 
   return (
