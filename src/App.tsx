@@ -278,7 +278,7 @@ export default function App() {
                       "0 1px 0 rgba(255,255,255,0.08), 0 2px 0 rgba(0,0,0,0.18), 0 3px 8px rgba(0,0,0,0.35)",
                   }}
                 >
-                  Coop Keeper
+                  Coop Keeper v1.1
                 </div>
 
                 <div
