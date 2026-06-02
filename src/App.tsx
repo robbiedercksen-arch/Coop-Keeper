@@ -159,21 +159,35 @@ export default function App() {
     );
 
     if (error) {
-      console.error("Save chicken error:", error);
-      return;
-    }
+  console.error("Save chicken error:", error);
+  return;
+}
 
-    await loadChickens();
+setChickens((prev) =>
+  prev.map((c) =>
+    c.id === chicken.id
+      ? {
+          ...c,
+          name: chicken.name || "",
+          idTag: chicken.idTag || "",
+          breed: chicken.breed || "",
+          sex: chicken.sex || "",
+          ageGroup: chicken.ageGroup || "",
+          image: thumbnailImage,
+        }
+      : c
+  )
+);
 
-    setSelectedChicken((current: any) => {
-      if (!current || current.id !== chicken.id) return current;
+setSelectedChicken((current: any) => {
+  if (!current || current.id !== chicken.id) return current;
 
-      return {
-        ...current,
-        ...chicken,
-        image: thumbnailImage,
-      };
-    });
+  return {
+    ...current,
+    ...chicken,
+    image: thumbnailImage,
+  };
+});
   };
 
   useEffect(() => {
