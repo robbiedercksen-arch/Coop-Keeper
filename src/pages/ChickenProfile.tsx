@@ -33,8 +33,12 @@ export default function ChickenProfile({
   const [loadingFullProfile, setLoadingFullProfile] = useState(false);
 
   const [showPhotoEditor, setShowPhotoEditor] = useState(false);
-  const [newProfilePhoto, setNewProfilePhoto] = useState("");
+  const [newProfilePhotoPreview, setNewProfilePhotoPreview] = useState("");
+  const [newProfilePhotoBlob, setNewProfilePhotoBlob] = useState<Blob | null>(
+    null
+  );
   const [profilePhotoZoom, setProfilePhotoZoom] = useState(1);
+  const [savingProfilePhoto, setSavingProfilePhoto] = useState(false);
 
   const [editingWeightIndex, setEditingWeightIndex] = useState<number | null>(
     null
@@ -54,10 +58,8 @@ export default function ChickenProfile({
   });
 
   useEffect(() => {
-    if (selectedChicken) {
-      setChicken(selectedChicken);
-    }
-  }, [selectedChicken?.id]);
+    setChicken(selectedChicken);
+  }, [selectedChicken]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -82,11 +84,20 @@ export default function ChickenProfile({
     return value;
   };
 
-  const resizeImage = (
+  const isBase64Image = (value: any) =>
+    typeof value === "string" && value.startsWith("data:image");
+
+  const isUsableImageUrl = (value: any) =>
+    typeof value === "string" && value.trim() !== "" && !isBase64Image(value);
+
+  const cleanPhotoList = (photos: any[]) =>
+    (photos || []).filter((photo) => isUsableImageUrl(photo));
+
+  const resizeImageToBlob = (
     file: File,
     maxSize = 900,
     quality = 0.8
-  ): Promise<string> => {
+  ): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       const img = new Image();
@@ -122,13 +133,50 @@ export default function ChickenProfile({
 
         ctx.drawImage(img, 0, 0, width, height);
 
-        resolve(canvas.toDataURL("image/jpeg", quality));
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject("Could not compress image.");
+              return;
+            }
+
+            resolve(blob);
+          },
+          "image/jpeg",
+          quality
+        );
       };
 
       img.onerror = () => reject("Could not load image.");
 
       reader.readAsDataURL(file);
     });
+  };
+
+  const uploadProfilePhotoToStorage = async (blob: Blob) => {
+    const chickenId = String(chicken?.id || selectedChicken?.id || "unknown");
+
+    const fileName = `${chickenId}/profile-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("chicken-photos")
+      .upload(fileName, blob, {
+        contentType: "image/jpeg",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Profile photo upload error:", uploadError);
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from("chicken-photos")
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
   };
 
   const loadFullChicken = async () => {
@@ -150,24 +198,6 @@ export default function ChickenProfile({
 
     const chickenData = parseChickenData(data?.data);
 
-    const loadedPhotos =
-      chickenData.photos?.length > 0
-        ? chickenData.photos
-        : chickenData.album?.length > 0
-        ? chickenData.album
-        : data.photos?.length > 0
-        ? data.photos
-        : data.album || [];
-
-    const loadedAlbum =
-      chickenData.album?.length > 0
-        ? chickenData.album
-        : chickenData.photos?.length > 0
-        ? chickenData.photos
-        : data.album?.length > 0
-        ? data.album
-        : data.photos || [];
-
     const fullChicken = {
       ...data,
       ...chickenData,
@@ -177,16 +207,14 @@ export default function ChickenProfile({
       breed: chickenData.breed || data.breed || "",
       sex: chickenData.sex || data.sex || "",
       ageGroup: chickenData.ageGroup || data.ageGroup || "",
-      image: chickenData.image || data.image || loadedPhotos?.[0] || "",
+      image: chickenData.image || data.image || "",
       profileImageZoom: chickenData.profileImageZoom || 1,
-      photos: loadedPhotos,
-      album: loadedAlbum,
+      photos: chickenData.photos || data.photos || [],
       notes: chickenData.notes || data.notes || [],
       healthLogs: chickenData.healthLogs || data.healthLogs || [],
+      album: chickenData.album || data.album || [],
       weightHistory:
         chickenData.weightHistory || chickenData.weight_history || [],
-      weight_history:
-        chickenData.weight_history || chickenData.weightHistory || [],
       activity: chickenData.activity || [],
     };
 
@@ -235,22 +263,15 @@ export default function ChickenProfile({
 
     const weekEggs = data
       .filter((log) => new Date(log.date) >= weekAgo)
-      .reduce((sum, log) => sum + Number(log.eggs || 0), 0);
+      .reduce((sum, log) => sum + log.eggs, 0);
 
     const monthEggs = data
       .filter((log) => new Date(log.date) >= monthAgo)
-      .reduce((sum, log) => sum + Number(log.eggs || 0), 0);
+      .reduce((sum, log) => sum + log.eggs, 0);
 
-    const lifetimeEggs = data.reduce(
-      (sum, log) => sum + Number(log.eggs || 0),
-      0
-    );
+    const lifetimeEggs = data.reduce((sum, log) => sum + log.eggs, 0);
 
-    const sortedLogs = [...data].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    const lastDate = sortedLogs.length > 0 ? sortedLogs[0].date : "None";
+    const lastDate = data.length > 0 ? data[data.length - 1].date : "None";
 
     setEggStats({
       week: weekEggs,
@@ -271,12 +292,13 @@ export default function ChickenProfile({
   const weightKg = getValue("weightKg", "weight_kg");
   const weightHistory = getWeightHistory();
 
-  const profileImage =
-    chicken.image ||
-    chicken.image_url ||
-    chicken.photos?.[0] ||
-    chicken.album?.[0] ||
-    "https://via.placeholder.com/160";
+  const profileImage = isUsableImageUrl(chicken.image)
+    ? chicken.image
+    : isUsableImageUrl(chicken.image_url)
+    ? chicken.image_url
+    : chicken.photos?.[0] ||
+      chicken.album?.[0] ||
+      "https://via.placeholder.com/160";
 
   const currentProfileZoom = Number(chicken.profileImageZoom || 1);
 
@@ -285,23 +307,25 @@ export default function ChickenProfile({
   );
 
   const updateChicken = async (updated: any) => {
-    const updatedPhotos =
+    const updatedPhotos = cleanPhotoList(
       updated.photos?.length > 0
         ? updated.photos
         : updated.album?.length > 0
         ? updated.album
         : chicken.photos?.length > 0
         ? chicken.photos
-        : chicken.album || [];
+        : chicken.album || []
+    );
 
-    const updatedAlbum =
+    const updatedAlbum = cleanPhotoList(
       updated.album?.length > 0
         ? updated.album
         : updated.photos?.length > 0
         ? updated.photos
         : chicken.album?.length > 0
         ? chicken.album
-        : chicken.photos || [];
+        : chicken.photos || []
+    );
 
     const mergedChicken = {
       ...chicken,
@@ -325,16 +349,16 @@ export default function ChickenProfile({
         [],
     };
 
-    const profileThumbnail =
-      mergedChicken.image ||
-      mergedChicken.image_url ||
-      mergedChicken.photos?.[0] ||
-      mergedChicken.album?.[0] ||
-      "";
+    const profileThumbnail = isUsableImageUrl(mergedChicken.image)
+      ? mergedChicken.image
+      : isUsableImageUrl(mergedChicken.image_url)
+      ? mergedChicken.image_url
+      : mergedChicken.photos?.[0] || mergedChicken.album?.[0] || "";
 
     const updatedWithThumbnail = {
       ...mergedChicken,
       image: profileThumbnail,
+      image_url: profileThumbnail,
     };
 
     setChicken(updatedWithThumbnail);
@@ -369,9 +393,11 @@ export default function ChickenProfile({
     if (!file) return;
 
     try {
-      const compressedImage = await resizeImage(file, 900, 0.8);
+      const compressedBlob = await resizeImageToBlob(file, 900, 0.8);
+      const previewUrl = URL.createObjectURL(compressedBlob);
 
-      setNewProfilePhoto(compressedImage);
+      setNewProfilePhotoBlob(compressedBlob);
+      setNewProfilePhotoPreview(previewUrl);
       setProfilePhotoZoom(1);
       setShowPhotoEditor(true);
 
@@ -385,33 +411,51 @@ export default function ChickenProfile({
   };
 
   const saveProfilePhoto = async () => {
-    if (!newProfilePhoto) return;
+    if (!newProfilePhotoBlob) return;
 
-    const currentPhotos =
-      chicken.photos?.length > 0 ? chicken.photos : chicken.album || [];
+    try {
+      setSavingProfilePhoto(true);
 
-    const updatedPhotos = currentPhotos.includes(newProfilePhoto)
-      ? currentPhotos
-      : [newProfilePhoto, ...currentPhotos];
+      const publicUrl = await uploadProfilePhotoToStorage(newProfilePhotoBlob);
 
-    const updated = {
-      ...chicken,
-      image: newProfilePhoto,
-      profileImageZoom: profilePhotoZoom,
-      photos: updatedPhotos,
-      album: updatedPhotos,
-    };
+      const currentPhotos =
+        chicken.photos?.length > 0 ? chicken.photos : chicken.album || [];
 
-    await updateChicken(updated);
+      const cleanedCurrentPhotos = cleanPhotoList(currentPhotos);
 
-    setShowPhotoEditor(false);
-    setNewProfilePhoto("");
-    setProfilePhotoZoom(1);
+      const updatedPhotos = cleanedCurrentPhotos.includes(publicUrl)
+        ? cleanedCurrentPhotos
+        : [publicUrl, ...cleanedCurrentPhotos];
+
+      const updated = {
+        ...chicken,
+        image: publicUrl,
+        image_url: publicUrl,
+        profileImageZoom: profilePhotoZoom,
+        photos: updatedPhotos,
+        album: updatedPhotos,
+      };
+
+      await updateChicken(updated);
+
+      setShowPhotoEditor(false);
+      setNewProfilePhotoPreview("");
+      setNewProfilePhotoBlob(null);
+      setProfilePhotoZoom(1);
+    } catch (error) {
+      console.error("Profile photo save error:", error);
+      alert(
+        "Could not upload profile photo. Please check that the Supabase bucket 'chicken-photos' exists and is public."
+      );
+    } finally {
+      setSavingProfilePhoto(false);
+    }
   };
 
   const cancelProfilePhotoEdit = () => {
     setShowPhotoEditor(false);
-    setNewProfilePhoto("");
+    setNewProfilePhotoPreview("");
+    setNewProfilePhotoBlob(null);
     setProfilePhotoZoom(1);
   };
 
@@ -600,7 +644,7 @@ export default function ChickenProfile({
 
             <div className="w-44 h-44 rounded-full overflow-hidden border-4 border-[#d9a441] bg-gray-200">
               <img
-                src={newProfilePhoto}
+                src={newProfilePhotoPreview}
                 className="w-full h-full object-cover"
                 style={{
                   transform: `scale(${profilePhotoZoom})`,
@@ -628,14 +672,16 @@ export default function ChickenProfile({
             <div className="flex gap-2 w-full">
               <button
                 onClick={saveProfilePhoto}
-                className="bg-green-600 text-white px-3 py-3 rounded-xl font-bold flex-1"
+                disabled={savingProfilePhoto}
+                className="bg-green-600 text-white px-3 py-3 rounded-xl font-bold flex-1 disabled:bg-gray-400"
               >
-                Save Photo
+                {savingProfilePhoto ? "Uploading..." : "Save Photo"}
               </button>
 
               <button
                 onClick={cancelProfilePhotoEdit}
-                className="bg-gray-500 text-white px-3 py-3 rounded-xl font-bold flex-1"
+                disabled={savingProfilePhoto}
+                className="bg-gray-500 text-white px-3 py-3 rounded-xl font-bold flex-1 disabled:bg-gray-400"
               >
                 Cancel
               </button>
@@ -1004,30 +1050,30 @@ export default function ChickenProfile({
         <NotesSection chicken={chicken} updateChicken={updateChicken} />
       </ProfileSection>
 
-      <ProfileSection title="Activity">
-        <div className="flex flex-col gap-2 text-base">
-          {(chicken.activity || []).length === 0 && (
-            <div className="text-gray-400">No activity yet</div>
-          )}
-
-          {(chicken.activity || [])
-            .slice()
-            .reverse()
-            .map((item: any, i: number) => (
-              <div
-                key={i}
-                className="bg-gray-50 p-2 rounded-md flex justify-between gap-3"
-              >
-                <span>{item.text}</span>
-                <span className="text-gray-400">
-                  {new Date(item.time).toLocaleDateString()}
-                </span>
-              </div>
-            ))}
-        </div>
-      </ProfileSection>
-
       <ProfileSection title="Health">
+        <ProfileSection title="Activity">
+          <div className="flex flex-col gap-2 text-base">
+            {(chicken.activity || []).length === 0 && (
+              <div className="text-gray-400">No activity yet</div>
+            )}
+
+            {(chicken.activity || [])
+              .slice()
+              .reverse()
+              .map((item: any, i: number) => (
+                <div
+                  key={i}
+                  className="bg-gray-50 p-2 rounded-md flex justify-between gap-3"
+                >
+                  <span>{item.text}</span>
+                  <span className="text-gray-400">
+                    {new Date(item.time).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </ProfileSection>
+
         <div ref={healthRef}>
           <HealthSection chicken={chicken} updateChicken={updateChicken} />
         </div>

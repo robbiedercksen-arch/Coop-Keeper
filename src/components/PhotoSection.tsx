@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { supabase } from "../supabase";
 
 type Props = {
   chicken: any;
@@ -13,15 +14,15 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
   const [uploading, setUploading] = useState(false);
 
   const photos =
-  chicken.photos && chicken.photos.length > 0
-    ? chicken.photos
-    : chicken.album || [];
+    chicken.photos && chicken.photos.length > 0
+      ? chicken.photos
+      : chicken.album || [];
 
-  const resizeImage = (
+  const resizeImageToBlob = (
     file: File,
     maxSize = 1200,
     quality = 0.8
-  ): Promise<string> => {
+  ): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       const img = new Image();
@@ -57,13 +58,51 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
 
         ctx.drawImage(img, 0, 0, width, height);
 
-        resolve(canvas.toDataURL("image/jpeg", quality));
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject("Could not compress image.");
+              return;
+            }
+
+            resolve(blob);
+          },
+          "image/jpeg",
+          quality
+        );
       };
 
       img.onerror = () => reject("Could not load image.");
 
       reader.readAsDataURL(file);
     });
+  };
+
+  const uploadPhotoToStorage = async (file: File) => {
+    const resizedBlob = await resizeImageToBlob(file, 1200, 0.8);
+
+    const chickenId = String(chicken.id || "unknown");
+    const fileName = `${chickenId}/album-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("chicken-photos")
+      .upload(fileName, resizedBlob, {
+        contentType: "image/jpeg",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Photo upload error:", uploadError);
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from("chicken-photos")
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
   };
 
   const handleUploadClick = () => {
@@ -77,14 +116,14 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
     try {
       setUploading(true);
 
-      const resizedPhotos: string[] = [];
+      const uploadedPhotoUrls: string[] = [];
 
       for (const file of files) {
-        const resizedPhoto = await resizeImage(file, 1200, 0.8);
-        resizedPhotos.push(resizedPhoto);
+        const publicUrl = await uploadPhotoToStorage(file);
+        uploadedPhotoUrls.push(publicUrl);
       }
 
-      const updatedPhotos = [...photos, ...resizedPhotos];
+      const updatedPhotos = [...photos, ...uploadedPhotoUrls];
 
       const updated = {
         ...chicken,
@@ -98,8 +137,10 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
         fileInputRef.current.value = "";
       }
     } catch (error) {
-      console.error("Photo resize error:", error);
-      alert("Could not add photo. Please try a different image.");
+      console.error("Photo upload error:", error);
+      alert(
+        "Could not upload photo. Please check that the Supabase bucket 'chicken-photos' exists and is public."
+      );
     } finally {
       setUploading(false);
     }
@@ -133,7 +174,7 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
         disabled={uploading}
         className="bg-blue-500 text-white px-3 py-3 rounded-lg text-base font-semibold disabled:bg-gray-400"
       >
-        {uploading ? "Compressing Photo..." : "+ Add Photo"}
+        {uploading ? "Uploading Photo..." : "+ Add Photo"}
       </button>
 
       <input
