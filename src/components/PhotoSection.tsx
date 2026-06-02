@@ -12,11 +12,17 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [touchStart, setTouchStart] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
 
-  const photos =
-    chicken.photos && chicken.photos.length > 0
-      ? chicken.photos
-      : chicken.album || [];
+  const isValidPhotoUrl = (value: any) =>
+    typeof value === "string" &&
+    value.trim() !== "" &&
+    !value.startsWith("data:image") &&
+    !value.startsWith("blob:");
+
+  const photos = (
+    chicken.photos && chicken.photos.length > 0 ? chicken.photos : chicken.album || []
+  ).filter(isValidPhotoUrl);
 
   const resizeImageToBlob = (
     file: File,
@@ -79,7 +85,11 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
   };
 
   const uploadPhotoToStorage = async (file: File) => {
+    setUploadStatus("Compressing photo...");
+
     const resizedBlob = await resizeImageToBlob(file, 1200, 0.8);
+
+    setUploadStatus("Uploading photo...");
 
     const chickenId = String(chicken.id || "unknown");
     const fileName = `${chickenId}/album-${Date.now()}-${Math.random()
@@ -102,7 +112,33 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
       .from("chicken-photos")
       .getPublicUrl(fileName);
 
+    if (!data.publicUrl) {
+      throw new Error("No public URL returned from Supabase Storage.");
+    }
+
     return data.publicUrl;
+  };
+
+  const getStoragePathFromUrl = (url: string) => {
+    const marker = "/storage/v1/object/public/chicken-photos/";
+    const parts = url.split(marker);
+
+    if (parts.length < 2) return null;
+
+    return decodeURIComponent(parts[1]);
+  };
+
+  const deletePhotoFromStorage = async (url: string) => {
+    const path = getStoragePathFromUrl(url);
+    if (!path) return;
+
+    const { error } = await supabase.storage
+      .from("chicken-photos")
+      .remove([path]);
+
+    if (error) {
+      console.warn("Storage delete warning:", error);
+    }
   };
 
   const handleUploadClick = () => {
@@ -143,16 +179,25 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
       );
     } finally {
       setUploading(false);
+      setUploadStatus("");
     }
   };
 
-  const handleDelete = async (index: number) => {
+  const handleDelete = async (
+    e: React.MouseEvent<HTMLButtonElement>,
+    index: number
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const confirmed = confirm("Delete this photo?");
     if (!confirmed) return;
 
-    const updatedPhotos = photos.filter(
-      (_photo: string, i: number) => i !== index
-    );
+    const photoToDelete = photos[index];
+
+    await deletePhotoFromStorage(photoToDelete);
+
+    const updatedPhotos = photos.filter((_photo: string, i: number) => i !== index);
 
     const updated = {
       ...chicken,
@@ -174,7 +219,7 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
         disabled={uploading}
         className="bg-blue-500 text-white px-3 py-3 rounded-lg text-base font-semibold disabled:bg-gray-400"
       >
-        {uploading ? "Uploading Photo..." : "+ Add Photo"}
+        {uploading ? uploadStatus || "Uploading photo..." : "+ Add Photo"}
       </button>
 
       <input
@@ -186,19 +231,27 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
         className="hidden"
       />
 
+      {photos.length === 0 && (
+        <div className="text-sm text-gray-500">No album photos yet.</div>
+      )}
+
       <div className="grid grid-cols-3 gap-2">
         {photos.map((photo: string, index: number) => (
-          <div key={index} className="relative">
+          <div key={`${photo}-${index}`} className="relative">
             <img
               src={photo}
               alt="Chicken"
-              className="w-full h-24 object-cover rounded-lg cursor-pointer"
+              className="w-full h-24 object-cover rounded-lg cursor-pointer border border-[#d9a441]"
               onClick={() => setSelectedIndex(index)}
+              onError={(e) => {
+                e.currentTarget.style.opacity = "0.35";
+              }}
             />
 
             <button
-              onClick={() => handleDelete(index)}
-              className="absolute top-1 right-1 bg-black/60 text-white text-xs px-1 rounded"
+              type="button"
+              onClick={(e) => handleDelete(e, index)}
+              className="absolute top-1 right-1 bg-black/70 text-white text-xs px-2 py-1 rounded z-20"
             >
               ✕
             </button>
@@ -223,6 +276,7 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
           }}
         >
           <button
+            type="button"
             onClick={() => setSelectedIndex(null)}
             className="absolute top-4 right-4 text-white text-xl bg-black/60 px-3 py-1 rounded-full z-50"
           >
@@ -231,6 +285,7 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
 
           {selectedIndex > 0 && (
             <button
+              type="button"
               onClick={() => setSelectedIndex(selectedIndex - 1)}
               className="absolute left-4 text-white text-3xl z-50"
             >
@@ -246,6 +301,7 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
 
           {selectedIndex < photos.length - 1 && (
             <button
+              type="button"
               onClick={() => setSelectedIndex(selectedIndex + 1)}
               className="absolute right-4 text-white text-3xl z-50"
             >
