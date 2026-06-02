@@ -60,7 +60,13 @@ function LoadingScreen() {
           width: "100%",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: 14,
+          }}
+        >
           <CoopLogo size={76} />
         </div>
 
@@ -95,8 +101,10 @@ export default function App() {
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
+
     checkMobile();
     window.addEventListener("resize", checkMobile);
+
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
@@ -104,86 +112,82 @@ export default function App() {
     setLoadingChickens(true);
 
     const { data, error } = await supabase
-  .from("chickens")
-  .select("id,name,idTag,breed,sex,ageGroup,image")
-  .order("id", { ascending: true });
+      .from("chickens")
+      .select("id,name,idTag,breed,sex,ageGroup,image")
+      .order("id", { ascending: true });
 
     if (error) {
-      console.error("Load error:", error);
+      console.error("Load chickens error:", error);
       setChickens([]);
       setLoadingChickens(false);
       return;
     }
-console.log("SUPABASE RAW DATA:", data);
-    const formatted = (data || []).map((row: any) => {
-      const chickenData = row.data || {};
 
-      return {
-  ...row,
-  ...chickenData,
-  id: chickenData.id || row.id,
-  name: chickenData.name || row.name || "",
-  idTag: chickenData.idTag || row.idTag || "",
-  breed: chickenData.breed || row.breed || "",
-  sex: chickenData.sex || row.sex || "",
-  ageGroup: chickenData.ageGroup || row.ageGroup || "",
-  image: chickenData.image || row.image || "",
-  notes: chickenData.notes || row.notes || [],
-  healthLogs: chickenData.healthLogs || row.healthLogs || [],
-  album: chickenData.album || row.album || [],
-};
-    });
+    const formatted = (data || []).map((row: any) => ({
+      id: row.id,
+      name: row.name || "",
+      idTag: row.idTag || "",
+      breed: row.breed || "",
+      sex: row.sex || "",
+      ageGroup: row.ageGroup || "",
+      image: row.image || "",
+    }));
 
-console.log("FORMATTED CHICKENS:", formatted);
     setChickens(formatted);
     setLoadingChickens(false);
   };
 
   const saveChickenToDB = async (chicken: any) => {
-  const thumbnailImage =
-    chicken.image ||
-    chicken.image_url ||
-    chicken.photos?.[0] ||
-    "";
+    const thumbnailImage =
+      chicken.image || chicken.image_url || chicken.photos?.[0] || "";
 
-  const { error } = await supabase.from("chickens").upsert(
-    {
-      id: chicken.id,
-      name: chicken.name,
-      idTag: chicken.idTag,
-      breed: chicken.breed,
-      sex: chicken.sex,
-      ageGroup: chicken.ageGroup || "",
-      image: thumbnailImage,
-      data: {
+    const { error } = await supabase.from("chickens").upsert(
+      {
+        id: chicken.id,
+        name: chicken.name || "",
+        idTag: chicken.idTag || "",
+        breed: chicken.breed || "",
+        sex: chicken.sex || "",
+        ageGroup: chicken.ageGroup || "",
+        image: thumbnailImage,
+        data: {
+          ...chicken,
+          image: thumbnailImage,
+        },
+      },
+      { onConflict: "id" }
+    );
+
+    if (error) {
+      console.error("Save chicken error:", error);
+      return;
+    }
+
+    await loadChickens();
+
+    setSelectedChicken((current: any) => {
+      if (!current || current.id !== chicken.id) return current;
+
+      return {
+        ...current,
         ...chicken,
         image: thumbnailImage,
-      },
-    },
-    { onConflict: "id" }
-  );
-
-  if (error) {
-    console.error("Save error:", error);
-    return;
-  }
-
-  await loadChickens();
-};
+      };
+    });
+  };
 
   useEffect(() => {
     loadChickens();
   }, []);
 
-  useEffect(() => {
-    if (selectedChicken) {
-      const updated = chickens.find((c) => c.id === selectedChicken.id);
-      if (updated) setSelectedChicken(updated);
-    }
-  }, [chickens]);
-
   const navigate = (pageName: string) => {
     setPage(pageName);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  };
+
+  const openChickenProfile = (chicken: any) => {
+    setSelectedChicken(chicken);
+    setPage("profile");
     window.scrollTo({ top: 0, behavior: "auto" });
   };
 
@@ -450,11 +454,7 @@ console.log("FORMATTED CHICKENS:", formatted);
               chickens={chickens}
               setChickens={setChickens}
               saveChickenToDB={saveChickenToDB}
-              setSelectedChicken={(chicken: any) => {
-                setSelectedChicken(chicken);
-                setPage("profile");
-                window.scrollTo({ top: 0, behavior: "auto" });
-              }}
+              setSelectedChicken={openChickenProfile}
               navigate={navigate}
             />
           )}
