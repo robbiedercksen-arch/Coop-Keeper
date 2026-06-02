@@ -409,7 +409,7 @@ export default function ChickenProfile({
 
       setNewProfilePhotoBlob(compressedBlob);
       setNewProfilePhotoPreview(previewUrl);
-      setProfilePhotoZoom(1);
+      setProfilePhotoZoom(0.75);
       setProfilePhotoX(0);
       setProfilePhotoY(0);
       setShowPhotoEditor(true);
