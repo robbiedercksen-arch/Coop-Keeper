@@ -246,13 +246,9 @@ export default function ChickenProfile({
       "";
 
     const updatedWithThumbnail = {
-      ...mergedChicken,
-      image: profileThumbnail,
-      data: {
-        ...mergedChicken,
-        image: profileThumbnail,
-      },
-    };
+  ...mergedChicken,
+  image: profileThumbnail,
+};
 
     setChicken(updatedWithThumbnail);
     setSelectedChicken(updatedWithThumbnail);
