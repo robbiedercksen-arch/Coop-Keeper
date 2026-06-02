@@ -12,7 +12,10 @@ export default function PhotoSection({ chicken, updateChicken }: Props) {
   const [touchStart, setTouchStart] = useState(0);
   const [uploading, setUploading] = useState(false);
 
-  const photos = chicken.photos || chicken.album || [];
+  const photos =
+  chicken.photos && chicken.photos.length > 0
+    ? chicken.photos
+    : chicken.album || [];
 
   const resizeImage = (
     file: File,

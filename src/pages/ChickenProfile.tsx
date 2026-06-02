@@ -150,6 +150,24 @@ export default function ChickenProfile({
 
     const chickenData = parseChickenData(data?.data);
 
+    const loadedPhotos =
+      chickenData.photos?.length > 0
+        ? chickenData.photos
+        : chickenData.album?.length > 0
+        ? chickenData.album
+        : data.photos?.length > 0
+        ? data.photos
+        : data.album || [];
+
+    const loadedAlbum =
+      chickenData.album?.length > 0
+        ? chickenData.album
+        : chickenData.photos?.length > 0
+        ? chickenData.photos
+        : data.album?.length > 0
+        ? data.album
+        : data.photos || [];
+
     const fullChicken = {
       ...data,
       ...chickenData,
@@ -159,12 +177,12 @@ export default function ChickenProfile({
       breed: chickenData.breed || data.breed || "",
       sex: chickenData.sex || data.sex || "",
       ageGroup: chickenData.ageGroup || data.ageGroup || "",
-      image: chickenData.image || data.image || "",
+      image: chickenData.image || data.image || loadedPhotos?.[0] || "",
       profileImageZoom: chickenData.profileImageZoom || 1,
-      photos: chickenData.photos || data.photos || [],
+      photos: loadedPhotos,
+      album: loadedAlbum,
       notes: chickenData.notes || data.notes || [],
       healthLogs: chickenData.healthLogs || data.healthLogs || [],
-      album: chickenData.album || data.album || [],
       weightHistory:
         chickenData.weightHistory || chickenData.weight_history || [],
       weight_history:
@@ -257,6 +275,7 @@ export default function ChickenProfile({
     chicken.image ||
     chicken.image_url ||
     chicken.photos?.[0] ||
+    chicken.album?.[0] ||
     "https://via.placeholder.com/160";
 
   const currentProfileZoom = Number(chicken.profileImageZoom || 1);
@@ -266,12 +285,30 @@ export default function ChickenProfile({
   );
 
   const updateChicken = async (updated: any) => {
+    const updatedPhotos =
+      updated.photos?.length > 0
+        ? updated.photos
+        : updated.album?.length > 0
+        ? updated.album
+        : chicken.photos?.length > 0
+        ? chicken.photos
+        : chicken.album || [];
+
+    const updatedAlbum =
+      updated.album?.length > 0
+        ? updated.album
+        : updated.photos?.length > 0
+        ? updated.photos
+        : chicken.album?.length > 0
+        ? chicken.album
+        : chicken.photos || [];
+
     const mergedChicken = {
       ...chicken,
       ...updated,
       notes: updated.notes ?? chicken.notes ?? [],
-      photos: updated.photos ?? chicken.photos ?? [],
-      album: updated.album ?? chicken.album ?? [],
+      photos: updatedPhotos,
+      album: updatedAlbum,
       healthLogs: updated.healthLogs ?? chicken.healthLogs ?? [],
       activity: updated.activity ?? chicken.activity ?? [],
       weightHistory:
@@ -292,6 +329,7 @@ export default function ChickenProfile({
       mergedChicken.image ||
       mergedChicken.image_url ||
       mergedChicken.photos?.[0] ||
+      mergedChicken.album?.[0] ||
       "";
 
     const updatedWithThumbnail = {
@@ -349,9 +387,12 @@ export default function ChickenProfile({
   const saveProfilePhoto = async () => {
     if (!newProfilePhoto) return;
 
-    const updatedPhotos = chicken.photos?.includes(newProfilePhoto)
-      ? chicken.photos || []
-      : [newProfilePhoto, ...(chicken.photos || [])];
+    const currentPhotos =
+      chicken.photos?.length > 0 ? chicken.photos : chicken.album || [];
+
+    const updatedPhotos = currentPhotos.includes(newProfilePhoto)
+      ? currentPhotos
+      : [newProfilePhoto, ...currentPhotos];
 
     const updated = {
       ...chicken,
