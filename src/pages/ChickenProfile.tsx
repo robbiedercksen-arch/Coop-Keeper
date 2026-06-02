@@ -622,7 +622,7 @@ export default function ChickenProfile({
         <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-200">
           <img
             src={profileImage}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             style={{
               transform: `translate(${currentProfileX}%, ${currentProfileY}%) scale(${currentProfileZoom})`,
               transformOrigin: "center",
