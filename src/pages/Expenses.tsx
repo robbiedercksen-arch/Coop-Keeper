@@ -37,6 +37,8 @@ export default function Expenses() {
   const [selectedSlipImages, setSelectedSlipImages] = useState<string[]>([]);
   const [showSlipViewer, setShowSlipViewer] = useState(false);
   const [activeSlipIndex, setActiveSlipIndex] = useState(0);
+  const [uploadingSlips, setUploadingSlips] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
 
   const subtotal = Number(qty || 0) * Number(unitPrice || 0);
 
@@ -87,6 +89,8 @@ export default function Expenses() {
     setExistingSlipImages([]);
     setEditingId(null);
     setShowForm(false);
+    setUploadingSlips(false);
+    setUploadStatus("");
   };
 
   const editExpense = (expense: any) => {
@@ -107,75 +111,202 @@ export default function Expenses() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const saveExpense = async () => {
-    if (!title || subtotal <= 0) return;
+  const resizeImageToBlob = (
+    file: File,
+    maxSize = 1400,
+    quality = 0.78
+  ): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      const img = new Image();
 
-    const uploadedSlipUrls: string[] = [];
+      reader.onload = () => {
+        img.src = reader.result as string;
+      };
 
-    for (const file of slipFiles) {
-      const fileName = `${Date.now()}-${file.name}`;
+      reader.onerror = () => reject("Could not read invoice image.");
 
-      const { error: uploadError } = await supabase.storage
-        .from("expense-slips")
-        .upload(fileName, file);
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
 
-      if (uploadError) {
-        console.error(uploadError);
-        continue;
-      }
+        if (width > height && width > maxSize) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
 
-      const { data } = supabase.storage
-        .from("expense-slips")
-        .getPublicUrl(fileName);
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
 
-      uploadedSlipUrls.push(data.publicUrl);
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          reject("Could not compress invoice image.");
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject("Could not create compressed invoice image.");
+              return;
+            }
+
+            resolve(blob);
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+
+      img.onerror = () => reject("Could not load invoice image.");
+
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const uploadSlipToStorage = async (file: File) => {
+    setUploadStatus("Compressing invoice slip...");
+
+    const compressedBlob = await resizeImageToBlob(file, 1400, 0.78);
+
+    setUploadStatus("Uploading invoice slip...");
+
+    const safeName = file.name
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9-_]/g, "-")
+      .slice(0, 40);
+
+    const fileName = `expense-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}-${safeName}.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("expense-slips")
+      .upload(fileName, compressedBlob, {
+        contentType: "image/jpeg",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Expense slip upload error:", uploadError);
+      throw uploadError;
     }
 
-    const payload = {
-      title,
-      amount: subtotal,
-      category,
-      expense_date: expenseDate,
-      notes,
-      recurring,
-      feed_product: selectedFeed,
-      bag_size: bagSize,
-      qty: Number(qty),
-      unit_price: Number(unitPrice),
-      slip_images: [...existingSlipImages, ...uploadedSlipUrls],
-    };
+    const { data } = supabase.storage
+      .from("expense-slips")
+      .getPublicUrl(fileName);
 
-    let error;
-
-    if (editingId) {
-      const response = await supabase
-        .from("expenses")
-        .update(payload)
-        .eq("id", editingId);
-
-      error = response.error;
-    } else {
-      const response = await supabase.from("expenses").insert([payload]);
-      error = response.error;
+    if (!data.publicUrl) {
+      throw new Error("No public URL returned for expense slip.");
     }
+
+    return data.publicUrl;
+  };
+
+  const getStoragePathFromUrl = (url: string, bucket: string) => {
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const parts = url.split(marker);
+
+    if (parts.length < 2) return null;
+
+    return decodeURIComponent(parts[1]);
+  };
+
+  const deleteFilesFromStorage = async (urls: string[], bucket: string) => {
+    const paths = urls
+      .map((url) => getStoragePathFromUrl(url, bucket))
+      .filter(Boolean) as string[];
+
+    if (paths.length === 0) return;
+
+    const { error } = await supabase.storage.from(bucket).remove(paths);
 
     if (error) {
-      console.error(error);
-      return;
+      console.warn(`Could not delete files from ${bucket}:`, error);
     }
+  };
 
-    resetForm();
-    loadExpenses();
+  const saveExpense = async () => {
+    if (!title || subtotal <= 0 || uploadingSlips) return;
+
+    try {
+      setUploadingSlips(true);
+
+      const uploadedSlipUrls: string[] = [];
+
+      for (const file of slipFiles) {
+        const publicUrl = await uploadSlipToStorage(file);
+        uploadedSlipUrls.push(publicUrl);
+      }
+
+      const payload = {
+        title,
+        amount: subtotal,
+        category,
+        expense_date: expenseDate,
+        notes,
+        recurring,
+        feed_product: selectedFeed,
+        bag_size: bagSize,
+        qty: Number(qty),
+        unit_price: Number(unitPrice),
+        slip_images: [...existingSlipImages, ...uploadedSlipUrls],
+      };
+
+      let error;
+
+      if (editingId) {
+        const response = await supabase
+          .from("expenses")
+          .update(payload)
+          .eq("id", editingId);
+
+        error = response.error;
+      } else {
+        const response = await supabase.from("expenses").insert([payload]);
+        error = response.error;
+      }
+
+      if (error) {
+        console.error(error);
+        alert("Could not save expense.");
+        return;
+      }
+
+      resetForm();
+      loadExpenses();
+    } catch (error) {
+      console.error("Save expense error:", error);
+      alert(
+        "Could not upload invoice slip. Please check the expense-slips bucket and try again."
+      );
+    } finally {
+      setUploadingSlips(false);
+      setUploadStatus("");
+    }
   };
 
   const deleteExpense = async (id: number) => {
-    const confirmed = confirm("Delete this expense?");
+    const confirmed = confirm("Delete this expense and its slip images?");
     if (!confirmed) return;
+
+    const expenseToDelete = expenses.find((expense) => expense.id === id);
+    const slipImages = expenseToDelete?.slip_images || [];
+
+    await deleteFilesFromStorage(slipImages, "expense-slips");
 
     const { error } = await supabase.from("expenses").delete().eq("id", id);
 
     if (error) {
       console.error(error);
+      alert("Could not delete expense.");
       return;
     }
 
@@ -647,6 +778,12 @@ export default function Expenses() {
                   {slipFiles.length} new slip(s) selected
                 </div>
               )}
+
+              {uploadingSlips && (
+                <div className="rounded-2xl p-3 bg-blue-50 border border-blue-200 text-blue-800 font-bold text-sm">
+                  {uploadStatus || "Uploading invoice slip..."}
+                </div>
+              )}
             </div>
 
             <label className="flex items-center gap-2 text-[#4b3a1d] font-semibold">
@@ -668,14 +805,20 @@ export default function Expenses() {
             <div className="flex gap-3">
               <button
                 onClick={saveExpense}
-                className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold"
+                disabled={uploadingSlips}
+                className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold disabled:bg-gray-400 disabled:text-white"
               >
-                {editingId ? "Update Expense" : "+ Add Expense"}
+                {uploadingSlips
+                  ? uploadStatus || "Saving..."
+                  : editingId
+                  ? "Update Expense"
+                  : "+ Add Expense"}
               </button>
 
               <button
                 onClick={resetForm}
-                className="bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold"
+                disabled={uploadingSlips}
+                className="bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold disabled:bg-gray-300"
               >
                 Cancel
               </button>

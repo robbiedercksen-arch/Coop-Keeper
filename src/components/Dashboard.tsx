@@ -38,24 +38,49 @@ export default function Dashboard({ chickens }: any) {
   }, []);
 
   const loadDashboardData = async () => {
-    const { data: eggData } = await supabase.from("egg_logs").select("*");
+    const { data: eggData, error: eggError } = await supabase
+      .from("egg_logs")
+      .select("date,eggs");
+
+    if (eggError) console.error("Dashboard egg load error:", eggError);
     setEggLogs(eggData || []);
 
-    const { data: choreData } = await supabase.from("daily_chores").select("*");
+    const { data: choreData, error: choreError } = await supabase
+      .from("daily_chores")
+      .select("completed,repeat_daily");
+
+    if (choreError) console.error("Dashboard chores load error:", choreError);
     setChores(choreData || []);
 
-    const { data: planData } = await supabase.from("farm_plans").select("*");
+    const { data: planData, error: planError } = await supabase
+      .from("farm_plans")
+      .select("completed,archived,priority");
+
+    if (planError) console.error("Dashboard plans load error:", planError);
     setPlans(planData || []);
 
-    const { data: incubatorData } = await supabase
+    const { data: incubatorData, error: incubatorError } = await supabase
       .from("incubator_batches")
-      .select("*");
+      .select("batchname,status,hatchdate,expected_hatch_date");
+
+    if (incubatorError)
+      console.error("Dashboard incubator load error:", incubatorError);
     setIncubators(incubatorData || []);
 
-    const { data: wishlistData } = await supabase.from("wishlist").select("*");
+    const { data: wishlistData, error: wishlistError } = await supabase
+      .from("wishlist")
+      .select("purchased,total_cost");
+
+    if (wishlistError)
+      console.error("Dashboard wishlist load error:", wishlistError);
     setWishlistItems(wishlistData || []);
 
-    const { data: expenseData } = await supabase.from("expenses").select("*");
+    const { data: expenseData, error: expenseError } = await supabase
+      .from("expenses")
+      .select("amount,expense_date");
+
+    if (expenseError)
+      console.error("Dashboard expenses load error:", expenseError);
     setExpenses(expenseData || []);
   };
 
@@ -208,7 +233,10 @@ export default function Dashboard({ chickens }: any) {
         const date = new Date(expense.expense_date);
         return date.getFullYear() === currentYear && date.getMonth() === index;
       })
-      .reduce((sum: number, expense: any) => sum + Number(expense.amount || 0), 0);
+      .reduce(
+        (sum: number, expense: any) => sum + Number(expense.amount || 0),
+        0
+      );
 
     return {
       label: month,
@@ -249,7 +277,10 @@ export default function Dashboard({ chickens }: any) {
         const date = new Date(expense.expense_date);
         return date.getFullYear() === year;
       })
-      .reduce((sum: number, expense: any) => sum + Number(expense.amount || 0), 0);
+      .reduce(
+        (sum: number, expense: any) => sum + Number(expense.amount || 0),
+        0
+      );
 
     return {
       label: String(year),
@@ -301,10 +332,16 @@ export default function Dashboard({ chickens }: any) {
         ) : (
           <div className="h-[230px] flex items-end gap-3 border-b border-[#d9a441]/50 pb-3">
             {data.map((item, index) => {
-              const height = Math.max((Number(item.value || 0) / maxValue) * 170, 8);
+              const height = Math.max(
+                (Number(item.value || 0) / maxValue) * 170,
+                8
+              );
 
               return (
-                <div key={index} className="flex-1 flex flex-col items-center justify-end gap-2">
+                <div
+                  key={index}
+                  className="flex-1 flex flex-col items-center justify-end gap-2"
+                >
                   <div className="text-[10px] font-bold text-[#4b3a1d] min-h-[18px]">
                     {item.value > 0 ? item.display : ""}
                   </div>

@@ -20,7 +20,9 @@ export default function Wishlist() {
   const [productImages, setProductImages] = useState<File[]>([]);
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
 
-  const [selectedProductImages, setSelectedProductImages] = useState<string[]>([]);
+  const [selectedProductImages, setSelectedProductImages] = useState<string[]>(
+    []
+  );
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
@@ -32,17 +34,20 @@ export default function Wishlist() {
   );
   const [purchaseSlipFiles, setPurchaseSlipFiles] = useState<File[]>([]);
 
+  const [uploadingWishlistImages, setUploadingWishlistImages] = useState(false);
+  const [wishlistUploadStatus, setWishlistUploadStatus] = useState("");
+  const [uploadingPurchaseSlips, setUploadingPurchaseSlips] = useState(false);
+  const [purchaseUploadStatus, setPurchaseUploadStatus] = useState("");
+
   const totalCost = Number(qty || 0) * Number(unitPrice || 0);
 
   const normalizeUrl = (url: string) => {
     if (!url) return "";
 
     const match = url.match(/(https?:\/\/[^\s]+|www\.[^\s]+)/i);
-
     if (!match) return "";
 
     let cleanUrl = match[0].trim();
-
     cleanUrl = cleanUrl.replace(/[),.;]+$/g, "");
 
     if (!cleanUrl.startsWith("http")) {
@@ -50,6 +55,129 @@ export default function Wishlist() {
     }
 
     return cleanUrl;
+  };
+
+  const resizeImageToBlob = (
+    file: File,
+    maxSize = 1400,
+    quality = 0.78
+  ): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      const img = new Image();
+
+      reader.onload = () => {
+        img.src = reader.result as string;
+      };
+
+      reader.onerror = () => reject("Could not read image.");
+
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > maxSize) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else if (height > maxSize) {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          reject("Could not compress image.");
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject("Could not create compressed image.");
+              return;
+            }
+
+            resolve(blob);
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+
+      img.onerror = () => reject("Could not load image.");
+
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const makeSafeFileName = (file: File) =>
+    file.name
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9-_]/g, "-")
+      .slice(0, 40);
+
+  const uploadCompressedImage = async (
+    file: File,
+    bucket: string,
+    prefix: string
+  ) => {
+    const compressedBlob = await resizeImageToBlob(file, 1400, 0.78);
+
+    const safeName = makeSafeFileName(file);
+
+    const fileName = `${prefix}-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}-${safeName}.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, compressedBlob, {
+        contentType: "image/jpeg",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error(`${bucket} upload error:`, uploadError);
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
+
+    if (!data.publicUrl) {
+      throw new Error(`No public URL returned from ${bucket}.`);
+    }
+
+    return data.publicUrl;
+  };
+
+  const getStoragePathFromUrl = (url: string, bucket: string) => {
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const parts = url.split(marker);
+
+    if (parts.length < 2) return null;
+
+    return decodeURIComponent(parts[1]);
+  };
+
+  const deleteFilesFromStorage = async (urls: string[], bucket: string) => {
+    const paths = urls
+      .map((url) => getStoragePathFromUrl(url, bucket))
+      .filter(Boolean) as string[];
+
+    if (paths.length === 0) return;
+
+    const { error } = await supabase.storage.from(bucket).remove(paths);
+
+    if (error) {
+      console.warn(`Could not delete files from ${bucket}:`, error);
+    }
   };
 
   useEffect(() => {
@@ -85,58 +213,74 @@ export default function Wishlist() {
     setProductUrl("");
     setProductImages([]);
     setShowForm(false);
+    setUploadingWishlistImages(false);
+    setWishlistUploadStatus("");
   };
 
   const addWishlistItem = async () => {
-    if (!itemName || totalCost <= 0) return;
+    if (!itemName || totalCost <= 0 || uploadingWishlistImages) return;
 
-    const uploadedImageUrls: string[] = [];
+    try {
+      setUploadingWishlistImages(true);
 
-    for (const file of productImages) {
-      const fileName = `${Date.now()}-${file.name}`;
+      const uploadedImageUrls: string[] = [];
 
-      const { error: uploadError } = await supabase.storage
-        .from("wishlist-images")
-        .upload(fileName, file);
-
-      if (uploadError) {
-        console.error("Wishlist Image Upload Error:", uploadError);
-        continue;
+      for (const file of productImages) {
+        setWishlistUploadStatus("Compressing product image...");
+        const publicUrl = await uploadCompressedImage(
+          file,
+          "wishlist-images",
+          "wishlist"
+        );
+        uploadedImageUrls.push(publicUrl);
+        setWishlistUploadStatus("Uploading product image...");
       }
 
-      const { data } = supabase.storage
-        .from("wishlist-images")
-        .getPublicUrl(fileName);
+      const { error } = await supabase.from("wishlist").insert([
+        {
+          item_category: itemCategory,
+          item_name: itemName,
+          qty: Number(qty),
+          unit_price: Number(unitPrice),
+          total_cost: totalCost,
+          item_details: itemDetails,
+          product_url: normalizeUrl(productUrl),
+          product_images: uploadedImageUrls,
+        },
+      ]);
 
-      uploadedImageUrls.push(data.publicUrl);
+      if (error) {
+        console.error("Add Wishlist Error:", error);
+        alert("Could not add wishlist item.");
+        return;
+      }
+
+      resetForm();
+      await loadWishlistItems();
+    } catch (error) {
+      console.error("Wishlist image upload error:", error);
+      alert(
+        "Could not upload wishlist image. Please check the wishlist-images bucket and try again."
+      );
+    } finally {
+      setUploadingWishlistImages(false);
+      setWishlistUploadStatus("");
     }
-
-    const { error } = await supabase.from("wishlist").insert([
-      {
-        item_category: itemCategory,
-        item_name: itemName,
-        qty: Number(qty),
-        unit_price: Number(unitPrice),
-        total_cost: totalCost,
-        item_details: itemDetails,
-        product_url: normalizeUrl(productUrl),
-        product_images: uploadedImageUrls,
-      },
-    ]);
-
-    if (error) {
-      console.error("Add Wishlist Error:", error);
-      alert("Could not add wishlist item.");
-      return;
-    }
-
-    resetForm();
-    await loadWishlistItems();
   };
 
   const deleteWishlistItem = async (id: string) => {
-    const confirmed = confirm("Delete this wishlist item?");
+    const confirmed = confirm(
+      "Delete this wishlist item and its product images?"
+    );
     if (!confirmed) return;
+
+    const itemToDelete = wishlistItems.find(
+      (item) => String(item.id) === String(id)
+    );
+
+    const productImageUrls = itemToDelete?.product_images || [];
+
+    await deleteFilesFromStorage(productImageUrls, "wishlist-images");
 
     const { error } = await supabase.from("wishlist").delete().eq("id", id);
 
@@ -146,7 +290,7 @@ export default function Wishlist() {
       return;
     }
 
-    setWishlistItems((prev) => prev.filter((item) => item.id !== id));
+    setWishlistItems((prev) => prev.filter((item) => String(item.id) !== String(id)));
   };
 
   const openPurchaseModal = (item: any) => {
@@ -154,82 +298,92 @@ export default function Wishlist() {
     setPurchaseCategory("Equipment");
     setPurchaseDate(new Date().toISOString().split("T")[0]);
     setPurchaseSlipFiles([]);
+    setPurchaseUploadStatus("");
+    setUploadingPurchaseSlips(false);
     setShowPurchaseModal(true);
   };
 
   const completePurchase = async () => {
-    if (!purchaseItem || !purchaseDate) {
+    if (!purchaseItem || !purchaseDate || uploadingPurchaseSlips) {
       alert("Please select a purchase date.");
       return;
     }
 
-    const wishlistId = String(purchaseItem.id);
-    const uploadedSlipUrls: string[] = [];
+    try {
+      setUploadingPurchaseSlips(true);
 
-    for (const file of purchaseSlipFiles) {
-      const fileName = `${Date.now()}-${file.name}`;
+      const wishlistId = String(purchaseItem.id);
+      const uploadedSlipUrls: string[] = [];
 
-      const { error: uploadError } = await supabase.storage
-        .from("expense-slips")
-        .upload(fileName, file);
+      for (const file of purchaseSlipFiles) {
+        setPurchaseUploadStatus("Compressing purchase slip...");
+        const publicUrl = await uploadCompressedImage(
+          file,
+          "expense-slips",
+          "expense"
+        );
+        uploadedSlipUrls.push(publicUrl);
+        setPurchaseUploadStatus("Uploading purchase slip...");
+      }
 
-      if (uploadError) {
-        console.error("Slip Upload Error:", uploadError);
-        alert("Slip upload failed. Check console.");
+      const { error: expenseError } = await supabase.from("expenses").insert([
+        {
+          title: purchaseItem.item_name,
+          amount: Number(purchaseItem.total_cost),
+          category: purchaseCategory,
+          expense_date: purchaseDate,
+          notes: purchaseItem.item_details || "Purchased from Wishlist",
+          recurring: false,
+          feed_product: "",
+          bag_size: "",
+          qty: Number(purchaseItem.qty),
+          unit_price: Number(purchaseItem.unit_price),
+          slip_images: uploadedSlipUrls,
+        },
+      ]);
+
+      if (expenseError) {
+        console.error("Expense Insert Error:", expenseError);
+        alert("Could not move item to Expenses.");
         return;
       }
 
-      const { data } = supabase.storage
-        .from("expense-slips")
-        .getPublicUrl(fileName);
+      await deleteFilesFromStorage(
+        purchaseItem.product_images || [],
+        "wishlist-images"
+      );
 
-      uploadedSlipUrls.push(data.publicUrl);
+      const { error: deleteError } = await supabase
+        .from("wishlist")
+        .delete()
+        .eq("id", wishlistId);
+
+      if (deleteError) {
+        console.error("Wishlist Delete Error:", deleteError);
+        alert(JSON.stringify(deleteError));
+        return;
+      }
+
+      setWishlistItems((prev) =>
+        prev.filter((item) => String(item.id) !== wishlistId)
+      );
+
+      setShowPurchaseModal(false);
+      setPurchaseItem(null);
+      setPurchaseSlipFiles([]);
+
+      await loadWishlistItems();
+
+      alert("Item moved to Expenses and deleted from Wishlist.");
+    } catch (error) {
+      console.error("Complete purchase error:", error);
+      alert(
+        "Could not upload purchase slip. Please check the expense-slips bucket and try again."
+      );
+    } finally {
+      setUploadingPurchaseSlips(false);
+      setPurchaseUploadStatus("");
     }
-
-    const { error: expenseError } = await supabase.from("expenses").insert([
-      {
-        title: purchaseItem.item_name,
-        amount: Number(purchaseItem.total_cost),
-        category: purchaseCategory,
-        expense_date: purchaseDate,
-        notes: purchaseItem.item_details || "Purchased from Wishlist",
-        recurring: false,
-        feed_product: "",
-        bag_size: "",
-        qty: Number(purchaseItem.qty),
-        unit_price: Number(purchaseItem.unit_price),
-        slip_images: uploadedSlipUrls,
-      },
-    ]);
-
-    if (expenseError) {
-      console.error("Expense Insert Error:", expenseError);
-      alert("Could not move item to Expenses.");
-      return;
-    }
-
-    const { error: deleteError } = await supabase
-      .from("wishlist")
-      .delete()
-      .eq("id", wishlistId);
-
-    if (deleteError) {
-      console.error("Wishlist Delete Error:", deleteError);
-      alert(JSON.stringify(deleteError));
-      return;
-    }
-
-    setWishlistItems((prev) =>
-      prev.filter((item) => String(item.id) !== wishlistId)
-    );
-
-    setShowPurchaseModal(false);
-    setPurchaseItem(null);
-    setPurchaseSlipFiles([]);
-
-    await loadWishlistItems();
-
-    alert("Item moved to Expenses and deleted from Wishlist.");
   };
 
   return (
@@ -383,6 +537,12 @@ export default function Wishlist() {
                   {productImages.length} image(s) selected
                 </div>
               )}
+
+              {uploadingWishlistImages && (
+                <div className="rounded-2xl p-3 bg-blue-50 border border-blue-200 text-blue-800 font-bold text-sm">
+                  {wishlistUploadStatus || "Uploading product image..."}
+                </div>
+              )}
             </div>
 
             <div className={statClass}>
@@ -395,14 +555,18 @@ export default function Wishlist() {
             <div className="flex gap-3">
               <button
                 onClick={addWishlistItem}
-                className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold"
+                disabled={uploadingWishlistImages}
+                className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold disabled:bg-gray-400 disabled:text-white"
               >
-                + Add Wishlist Item
+                {uploadingWishlistImages
+                  ? wishlistUploadStatus || "Saving..."
+                  : "+ Add Wishlist Item"}
               </button>
 
               <button
                 onClick={resetForm}
-                className="bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold"
+                disabled={uploadingWishlistImages}
+                className="bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold disabled:bg-gray-300"
               >
                 Cancel
               </button>
@@ -498,7 +662,11 @@ export default function Wishlist() {
                         return;
                       }
 
-                      window.open(cleanProductUrl, "_blank", "noopener,noreferrer");
+                      window.open(
+                        cleanProductUrl,
+                        "_blank",
+                        "noopener,noreferrer"
+                      );
                     }}
                     className="bg-blue-600 text-white rounded-2xl p-3 text-center font-bold break-words"
                   >
@@ -574,6 +742,18 @@ export default function Wishlist() {
               className="border border-[#d9a441] rounded-xl p-3 bg-white text-base"
             />
 
+            {purchaseSlipFiles.length > 0 && (
+              <div className="text-sm text-[#6b5a3a] font-semibold">
+                {purchaseSlipFiles.length} purchase slip(s) selected
+              </div>
+            )}
+
+            {uploadingPurchaseSlips && (
+              <div className="rounded-2xl p-3 bg-blue-50 border border-blue-200 text-blue-800 font-bold text-sm">
+                {purchaseUploadStatus || "Uploading purchase slip..."}
+              </div>
+            )}
+
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -581,16 +761,20 @@ export default function Wishlist() {
                   setPurchaseItem(null);
                   setPurchaseSlipFiles([]);
                 }}
-                className="flex-1 bg-gray-200 rounded-xl p-3 font-bold"
+                disabled={uploadingPurchaseSlips}
+                className="flex-1 bg-gray-200 rounded-xl p-3 font-bold disabled:bg-gray-300"
               >
                 Cancel
               </button>
 
               <button
                 onClick={completePurchase}
-                className="flex-1 bg-green-700 text-white rounded-xl p-3 font-bold"
+                disabled={uploadingPurchaseSlips}
+                className="flex-1 bg-green-700 text-white rounded-xl p-3 font-bold disabled:bg-gray-400"
               >
-                Save Purchase
+                {uploadingPurchaseSlips
+                  ? purchaseUploadStatus || "Saving..."
+                  : "Save Purchase"}
               </button>
             </div>
           </div>
@@ -625,8 +809,7 @@ export default function Wishlist() {
           <button
             onClick={() =>
               setActiveImageIndex((prev) =>
-                prev === selectedProductImages.length - 1 ? 0 : prev + 1
-              )
+                prev === selectedProductImages.length - 1 ? 0 : prev + 1)
             }
             className="absolute right-4 text-white text-5xl"
           >
