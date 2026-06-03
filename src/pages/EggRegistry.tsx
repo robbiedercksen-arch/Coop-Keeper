@@ -17,6 +17,7 @@ const textAreaClass =
 export default function EggRegistry({ chickens }: any) {
   const [eggLogs, setEggLogs] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const [date, setDate] = useState("");
   const [selectedHen, setSelectedHen] = useState("");
@@ -41,6 +42,48 @@ export default function EggRegistry({ chickens }: any) {
     } else {
       setEggLogs(data || []);
     }
+  };
+
+  const resetForm = () => {
+    setDate("");
+    setSelectedHen("");
+    setEggCount("");
+    setPurpose("");
+    setNotes("");
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  const startAddEggLog = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const startEditEggLog = (log: any) => {
+    setEditingId(log.id);
+    setDate(log.date || "");
+    setSelectedHen(log.henid ? String(log.henid) : "");
+    setEggCount(log.eggs?.toString() || "");
+    setPurpose(log.purpose || "");
+    setNotes(log.notes || "");
+    setShowForm(true);
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteEggLog = async (id: number) => {
+    const confirmed = confirm("Delete this egg production log?");
+    if (!confirmed) return;
+
+    const { error } = await supabase.from("egg_logs").delete().eq("id", id);
+
+    if (error) {
+      console.error(error);
+      alert("Could not delete egg production log.");
+      return;
+    }
+
+    await loadEggLogs();
   };
 
   const hens = chickens.filter((c: any) => {
@@ -134,7 +177,7 @@ export default function EggRegistry({ chickens }: any) {
       (c: any) => String(c.id) === String(selectedHen)
     );
 
-    const newLog = {
+    const eggPayload = {
       date: date || new Date().toISOString().split("T")[0],
       henid: selectedHen,
       henname: selectedChicken?.name || "Unknown Hen",
@@ -143,22 +186,32 @@ export default function EggRegistry({ chickens }: any) {
       notes,
     };
 
-    const { error } = await supabase.from("egg_logs").insert([newLog]);
+    let error;
+
+    if (editingId) {
+      const response = await supabase
+        .from("egg_logs")
+        .update(eggPayload)
+        .eq("id", editingId);
+
+      error = response.error;
+    } else {
+      const response = await supabase.from("egg_logs").insert([eggPayload]);
+      error = response.error;
+    }
 
     if (error) {
       console.error(error);
-      alert("Could not log egg production.");
+      alert(
+        editingId
+          ? "Could not update egg production log."
+          : "Could not log egg production."
+      );
       return;
     }
 
     await loadEggLogs();
-
-    setDate("");
-    setSelectedHen("");
-    setEggCount("");
-    setPurpose("");
-    setNotes("");
-    setShowForm(false);
+    resetForm();
   };
 
   return (
@@ -199,7 +252,7 @@ export default function EggRegistry({ chickens }: any) {
 
       <div className={cardClass}>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={startAddEggLog}
           className="w-full bg-[#022312] text-[#f7d37b] rounded-2xl px-5 py-4 font-extrabold shadow-md"
         >
           ➕ Add Egg Production
@@ -209,7 +262,7 @@ export default function EggRegistry({ chickens }: any) {
       {showForm && (
         <div className={cardClass}>
           <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
-            🥚 Log Egg Production
+            {editingId ? "✏️ Edit Egg Production" : "🥚 Log Egg Production"}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-full">
@@ -299,14 +352,14 @@ export default function EggRegistry({ chickens }: any) {
               onClick={handleLogEggs}
               className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold"
             >
-              + Log Eggs
+              {editingId ? "Update Egg Log" : "+ Log Eggs"}
             </button>
 
             <button
-              onClick={() => setShowForm(false)}
+              onClick={resetForm}
               className="bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold"
             >
-              Cancel
+              {editingId ? "Cancel Edit" : "Cancel"}
             </button>
           </div>
         </div>
@@ -356,9 +409,9 @@ export default function EggRegistry({ chickens }: any) {
             {filteredEggLogs.map((log: any) => (
               <div
                 key={log.id}
-                className="rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)] flex justify-between items-center gap-3"
+                className="rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)] flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3"
               >
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="font-extrabold text-[#3d2a10]">
                     {log.henname}
                   </div>
@@ -376,8 +429,26 @@ export default function EggRegistry({ chickens }: any) {
                   )}
                 </div>
 
-                <div className="text-3xl font-extrabold text-[#3d2a10] shrink-0">
-                  🥚 {log.eggs}
+                <div className="flex flex-col sm:items-end gap-2 shrink-0">
+                  <div className="text-3xl font-extrabold text-[#3d2a10]">
+                    🥚 {log.eggs}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => startEditEggLog(log)}
+                      className="bg-orange-500 text-white px-3 py-2 rounded-xl text-sm font-bold"
+                    >
+                      ✏️ Edit
+                    </button>
+
+                    <button
+                      onClick={() => deleteEggLog(log.id)}
+                      className="bg-red-600 text-white px-3 py-2 rounded-xl text-sm font-bold"
+                    >
+                      🗑 Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
