@@ -17,7 +17,7 @@ const textAreaClass =
 export default function EggRegistry({ chickens }: any) {
   const [eggLogs, setEggLogs] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<any>(null);
+  const [editingLog, setEditingLog] = useState<any>(null);
 
   const [date, setDate] = useState("");
   const [selectedHen, setSelectedHen] = useState("");
@@ -51,7 +51,7 @@ export default function EggRegistry({ chickens }: any) {
     setEggCount("");
     setPurpose("");
     setNotes("");
-    setEditingId(null);
+    setEditingLog(null);
     setShowForm(false);
   };
 
@@ -61,7 +61,7 @@ export default function EggRegistry({ chickens }: any) {
   };
 
   const startEditEggLog = (log: any) => {
-    setEditingId(log.id);
+    setEditingLog(log);
     setDate(log.date || "");
     setSelectedHen(log.henid ? String(log.henid) : "");
     setEggCount(log.eggs?.toString() || "");
@@ -72,15 +72,43 @@ export default function EggRegistry({ chickens }: any) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const deleteEggLog = async (id: any) => {
+  const buildEggLogQuery = (baseQuery: any, log: any) => {
+    if (log.id !== undefined && log.id !== null && log.id !== "") {
+      return baseQuery.eq("id", log.id);
+    }
+
+    if (
+      log.created_at !== undefined &&
+      log.created_at !== null &&
+      log.created_at !== ""
+    ) {
+      return baseQuery.eq("created_at", log.created_at);
+    }
+
+    let query = baseQuery
+      .eq("date", log.date || "")
+      .eq("eggs", Number(log.eggs || 0))
+      .eq("henname", log.henname || "Unknown Hen");
+
+    if (log.henid) query = query.eq("henid", log.henid);
+    else query = query.or("henid.is.null,henid.eq.");
+
+    if (log.purpose) query = query.eq("purpose", log.purpose);
+    else query = query.or("purpose.is.null,purpose.eq.");
+
+    if (log.notes) query = query.eq("notes", log.notes);
+    else query = query.or("notes.is.null,notes.eq.");
+
+    return query;
+  };
+
+  const deleteEggLog = async (log: any) => {
     const confirmed = confirm("Delete this egg production log?");
     if (!confirmed) return;
 
-    const { data, error } = await supabase
-      .from("egg_logs")
-      .delete()
-      .eq("id", id)
-      .select();
+    const query = buildEggLogQuery(supabase.from("egg_logs").delete(), log);
+
+    const { error } = await query;
 
     if (error) {
       console.error("Delete egg log error:", error);
@@ -88,14 +116,23 @@ export default function EggRegistry({ chickens }: any) {
       return;
     }
 
-    if (!data || data.length === 0) {
-      alert(
-        "No egg log was deleted. Please check that the egg_logs table has an id column."
-      );
-      return;
-    }
+    setEggLogs((prev) =>
+      prev.filter((item) => {
+        if (log.id && item.id) return String(item.id) !== String(log.id);
+        if (log.created_at && item.created_at) {
+          return String(item.created_at) !== String(log.created_at);
+        }
 
-    setEggLogs((prev) => prev.filter((log) => String(log.id) !== String(id)));
+        return !(
+          String(item.date || "") === String(log.date || "") &&
+          Number(item.eggs || 0) === Number(log.eggs || 0) &&
+          String(item.henname || "Unknown Hen") ===
+            String(log.henname || "Unknown Hen") &&
+          String(item.purpose || "") === String(log.purpose || "") &&
+          String(item.notes || "") === String(log.notes || "")
+        );
+      })
+    );
 
     await loadEggLogs();
   };
@@ -202,12 +239,13 @@ export default function EggRegistry({ chickens }: any) {
 
     let error;
 
-    if (editingId) {
-      const response = await supabase
-        .from("egg_logs")
-        .update(eggPayload)
-        .eq("id", editingId);
+    if (editingLog) {
+      const query = buildEggLogQuery(
+        supabase.from("egg_logs").update(eggPayload),
+        editingLog
+      );
 
+      const response = await query;
       error = response.error;
     } else {
       const response = await supabase.from("egg_logs").insert([eggPayload]);
@@ -217,7 +255,7 @@ export default function EggRegistry({ chickens }: any) {
     if (error) {
       console.error("Save egg log error:", error);
       alert(
-        editingId
+        editingLog
           ? "Could not update egg production log."
           : "Could not log egg production."
       );
@@ -276,7 +314,7 @@ export default function EggRegistry({ chickens }: any) {
       {showForm && (
         <div className={cardClass}>
           <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
-            {editingId ? "✏️ Edit Egg Production" : "🥚 Log Egg Production"}
+            {editingLog ? "✏️ Edit Egg Production" : "🥚 Log Egg Production"}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-full">
@@ -366,14 +404,14 @@ export default function EggRegistry({ chickens }: any) {
               onClick={handleLogEggs}
               className="bg-[#022312] text-[#f7d37b] px-5 py-3 rounded-xl font-bold"
             >
-              {editingId ? "Update Egg Log" : "+ Log Eggs"}
+              {editingLog ? "Update Egg Log" : "+ Log Eggs"}
             </button>
 
             <button
               onClick={resetForm}
               className="bg-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold"
             >
-              {editingId ? "Cancel Edit" : "Cancel"}
+              {editingLog ? "Cancel Edit" : "Cancel"}
             </button>
           </div>
         </div>
@@ -420,9 +458,9 @@ export default function EggRegistry({ chickens }: any) {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {filteredEggLogs.map((log: any) => (
+            {filteredEggLogs.map((log: any, index: number) => (
               <div
-                key={log.id}
+                key={log.id || log.created_at || `${log.date}-${index}`}
                 className="rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)] flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3"
               >
                 <div className="min-w-0 flex-1">
@@ -457,7 +495,7 @@ export default function EggRegistry({ chickens }: any) {
                     </button>
 
                     <button
-                      onClick={() => deleteEggLog(log.id)}
+                      onClick={() => deleteEggLog(log)}
                       className="bg-red-600 text-white px-3 py-2 rounded-xl text-sm font-bold"
                     >
                       🗑 Delete
