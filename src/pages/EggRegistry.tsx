@@ -72,9 +72,12 @@ export default function EggRegistry({ chickens }: any) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const buildEggLogQuery = (baseQuery: any, log: any) => {
+  const getEggLogIdentifier = (log: any) => {
     if (log.id !== undefined && log.id !== null && log.id !== "") {
-      return baseQuery.eq("id", log.id);
+      return {
+        key: "id",
+        value: log.id,
+      };
     }
 
     if (
@@ -82,33 +85,33 @@ export default function EggRegistry({ chickens }: any) {
       log.created_at !== null &&
       log.created_at !== ""
     ) {
-      return baseQuery.eq("created_at", log.created_at);
+      return {
+        key: "created_at",
+        value: log.created_at,
+      };
     }
 
-    let query = baseQuery
-      .eq("date", log.date || "")
-      .eq("eggs", Number(log.eggs || 0))
-      .eq("henname", log.henname || "Unknown Hen");
-
-    if (log.henid) query = query.eq("henid", log.henid);
-    else query = query.or("henid.is.null,henid.eq.");
-
-    if (log.purpose) query = query.eq("purpose", log.purpose);
-    else query = query.or("purpose.is.null,purpose.eq.");
-
-    if (log.notes) query = query.eq("notes", log.notes);
-    else query = query.or("notes.is.null,notes.eq.");
-
-    return query;
+    return null;
   };
 
   const deleteEggLog = async (log: any) => {
     const confirmed = confirm("Delete this egg production log?");
     if (!confirmed) return;
 
-    const query = buildEggLogQuery(supabase.from("egg_logs").delete(), log);
+    const identifier = getEggLogIdentifier(log);
 
-    const { error } = await query;
+    if (!identifier) {
+      alert(
+        "This egg log has no id or created_at field, so it cannot be safely deleted. We need to add an id column to egg_logs."
+      );
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("egg_logs")
+      .delete()
+      .eq(identifier.key, identifier.value)
+      .select();
 
     if (error) {
       console.error("Delete egg log error:", error);
@@ -116,23 +119,10 @@ export default function EggRegistry({ chickens }: any) {
       return;
     }
 
-    setEggLogs((prev) =>
-      prev.filter((item) => {
-        if (log.id && item.id) return String(item.id) !== String(log.id);
-        if (log.created_at && item.created_at) {
-          return String(item.created_at) !== String(log.created_at);
-        }
-
-        return !(
-          String(item.date || "") === String(log.date || "") &&
-          Number(item.eggs || 0) === Number(log.eggs || 0) &&
-          String(item.henname || "Unknown Hen") ===
-            String(log.henname || "Unknown Hen") &&
-          String(item.purpose || "") === String(log.purpose || "") &&
-          String(item.notes || "") === String(log.notes || "")
-        );
-      })
-    );
+    if (!data || data.length === 0) {
+      alert("Supabase did not delete the egg log. The matching field was not found.");
+      return;
+    }
 
     await loadEggLogs();
   };
@@ -240,12 +230,20 @@ export default function EggRegistry({ chickens }: any) {
     let error;
 
     if (editingLog) {
-      const query = buildEggLogQuery(
-        supabase.from("egg_logs").update(eggPayload),
-        editingLog
-      );
+      const identifier = getEggLogIdentifier(editingLog);
 
-      const response = await query;
+      if (!identifier) {
+        alert(
+          "This egg log has no id or created_at field, so it cannot be safely updated. We need to add an id column to egg_logs."
+        );
+        return;
+      }
+
+      const response = await supabase
+        .from("egg_logs")
+        .update(eggPayload)
+        .eq(identifier.key, identifier.value);
+
       error = response.error;
     } else {
       const response = await supabase.from("egg_logs").insert([eggPayload]);
