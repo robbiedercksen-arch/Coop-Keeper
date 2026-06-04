@@ -1,6 +1,6 @@
+import DashboardFarmBanner from "./DashboardFarmBanner";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
-import CoopPageBanner from "../components/CoopPageBanner";
 
 const cardClass =
   "rounded-3xl p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)]";
@@ -35,51 +35,76 @@ export default function Dashboard({ chickens }: any) {
 
   useEffect(() => {
     loadDashboardData();
+
+    const handleRefresh = () => {
+      loadDashboardData();
+    };
+
+    window.addEventListener("focus", handleRefresh);
+    document.addEventListener("visibilitychange", handleRefresh);
+
+    return () => {
+      window.removeEventListener("focus", handleRefresh);
+      document.removeEventListener("visibilitychange", handleRefresh);
+    };
   }, []);
 
   const loadDashboardData = async () => {
+    const { data: eggData, error: eggError } = await supabase
+      .from("egg_logs")
+      .select("*");
+
+    if (eggError) console.error("Dashboard egg load error:", eggError);
+    setEggLogs(eggData || []);
+
     const { data: choreData, error: choreError } = await supabase
-  .from("daily_chores")
-  .select("*")
-  .order("id", { ascending: false });
-
-if (choreError) {
-  console.error("Dashboard chores load error:", choreError);
-} else {
-  const today = new Date().toISOString().split("T")[0];
-
-  const choresToReset = (choreData || []).filter(
-    (chore: any) =>
-      chore.completed &&
-      chore.last_completed_date &&
-      chore.last_completed_date !== today
-  );
-
-  for (const chore of choresToReset) {
-    await supabase
       .from("daily_chores")
-      .update({ completed: false })
-      .eq("id", chore.id);
-  }
+      .select("*")
+      .order("id", { ascending: false });
 
-  const { data: refreshedChores } = await supabase
-    .from("daily_chores")
-    .select("*")
-    .order("id", { ascending: false });
+    if (choreError) {
+      console.error("Dashboard chores load error:", choreError);
+      setChores([]);
+    } else {
+      const today = new Date().toISOString().split("T")[0];
 
-  setChores(refreshedChores || []);
-}
+      const choresToReset = (choreData || []).filter(
+        (chore: any) =>
+          chore.completed &&
+          chore.last_completed_date &&
+          chore.last_completed_date !== today
+      );
 
-        const { data: planData, error: planError } = await supabase
+      for (const chore of choresToReset) {
+        await supabase
+          .from("daily_chores")
+          .update({ completed: false })
+          .eq("id", chore.id);
+      }
+
+      const { data: refreshedChores, error: refreshedError } = await supabase
+        .from("daily_chores")
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (refreshedError) {
+        console.error("Dashboard refreshed chores load error:", refreshedError);
+        setChores(choreData || []);
+      } else {
+        setChores(refreshedChores || []);
+      }
+    }
+
+    const { data: planData, error: planError } = await supabase
       .from("farm_plans")
-      .select("completed,archived,priority");
+      .select("*");
 
     if (planError) console.error("Dashboard plans load error:", planError);
     setPlans(planData || []);
 
     const { data: incubatorData, error: incubatorError } = await supabase
       .from("incubator_batches")
-      .select("batchname,status,hatchdate,expected_hatch_date");
+      .select("*");
 
     if (incubatorError)
       console.error("Dashboard incubator load error:", incubatorError);
@@ -87,7 +112,7 @@ if (choreError) {
 
     const { data: wishlistData, error: wishlistError } = await supabase
       .from("wishlist")
-      .select("purchased,total_cost");
+      .select("*");
 
     if (wishlistError)
       console.error("Dashboard wishlist load error:", wishlistError);
@@ -95,7 +120,7 @@ if (choreError) {
 
     const { data: expenseData, error: expenseError } = await supabase
       .from("expenses")
-      .select("amount,expense_date");
+      .select("*");
 
     if (expenseError)
       console.error("Dashboard expenses load error:", expenseError);
@@ -127,9 +152,9 @@ if (choreError) {
     })
     .reduce((sum, log) => sum + Number(log.eggs || 0), 0);
 
-  const repeatedTasks = chores.filter((c) => c.repeat_daily).length;
-  const pendingTasks = chores.filter((c) => !c.completed).length;
-  const completedTasks = chores.filter((c) => c.completed).length;
+  const totalTasks = chores.length;
+  const completedTasks = chores.filter((chore) => chore.completed).length;
+  const pendingTasks = chores.filter((chore) => !chore.completed).length;
 
   const activePlans = plans.filter((p) => !p.completed && !p.archived);
   const completedPlans = plans.filter((p) => p.completed && !p.archived);
@@ -497,18 +522,18 @@ if (choreError) {
 
           <div className="grid grid-cols-3 gap-4">
             <div className={statClass}>
-              <div className="text-3xl font-bold">{repeatedTasks}</div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Repeating</div>
+              <div className="text-3xl font-bold">{totalTasks}</div>
+              <div className="text-xs text-[#4b3a1d] mt-1">Tasks</div>
+            </div>
+
+            <div className={statClass}>
+              <div className="text-3xl font-bold">{completedTasks}</div>
+              <div className="text-xs text-[#4b3a1d] mt-1">Done</div>
             </div>
 
             <div className={statClass}>
               <div className="text-3xl font-bold">{pendingTasks}</div>
               <div className="text-xs text-[#4b3a1d] mt-1">Pending</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-3xl font-bold">{completedTasks}</div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Completed</div>
             </div>
           </div>
         </div>
