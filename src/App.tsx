@@ -468,7 +468,7 @@ export default function App() {
               }}
             >
               <CoopLogo size={36} />
-              Coop Keeper v1.1
+              Coop Keeper (v1.1.0)
             </div>
           </div>
         )}

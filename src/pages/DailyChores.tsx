@@ -8,652 +8,240 @@ const cardClass =
 const statClass =
   "rounded-2xl p-4 text-center bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)]";
 
-const graphBarClass =
-  "bg-gradient-to-t from-[#054020] via-[#d9a441] to-[#f7b267] rounded-t-xl border border-[#d9a441] shadow-[0_8px_18px_rgba(88,54,18,0.18)]";
-
-const cardTitleClass =
-  "flex items-center gap-2 text-base text-[#3d2a10] mb-5 font-extrabold tracking-tight";
-
-const iconClass = "text-2xl drop-shadow-sm";
-const alarmIconClass = "text-2xl drop-shadow-sm animate-pulse";
-
-const warningClass =
-  "rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.16)] text-[#7a2e00] font-semibold";
-
-export default function Dashboard({ chickens }: any) {
-  const [expenses, setExpenses] = useState<any[]>([]);
-  const [eggLogs, setEggLogs] = useState<any[]>([]);
+export default function DailyChores() {
+  const [choreText, setChoreText] = useState("");
   const [chores, setChores] = useState<any[]>([]);
-  const [plans, setPlans] = useState<any[]>([]);
-  const [incubators, setIncubators] = useState<any[]>([]);
-  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
 
-  const total = chickens.length;
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
+  const safeChores = Array.isArray(chores) ? chores : [];
+
+  const totalTasks = safeChores.length;
+  const completedTasks = safeChores.filter((chore) => chore.completed).length;
+  const pendingTasks = safeChores.filter((chore) => !chore.completed).length;
 
   useEffect(() => {
-    loadDashboardData();
-
-    const handleRefresh = () => {
-      loadDashboardData();
-    };
-
-    window.addEventListener("focus", handleRefresh);
-    document.addEventListener("visibilitychange", handleRefresh);
-
-    return () => {
-      window.removeEventListener("focus", handleRefresh);
-      document.removeEventListener("visibilitychange", handleRefresh);
-    };
+    loadChores();
   }, []);
 
-  const loadDashboardData = async () => {
-    const { data: eggData } = await supabase.from("egg_logs").select("*");
-    setEggLogs(eggData || []);
-
-    const { data: choreData, error: choreError } = await supabase
+  const loadChores = async () => {
+    const { data, error } = await supabase
       .from("daily_chores")
       .select("*")
       .order("id", { ascending: false });
 
-    if (choreError) {
-      console.error("Dashboard chores load error:", choreError);
+    if (error) {
+      console.error("Load chores error:", error);
       setChores([]);
-    } else {
-      const today = new Date().toISOString().split("T")[0];
-
-      const choresToReset = (choreData || []).filter(
-        (chore: any) =>
-          chore.completed &&
-          chore.last_completed_date &&
-          chore.last_completed_date !== today
-      );
-
-      for (const chore of choresToReset) {
-        await supabase
-          .from("daily_chores")
-          .update({ completed: false })
-          .eq("id", chore.id);
-      }
-
-      const { data: refreshedChores } = await supabase
-        .from("daily_chores")
-        .select("*")
-        .order("id", { ascending: false });
-
-      setChores(refreshedChores || []);
+      return;
     }
 
-    const { data: planData } = await supabase.from("farm_plans").select("*");
-    setPlans(planData || []);
+    const today = new Date().toISOString().split("T")[0];
 
-    const { data: incubatorData } = await supabase
-      .from("incubator_batches")
-      .select("*");
-    setIncubators(incubatorData || []);
+    const choresToReset = (data || []).filter(
+      (chore) =>
+        chore.completed &&
+        chore.last_completed_date &&
+        chore.last_completed_date !== today
+    );
 
-    const { data: wishlistData } = await supabase.from("wishlist").select("*");
-    setWishlistItems(wishlistData || []);
+    for (const chore of choresToReset) {
+      await supabase
+        .from("daily_chores")
+        .update({ completed: false })
+        .eq("id", chore.id);
+    }
 
-    const { data: expenseData } = await supabase.from("expenses").select("*");
-    setExpenses(expenseData || []);
+    const { data: refreshedData, error: refreshError } = await supabase
+      .from("daily_chores")
+      .select("*")
+      .order("id", { ascending: false });
+
+    if (refreshError) {
+      console.error("Refresh chores error:", refreshError);
+      setChores(data || []);
+      return;
+    }
+
+    setChores(refreshedData || []);
   };
 
-  const totalEggs = eggLogs.reduce(
-    (sum, log) => sum + Number(log.eggs || 0),
-    0
-  );
+  const addChore = async () => {
+    if (!choreText.trim()) return;
 
-  const currentMonthEggs = eggLogs
-    .filter((log) => {
-      const logDate = new Date(log.date);
-      return (
-        logDate.getMonth() === currentMonth &&
-        logDate.getFullYear() === currentYear
-      );
-    })
-    .reduce((sum, log) => sum + Number(log.eggs || 0), 0);
+    const { error } = await supabase.from("daily_chores").insert([
+      {
+        title: choreText,
+        completed: false,
+        last_completed_date: null,
+      },
+    ]);
 
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(currentDate.getDate() - 7);
+    if (error) {
+      console.error("Add chore error:", error);
+      return;
+    }
 
-  const currentWeekEggs = eggLogs
-    .filter((log) => {
-      const logDate = new Date(log.date);
-      return logDate >= oneWeekAgo;
-    })
-    .reduce((sum, log) => sum + Number(log.eggs || 0), 0);
+    setChoreText("");
+    setShowForm(false);
+    await loadChores();
+  };
 
-  const totalTasks = chores.length;
-  const completedTasks = chores.filter((chore) => chore.completed).length;
-  const pendingTasks = chores.filter((chore) => !chore.completed).length;
+  const toggleComplete = async (chore: any) => {
+    const newCompletedState = !chore.completed;
 
-  const activePlans = plans.filter((p) => !p.completed && !p.archived);
-  const completedPlans = plans.filter((p) => p.completed && !p.archived);
-
-  const highPriorityPlans = activePlans.filter(
-    (p) => p.priority === "High"
-  ).length;
-
-  const activeWishlistItems = wishlistItems.filter((item) => !item.purchased);
-  const totalWishlistItems = activeWishlistItems.length;
-
-  const totalWishlistCost = activeWishlistItems.reduce(
-    (sum, item) => sum + Number(item.total_cost || 0),
-    0
-  );
-
-  const currentMonthExpenses = expenses.filter((expense: any) => {
-    const expenseDate = new Date(expense.expense_date);
-    return (
-      expenseDate.getMonth() === currentMonth &&
-      expenseDate.getFullYear() === currentYear
-    );
-  });
-
-  const monthlyExpenseTotal = currentMonthExpenses.reduce(
-    (sum: number, expense: any) => sum + Number(expense.amount || 0),
-    0
-  );
-
-  const yearlyExpenseTotal = expenses
-    .filter((expense: any) => {
-      const expenseDate = new Date(expense.expense_date);
-      return expenseDate.getFullYear() === currentYear;
-    })
-    .reduce(
-      (sum: number, expense: any) => sum + Number(expense.amount || 0),
-      0
-    );
-
-  let ongoing = 0;
-  let monitoring = 0;
-  let healthy = 0;
-
-  chickens.forEach((chicken: any) => {
-    const logs = chicken.healthLogs || [];
-    const hasOngoing = logs.some((log: any) => log.status === "Ongoing");
-    const hasMonitoring = logs.some((log: any) => log.status === "Monitoring");
-
-    if (hasOngoing) ongoing++;
-    else if (hasMonitoring) monitoring++;
-    else healthy++;
-  });
-
-  const activeIncubators = incubators.filter(
-    (batch: any) =>
-      batch.status === "Incubating" ||
-      batch.status === "Active" ||
-      !batch.status
-  );
-
-  const completedIncubators = incubators.filter(
-    (batch: any) =>
-      batch.status !== "Incubating" &&
-      batch.status !== "Active" &&
-      batch.status
-  );
-
-  const incubatorsWithDays = activeIncubators
-    .map((batch: any) => {
-      const hatchDate = new Date(batch.hatchdate || batch.expected_hatch_date);
-
-      const daysLeft = Math.ceil(
-        (hatchDate.getTime() - currentDate.getTime()) /
-          (1000 * 60 * 60 * 24)
-      );
-
-      return { ...batch, daysLeft };
-    })
-    .filter((batch: any) => !isNaN(batch.daysLeft))
-    .sort((a: any, b: any) => a.daysLeft - b.daysLeft);
-
-  const nextHatch =
-    incubatorsWithDays.length > 0 ? incubatorsWithDays[0] : null;
-
-  const attentionItems = [];
-
-  if (ongoing > 0)
-    attentionItems.push(`${ongoing} chicken health issue(s) need attention`);
-
-  if (pendingTasks > 0)
-    attentionItems.push(`${pendingTasks} daily chore(s) still pending`);
-
-  if (nextHatch && nextHatch.daysLeft <= 2)
-    attentionItems.push(
-      `${nextHatch.batchname || "Incubator batch"} hatches soon`
-    );
-
-  if (highPriorityPlans > 0)
-    attentionItems.push(`${highPriorityPlans} high priority farm plan(s)`);
-
-  const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-
-  const expenseMonthlyGraph = monthNames.map((month, index) => {
-    const total = expenses
-      .filter((expense: any) => {
-        const date = new Date(expense.expense_date);
-        return date.getFullYear() === currentYear && date.getMonth() === index;
+    const { error } = await supabase
+      .from("daily_chores")
+      .update({
+        completed: newCompletedState,
+        last_completed_date: newCompletedState
+          ? new Date().toISOString().split("T")[0]
+          : null,
       })
-      .reduce(
-        (sum: number, expense: any) => sum + Number(expense.amount || 0),
-        0
-      );
+      .eq("id", chore.id);
 
-    return {
-      label: month,
-      value: total,
-      display: `R ${total.toFixed(0)}`,
-    };
-  });
+    if (error) {
+      console.error("Update chore error:", error);
+      return;
+    }
 
-  const eggMonthlyGraph = monthNames.map((month, index) => {
-    const total = eggLogs
-      .filter((log: any) => {
-        const date = new Date(log.date);
-        return date.getFullYear() === currentYear && date.getMonth() === index;
-      })
-      .reduce((sum: number, log: any) => sum + Number(log.eggs || 0), 0);
+    await loadChores();
+  };
 
-    return {
-      label: month,
-      value: total,
-      display: `${total}`,
-    };
-  });
+  const deleteChore = async (id: number) => {
+    const confirmed = confirm("Delete this daily chore?");
+    if (!confirmed) return;
 
-  const graphYears = Array.from(
-    new Set([
-      currentYear,
-      ...expenses.map((e: any) => new Date(e.expense_date).getFullYear()),
-      ...eggLogs.map((e: any) => new Date(e.date).getFullYear()),
-    ])
-  )
-    .filter((year) => !isNaN(year))
-    .sort((a, b) => a - b)
-    .slice(-5);
+    const { error } = await supabase
+      .from("daily_chores")
+      .delete()
+      .eq("id", id);
 
-  const expenseYearGraph = graphYears.map((year) => {
-    const total = expenses
-      .filter((expense: any) => {
-        const date = new Date(expense.expense_date);
-        return date.getFullYear() === year;
-      })
-      .reduce(
-        (sum: number, expense: any) => sum + Number(expense.amount || 0),
-        0
-      );
+    if (error) {
+      console.error("Delete chore error:", error);
+      return;
+    }
 
-    return {
-      label: String(year),
-      value: total,
-      display: `R ${total.toFixed(0)}`,
-    };
-  });
-
-  const eggYearGraph = graphYears.map((year) => {
-    const total = eggLogs
-      .filter((log: any) => {
-        const date = new Date(log.date);
-        return date.getFullYear() === year;
-      })
-      .reduce((sum: number, log: any) => sum + Number(log.eggs || 0), 0);
-
-    return {
-      label: String(year),
-      value: total,
-      display: `${total}`,
-    };
-  });
-
-  const SimpleBarGraph = ({
-    title,
-    icon,
-    data,
-    emptyText,
-  }: {
-    title: string;
-    icon: string;
-    data: any[];
-    emptyText: string;
-  }) => {
-    const maxValue = Math.max(...data.map((item) => Number(item.value || 0)), 1);
-    const hasData = data.some((item) => Number(item.value || 0) > 0);
-
-    return (
-      <div className={cardClass}>
-        <div className={cardTitleClass}>
-          <span className={iconClass}>{icon}</span>
-          <span>{title}</span>
-        </div>
-
-        {!hasData ? (
-          <div className="bg-[#eef8e8] border border-[#b9d9a8] rounded-2xl p-4 text-[#28551f] font-semibold">
-            {emptyText}
-          </div>
-        ) : (
-          <div className="h-[230px] flex items-end gap-3 border-b border-[#d9a441]/50 pb-3">
-            {data.map((item, index) => {
-              const height = Math.max(
-                (Number(item.value || 0) / maxValue) * 170,
-                8
-              );
-
-              return (
-                <div
-                  key={index}
-                  className="flex-1 flex flex-col items-center justify-end gap-2"
-                >
-                  <div className="text-[10px] font-bold text-[#4b3a1d] min-h-[18px]">
-                    {item.value > 0 ? item.display : ""}
-                  </div>
-
-                  <div
-                    className={graphBarClass}
-                    style={{
-                      height: `${height}px`,
-                      width: "100%",
-                      minWidth: 18,
-                    }}
-                  />
-
-                  <div className="text-[11px] text-[#4b3a1d] font-semibold">
-                    {item.label}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
+    await loadChores();
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-4 px-1">
-      <DashboardFarmBanner />
+    <div className="w-full max-w-6xl mx-auto space-y-4 px-3 sm:px-4 overflow-hidden">
+      <CoopPageBanner
+        eyebrow="TASK MANAGER"
+        title="Daily Chores"
+        subtitle="Track recurring farm tasks and daily routines."
+        stats={[
+          { label: "Tasks", value: totalTasks },
+          { label: "Done", value: completedTasks },
+          { label: "Pending", value: pendingTasks },
+        ]}
+      />
 
-      <div className={cardClass}>
-        <div className={cardTitleClass}>
-          <span className={alarmIconClass}>🚨</span>
-          <span>Attention Required</span>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className={statClass}>
+          <div className="text-3xl font-bold">{totalTasks}</div>
+          <div className="text-sm text-[#4b3a1d]">Qty Tasks</div>
         </div>
 
-        {attentionItems.length === 0 ? (
-          <div className="bg-[#eef8e8] border border-[#b9d9a8] rounded-2xl p-4 text-[#28551f] font-semibold">
-            ✅ No urgent items right now.
-          </div>
+        <div className={statClass}>
+          <div className="text-3xl font-bold">{completedTasks}</div>
+          <div className="text-sm text-[#4b3a1d]">Qty Done</div>
+        </div>
+
+        <div className={statClass}>
+          <div className="text-3xl font-bold">{pendingTasks}</div>
+          <div className="text-sm text-[#4b3a1d]">Qty Pending</div>
+        </div>
+      </div>
+
+      <div className={cardClass}>
+        {!showForm ? (
+          <button
+            onClick={() => setShowForm(true)}
+            className="w-full bg-[#022312] text-[#f7d37b] rounded-2xl p-4 font-bold"
+          >
+            + Add Daily Chores
+          </button>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {attentionItems.map((item, index) => (
-              <div key={index} className={warningClass}>
-                {item}
+          <>
+            <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
+              ✅ Add Daily Chore
+            </h2>
+
+            <div className="flex flex-col gap-4">
+              <input
+                placeholder="Enter daily chore..."
+                value={choreText}
+                onChange={(e) => setChoreText(e.target.value)}
+                className="border border-[#d9a441] rounded-2xl p-3 bg-white w-full"
+              />
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={addChore}
+                  className="bg-[#022312] text-[#f7d37b] rounded-2xl p-4 font-bold"
+                >
+                  + Add Daily Chore
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowForm(false);
+                    setChoreText("");
+                  }}
+                  className="bg-gray-500 text-white rounded-2xl p-4 font-bold"
+                >
+                  Cancel
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
+          </>
         )}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div className={cardClass}>
-          <div className={cardTitleClass}>
-            <span className={iconClass}>🐓</span>
-            <span>Chicken Register</span>
-          </div>
+      <div className={cardClass}>
+        <h2 className="text-xl font-extrabold mb-4 text-[#3d2a10]">
+          📋 Chore List
+        </h2>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className={statClass}>
-              <div className="text-3xl font-bold">{total}</div>
-              <div className="text-sm text-[#4b3a1d] mt-1">Total Chickens</div>
-            </div>
+        {safeChores.length === 0 && (
+          <div className="text-[#6b5a3a] text-sm">No daily chores yet.</div>
+        )}
 
-            <div className={statClass}>
-              <div className="text-3xl font-bold">
-                {chickens.filter((c: any) => c.sex === "Hen").length}
+        <div className="flex flex-col gap-3">
+          {safeChores.map((chore) => (
+            <div
+              key={chore.id}
+              className="rounded-2xl p-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)] flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-3 flex-1">
+                <input
+                  type="checkbox"
+                  checked={!!chore.completed}
+                  onChange={() => toggleComplete(chore)}
+                  className="w-6 h-6 cursor-pointer"
+                />
+
+                <div
+                  className={`font-extrabold ${
+                    chore.completed
+                      ? "line-through opacity-50 text-[#6b5a3a]"
+                      : "text-[#3d2a10]"
+                  }`}
+                >
+                  {chore.title}
+                </div>
               </div>
-              <div className="text-sm text-[#4b3a1d] mt-1">Hens</div>
-            </div>
 
-            <div className={statClass}>
-              <div className="text-3xl font-bold">
-                {chickens.filter((c: any) => c.sex === "Rooster").length}
-              </div>
-              <div className="text-sm text-[#4b3a1d] mt-1">Roosters</div>
+              <button
+                onClick={() => deleteChore(chore.id)}
+                className="bg-red-600 text-white px-4 py-2 rounded-xl font-bold"
+              >
+                🗑
+              </button>
             </div>
-          </div>
+          ))}
         </div>
-
-        <div className={cardClass}>
-          <div className={cardTitleClass}>
-            <span className={iconClass}>❤️</span>
-            <span>Chicken Health Monitor</span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className={statClass}>
-              <div className="text-2xl font-bold text-red-700">{ongoing}</div>
-              <div className="text-xs text-[#4b3a1d]">Ongoing</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-2xl font-bold text-yellow-800">
-                {monitoring}
-              </div>
-              <div className="text-xs text-[#4b3a1d]">Monitoring</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-2xl font-bold text-green-800">{healthy}</div>
-              <div className="text-xs text-[#4b3a1d]">Healthy</div>
-            </div>
-          </div>
-        </div>
-
-        <div className={cardClass}>
-          <div className={cardTitleClass}>
-            <span className={iconClass}>🥚</span>
-            <span>Egg Registry</span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className={statClass}>
-              <div className="text-3xl font-bold">{totalEggs}</div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Total Eggs</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-3xl font-bold">{currentMonthEggs}</div>
-              <div className="text-xs text-[#4b3a1d] mt-1">This Month</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-3xl font-bold">{currentWeekEggs}</div>
-              <div className="text-xs text-[#4b3a1d] mt-1">This Week</div>
-            </div>
-          </div>
-        </div>
-
-        <div className={cardClass}>
-          <div className={cardTitleClass}>
-            <span className={iconClass}>✅</span>
-            <span>Daily Chores</span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className={statClass}>
-              <div className="text-3xl font-bold">{totalTasks}</div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Tasks</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-3xl font-bold">{completedTasks}</div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Done</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-3xl font-bold">{pendingTasks}</div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Pending</div>
-            </div>
-          </div>
-        </div>
-
-        <div className={cardClass}>
-          <div className={cardTitleClass}>
-            <span className={iconClass}>📋</span>
-            <span>Farm Planning</span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className={statClass}>
-              <div className="text-3xl font-bold">{activePlans.length}</div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Future Ideas</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-3xl font-bold">{completedPlans.length}</div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Completed</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-3xl font-bold text-red-700">
-                {highPriorityPlans}
-              </div>
-              <div className="text-xs text-[#4b3a1d] mt-1">High Priority</div>
-            </div>
-          </div>
-        </div>
-
-        <div className={cardClass}>
-          <div className={cardTitleClass}>
-            <span className={iconClass}>🐣</span>
-            <span>Incubator Overview</span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className={statClass}>
-              <div className="text-3xl font-bold">
-                {activeIncubators.length}
-              </div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Active</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-3xl font-bold">
-                {completedIncubators.length}
-              </div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Completed</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-3xl font-bold">
-                {nextHatch
-                  ? nextHatch.daysLeft > 0
-                    ? nextHatch.daysLeft
-                    : 0
-                  : "-"}
-              </div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Days To Hatch</div>
-            </div>
-          </div>
-
-          {nextHatch && (
-            <div className="mt-4 bg-gradient-to-br from-[#f7b267] via-[#f3d39a] to-[#dcecc8] border border-[#d9a441] rounded-2xl p-3 text-sm text-[#4b3a1d] shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_22px_rgba(88,54,18,0.12)]">
-              Closest Hatch:{" "}
-              <span className="font-semibold">
-                {nextHatch.batchname || "Batch"}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className={cardClass}>
-          <div className={cardTitleClass}>
-            <span className={iconClass}>🛒</span>
-            <span>Wishlist</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className={statClass}>
-              <div className="text-3xl font-bold">{totalWishlistItems}</div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Active Items</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-2xl font-bold text-green-800">
-                R {totalWishlistCost.toFixed(2)}
-              </div>
-              <div className="text-xs text-[#4b3a1d] mt-1">Planned Cost</div>
-            </div>
-          </div>
-        </div>
-
-        <div className={cardClass}>
-          <div className={cardTitleClass}>
-            <span className={iconClass}>💰</span>
-            <span>Expenses Overview</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className={statClass}>
-              <div className="text-2xl font-bold text-red-700">
-                R {monthlyExpenseTotal.toFixed(2)}
-              </div>
-              <div className="text-xs text-[#4b3a1d] mt-1">This Month</div>
-            </div>
-
-            <div className={statClass}>
-              <div className="text-2xl font-bold text-orange-800">
-                R {yearlyExpenseTotal.toFixed(2)}
-              </div>
-              <div className="text-xs text-[#4b3a1d] mt-1">This Year</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <SimpleBarGraph
-          title="Monthly Expense Graph"
-          icon="📊"
-          data={expenseMonthlyGraph}
-          emptyText="No monthly expense data yet."
-        />
-
-        <SimpleBarGraph
-          title="Year Expense Graph"
-          icon="📈"
-          data={expenseYearGraph}
-          emptyText="No yearly expense data yet."
-        />
-
-        <SimpleBarGraph
-          title="Egg Production Per Month"
-          icon="🥚"
-          data={eggMonthlyGraph}
-          emptyText="No monthly egg data yet."
-        />
-
-        <SimpleBarGraph
-          title="Egg Production Per Year"
-          icon="📆"
-          data={eggYearGraph}
-          emptyText="No yearly egg data yet."
-        />
       </div>
     </div>
   );
