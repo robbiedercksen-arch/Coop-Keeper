@@ -41,8 +41,35 @@ export default function Dashboard({ chickens }: any) {
     const { data: eggData } = await supabase.from("egg_logs").select("*");
     setEggLogs(eggData || []);
 
-    const { data: choreData } = await supabase.from("daily_chores").select("*");
-    setChores(choreData || []);
+    const { data: choreData, error: choreError } = await supabase
+  .from("daily_chores")
+  .select("*")
+  .order("id", { ascending: false });
+
+if (!choreError) {
+  const today = new Date().toISOString().split("T")[0];
+
+  const choresToReset = (choreData || []).filter(
+    (chore: any) =>
+      chore.completed &&
+      chore.last_completed_date &&
+      chore.last_completed_date !== today
+  );
+
+  for (const chore of choresToReset) {
+    await supabase
+      .from("daily_chores")
+      .update({ completed: false })
+      .eq("id", chore.id);
+  }
+
+  const { data: refreshedChores } = await supabase
+    .from("daily_chores")
+    .select("*")
+    .order("id", { ascending: false });
+
+  setChores(refreshedChores || []);
+}
 
     const { data: planData } = await supabase.from("farm_plans").select("*");
     setPlans(planData || []);
