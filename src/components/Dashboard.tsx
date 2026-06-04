@@ -38,12 +38,37 @@ export default function Dashboard({ chickens }: any) {
   }, []);
 
   const loadDashboardData = async () => {
-    const { data: eggData, error: eggError } = await supabase
-      .from("egg_logs")
-      .select("date,eggs");
+    const { data: choreData, error: choreError } = await supabase
+  .from("daily_chores")
+  .select("*")
+  .order("id", { ascending: false });
 
-    if (eggError) console.error("Dashboard egg load error:", eggError);
-    setEggLogs(eggData || []);
+if (choreError) {
+  console.error("Dashboard chores load error:", choreError);
+} else {
+  const today = new Date().toISOString().split("T")[0];
+
+  const choresToReset = (choreData || []).filter(
+    (chore: any) =>
+      chore.completed &&
+      chore.last_completed_date &&
+      chore.last_completed_date !== today
+  );
+
+  for (const chore of choresToReset) {
+    await supabase
+      .from("daily_chores")
+      .update({ completed: false })
+      .eq("id", chore.id);
+  }
+
+  const { data: refreshedChores } = await supabase
+    .from("daily_chores")
+    .select("*")
+    .order("id", { ascending: false });
+
+  setChores(refreshedChores || []);
+}
 
     const { data: choreData, error: choreError } = await supabase
       .from("daily_chores")
