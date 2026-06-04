@@ -1,6 +1,6 @@
-import DashboardFarmBanner from "./DashboardFarmBanner";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
+import CoopPageBanner from "../components/CoopPageBanner";
 
 const cardClass =
   "rounded-3xl p-5 border border-[#d9a441] bg-[#faf7f0] shadow-[0_16px_34px_rgba(76,54,24,0.16),inset_0_1px_0_rgba(255,255,255,0.8)]";
