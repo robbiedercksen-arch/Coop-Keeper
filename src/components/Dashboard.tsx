@@ -70,14 +70,7 @@ if (choreError) {
   setChores(refreshedChores || []);
 }
 
-    const { data: choreData, error: choreError } = await supabase
-      .from("daily_chores")
-      .select("completed,repeat_daily");
-
-    if (choreError) console.error("Dashboard chores load error:", choreError);
-    setChores(choreData || []);
-
-    const { data: planData, error: planError } = await supabase
+        const { data: planData, error: planError } = await supabase
       .from("farm_plans")
       .select("completed,archived,priority");
 
